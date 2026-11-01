@@ -54,6 +54,11 @@ export const createHandoffFn = authed.inputValidator(dataOnly).handler(({ contex
 export const saveReviewedUpdateFn = authed.inputValidator(dataOnly).handler(({ context, data }) => run(async () => ops.saveReviewedUpdate(await ownerActor(context), data.data)));
 export const exportKickoffFn = authed.inputValidator(dataOnly).handler(({ context, data }) => run(async () => ops.exportKickoff(await ownerActor(context), data.data)));
 export const saveKickoffFn = authed.inputValidator(dataOnly).handler(({ context, data }) => run(async () => ops.saveKickoff(await ownerActor(context), data.data)));
+export const saveMindMapFn = authed.inputValidator(dataOnly).handler(({ context, data }) => run(async () => ops.saveMindMap(await ownerActor(context), data.data)));
+export const getMindMapFn = authed.handler(({ context }) => run(async () => {
+  const actor = await ownerActor(context);
+  return (await readState(actor.db, actor.ownerId)).mindMap ?? null;
+}));
 export const getKickoffsFn = authed.handler(({ context }) => run(async () => {
   const actor = await ownerActor(context);
   return (await readState(actor.db, actor.ownerId)).kickoffs;
@@ -72,6 +77,6 @@ export const getSyncStatusFn = authed.handler(({ context }) => run(async () => {
     autoSyncEnabled: !!data?.github_sync_enabled,
     lastSyncAt: data?.last_sync_at ?? null, lastSyncOk: data?.last_sync_ok ?? null,
     lastSyncMessage: data?.last_sync_message ?? null, lastSyncTrigger: data?.last_sync_trigger ?? null,
-    intervalMinutes: 10,
+    intervalMinutes: 60,
   };
 }));

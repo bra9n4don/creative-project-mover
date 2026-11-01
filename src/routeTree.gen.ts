@@ -18,6 +18,7 @@ import { Route as HandoffsRouteImport } from './routes/handoffs'
 import { Route as IdeasRouteImport } from './routes/ideas'
 import { Route as KickoffRouteImport } from './routes/kickoff'
 import { Route as McpRouteImport } from './routes/mcp'
+import { Route as MindMapRouteImport } from './routes/mind-map'
 import { Route as OverviewRouteImport } from './routes/overview'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SettingsRouteImport } from './routes/settings'
@@ -81,6 +82,11 @@ const KickoffRoute = KickoffRouteImport.update({
 const McpRoute = McpRouteImport.update({
   id: '/mcp',
   path: '/mcp',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MindMapRoute = MindMapRouteImport.update({
+  id: '/mind-map',
+  path: '/mind-map',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OverviewRoute = OverviewRouteImport.update({
@@ -190,6 +196,7 @@ export interface FileRoutesByFullPath {
   '/ideas': typeof IdeasRoute
   '/kickoff': typeof KickoffRoute
   '/mcp': typeof McpRoute
+  '/mind-map': typeof MindMapRoute
   '/overview': typeof OverviewRoute
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
@@ -220,6 +227,7 @@ export interface FileRoutesByTo {
   '/ideas': typeof IdeasRoute
   '/kickoff': typeof KickoffRoute
   '/mcp': typeof McpRoute
+  '/mind-map': typeof MindMapRoute
   '/overview': typeof OverviewRoute
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
@@ -251,6 +259,7 @@ export interface FileRoutesById {
   '/ideas': typeof IdeasRoute
   '/kickoff': typeof KickoffRoute
   '/mcp': typeof McpRoute
+  '/mind-map': typeof MindMapRoute
   '/overview': typeof OverviewRoute
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
@@ -283,6 +292,7 @@ export interface FileRouteTypes {
     | '/ideas'
     | '/kickoff'
     | '/mcp'
+    | '/mind-map'
     | '/overview'
     | '/reset-password'
     | '/settings'
@@ -313,6 +323,7 @@ export interface FileRouteTypes {
     | '/ideas'
     | '/kickoff'
     | '/mcp'
+    | '/mind-map'
     | '/overview'
     | '/reset-password'
     | '/settings'
@@ -343,6 +354,7 @@ export interface FileRouteTypes {
     | '/ideas'
     | '/kickoff'
     | '/mcp'
+    | '/mind-map'
     | '/overview'
     | '/reset-password'
     | '/settings'
@@ -374,6 +386,7 @@ export interface RootRouteChildren {
   IdeasRoute: typeof IdeasRoute
   KickoffRoute: typeof KickoffRoute
   McpRoute: typeof McpRoute
+  MindMapRoute: typeof MindMapRoute
   OverviewRoute: typeof OverviewRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SettingsRoute: typeof SettingsRoute
@@ -458,6 +471,13 @@ declare module '@tanstack/react-router' {
       path: '/mcp'
       fullPath: '/mcp'
       preLoaderRoute: typeof McpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mind-map': {
+      id: '/mind-map'
+      path: '/mind-map'
+      fullPath: '/mind-map'
+      preLoaderRoute: typeof MindMapRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/overview': {
@@ -606,6 +626,7 @@ const rootRouteChildren: RootRouteChildren = {
   IdeasRoute: IdeasRoute,
   KickoffRoute: KickoffRoute,
   McpRoute: McpRoute,
+  MindMapRoute: MindMapRoute,
   OverviewRoute: OverviewRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SettingsRoute: SettingsRoute,

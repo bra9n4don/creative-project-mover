@@ -3,12 +3,15 @@ import type { z } from "zod/v4";
 import type { Database } from "@/integrations/supabase/types";
 import { GetHubStateResponse } from "./api-zod";
 import { clients, policy } from "./clients";
-import { savedKickoffSchema, type SavedKickoff } from "../kickoff";
+import { mindMapSchema, savedKickoffSchema, type SavedKickoff } from "../kickoff";
+import { z as zod } from "zod";
+export const savedMindMapSchema = zod.object({ map: mindMapSchema, title: zod.string().max(200), revision: zod.number().int(), updatedAt: zod.string() });
+export type SavedMindMap = zod.infer<typeof savedMindMapSchema>;
 
-export type HubState = z.infer<typeof GetHubStateResponse> & { kickoffs: SavedKickoff[] };
+export type HubState = z.infer<typeof GetHubStateResponse> & { kickoffs: SavedKickoff[]; mindMap?: SavedMindMap };
 function parseState(data: unknown): HubState {
-  const raw = data as { kickoffs?: unknown[] };
-  return { ...GetHubStateResponse.parse(data), kickoffs: (raw.kickoffs ?? []).map(k => savedKickoffSchema.parse(k)) };
+  const raw = data as { kickoffs?: unknown[]; mindMap?: unknown };
+  return { ...GetHubStateResponse.parse(data), kickoffs: (raw.kickoffs ?? []).map(k => savedKickoffSchema.parse(k)), ...(raw.mindMap ? { mindMap: savedMindMapSchema.parse(raw.mindMap) } : {}) };
 }
 export type HubDb = SupabaseClient<Database>;
 /** db is RLS-scoped for the signed-in owner, or the admin client after a verified agent credential. */

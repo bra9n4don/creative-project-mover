@@ -21,4 +21,6 @@
 - [x] GitHub sync: failed runs report failure, unsaved results surface as errors, read up to 500 repos and 30 commits/PRs per repo with a note when capped
 - [x] Workspace refresh sends only the latest 200 activity entries (all history stays stored)
 - [x] AI drafts: shared instructions, empty answers dropped, tighter answer lengths; real brief draft re-verified
-- [ ] GitHub sync frequency (10 min vs hourly) — waiting on owner decision
+- [x] GitHub sync moved to hourly; Settings explains results can be up to an hour old
+- [x] Mind map AI Expand (drafts brief + plan for review), promote clusters to Step 4 milestones, standalone saved /mind-map page
+- [x] Forced postcss-selector-parser 6.1.5 for @tailwindcss/typography

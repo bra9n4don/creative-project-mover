@@ -67,3 +67,24 @@ describe("Kickoff length limits", () => {
     expect(restoreCheckpoint(code).plan.milestones).toHaveLength(8);
   });
 });
+
+import { mindMapClusters } from "./kickoff";
+describe("mindMapClusters", () => {
+  const map = { nodes: [
+    { id: "r", label: "App", kind: "idea" as const, x: 0, y: 0 },
+    { id: "a", label: "Onboarding", kind: "idea" as const, x: 0, y: 0 },
+    { id: "a1", label: "Sign up", kind: "feature" as const, x: 0, y: 0 },
+    { id: "a2", label: "Spam signups", kind: "risk" as const, x: 0, y: 0 },
+    { id: "b", label: "Billing", kind: "idea" as const, x: 0, y: 0 },
+  ], edges: [{ id: "1", source: "r", target: "a" }, { id: "2", source: "a", target: "a1" }, { id: "3", source: "a", target: "a2" }, { id: "4", source: "r", target: "b" }] };
+  it("makes each main branch a milestone titled by the cluster", () => {
+    const ms = mindMapClusters(map);
+    expect(ms.map(m => m.title)).toEqual(["Onboarding", "Billing"]);
+    expect(ms[0]!.tasks.map(t => t.title)).toEqual(["Sign up"]);
+    expect(ms[0]!.outcome).toContain("Risk: Spam signups");
+  });
+  it("caps at 8 milestones", () => {
+    const nodes = [{ id: "r", label: "R", kind: "idea" as const, x: 0, y: 0 }, ...Array.from({ length: 10 }, (_, i) => ({ id: `c${i}`, label: `C${i}`, kind: "idea" as const, x: 0, y: 0 }))];
+    expect(mindMapClusters({ nodes, edges: nodes.slice(1).map(n => ({ id: n.id, source: "r", target: n.id })) })).toHaveLength(8);
+  });
+});
