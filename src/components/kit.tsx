@@ -175,21 +175,20 @@ export function Confirm({
 }
 
 export function CopyButton({ text, label = "Copy", className, testId }: { text: string; label?: string; className?: string; testId?: string }) {
-  const [done, setDone] = useState(false);
+  const [done, setDone] = useState<boolean | "failed">(false);
   return (
     <button
       type="button"
       data-testid={testId ?? "button-copy"}
+      aria-live="polite"
       onClick={() => {
-        void navigator.clipboard.writeText(text).then(() => {
-          setDone(true);
-          setTimeout(() => setDone(false), 1600);
-        });
+        navigator.clipboard.writeText(text).then(() => setDone(true), () => setDone("failed"))
+          .finally(() => setTimeout(() => setDone(false), 2500));
       }}
       className={cn("inline-flex items-center gap-1.5 rounded-lg border bg-card px-3 py-1.5 text-xs font-medium hover:bg-secondary", className)}
     >
-      {done ? <Check className="h-3.5 w-3.5 text-accent" /> : <Copy className="h-3.5 w-3.5" />}
-      {done ? "Copied" : label}
+      {done === true ? <Check className="h-3.5 w-3.5 text-accent" /> : <Copy className="h-3.5 w-3.5" />}
+      {done === true ? "Copied" : done === "failed" ? "Couldn't copy — select it instead" : label}
     </button>
   );
 }
