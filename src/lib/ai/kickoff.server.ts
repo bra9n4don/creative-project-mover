@@ -26,7 +26,7 @@ export async function handleKickoffDraft(request: Request): Promise<Response> {
     : "Draft 2-5 milestones, each with a title (max 200 characters), measurable outcome (max 400 characters), and 1-5 concrete starter tasks. Each task has title (max 200), description (max 600), priority low/medium/high. Fit the scope, budget, timeline and available time. Do not claim tasks are done. Do not invent deadlines.");
   try {
     const schema: z.ZodTypeAny = mode === "brief" ? briefSchema : planSchema;
-    const call = createResponsesCall(request, { baseURL: "https://ai.gateway.lovable.dev/v1", apiKey: aiKey, model: DRAFT_MODEL, reasoningEffort: mode === "brief" ? "low" : "medium" }, [{ role: "user", content: JSON.stringify(compact({ brainstorm: kickoff.brainstorm, answers: kickoff.clarify, brief: mode === "plan" ? kickoff.brief : undefined })) }], prompt, schema);
+    const call = createResponsesCall(request, { baseURL: "https://ai.gateway.lovable.dev/v1", apiKey: aiKey, model: DRAFT_MODEL, reasoningEffort: mode === "brief" ? "low" : "medium", maxOutputTokens: mode === "brief" ? 6000 : 10000 }, [{ role: "user", content: JSON.stringify(compact({ brainstorm: kickoff.brainstorm, answers: kickoff.clarify, brief: mode === "plan" ? kickoff.brief : undefined })) }], prompt, schema);
     const output = Promise.resolve(call.result.output); void output.catch(() => {});
     await call.runIdFetch.waitForRunId();
     const failure = call.getFailure();
@@ -34,9 +34,11 @@ export async function handleKickoffDraft(request: Request): Promise<Response> {
     const encoder = new TextEncoder();
     const body = new ReadableStream({ async start(controller) {
       const send = (event: unknown) => controller.enqueue(encoder.encode(JSON.stringify(event) + "\n"));
+      let lastProgress = 0;
       try {
         for await (const part of call.result.fullStream) {
-          if (part.type === "text-delta" || part.type === "reasoning-delta") send({ type: "progress" });
+          // Heartbeat at most once a second instead of once per token.
+          if ((part.type === "text-delta" || part.type === "reasoning-delta") && Date.now() - lastProgress > 1000) { lastProgress = Date.now(); send({ type: "progress" }); }
           if (part.type === "error") throw part.error;
         }
         const draft = await output;

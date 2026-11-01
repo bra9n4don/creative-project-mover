@@ -69,7 +69,7 @@ export default function SettingsPage() {
 }
 
 function GithubSyncPanel() {
-  const status = useGithubSyncStatus({ query: { refetchInterval: 30000 } });
+  const status = useGithubSyncStatus({ query: { refetchInterval: 300000 } });
   const sync = useSyncGithub();
   const result = useHubResult();
   const s = status.data;

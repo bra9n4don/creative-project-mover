@@ -26,7 +26,7 @@ export async function handleProjectUpdate(request: Request): Promise<Response> {
   const { data: owner, error: ownerError } = await db.rpc("is_hub_owner", { _uid: auth.user.id });
   if (ownerError || !owner) return jsonError(403, "Only the workspace owner can generate project updates.");
   const parsed = inputSchema.safeParse(await request.json().catch(() => null));
-  if (!parsed.success) return jsonError(400, "Choose a project and paste an update of up to 20,000 characters.");
+  if (!parsed.success) return jsonError(400, "Choose a project and paste an update of up to 8,000 characters.");
   try {
     const state = await readState(db, auth.user.id);
     const p = project(state, parsed.data.projectId);
@@ -46,8 +46,9 @@ export async function handleProjectUpdate(request: Request): Promise<Response> {
     const stream = new ReadableStream({ async start(controller) {
       const send = (v: unknown) => controller.enqueue(encoder.encode(JSON.stringify(v) + "\n"));
       try {
+        let lastProgress = 0;
         for await (const part of call.result.fullStream) {
-          if (part.type === "reasoning-delta" || part.type === "text-delta") send({ type: "progress" });
+          if ((part.type === "reasoning-delta" || part.type === "text-delta") && Date.now() - lastProgress > 1000) { lastProgress = Date.now(); send({ type: "progress" }); }
           if (part.type === "error") throw part.error;
         }
         const draft = await outputPromise;
