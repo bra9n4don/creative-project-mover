@@ -26,7 +26,7 @@ describe("assistant resume context", () => {
   });
   it("caps task descriptions at 300 characters and activity at 5 items", () => {
     const c = buildResumeContext(state());
-    expect(c.focus?.openTasks[0].description?.length).toBe(301);
+    expect(c.focus?.openTasks[0]?.description?.length).toBe(301);
     expect(c.focus?.recentActivity).toHaveLength(5);
   });
   it("returns the requested project when projectId is given", () => {
