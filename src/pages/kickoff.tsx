@@ -4,7 +4,7 @@ import { useAuth } from "@/lib/auth";
 import { useWorkspace, errMessage } from "@/lib/workspace";
 import { supabase } from "@/integrations/supabase/client";
 import { useKickoffSaving } from "@/lib/use-kickoff-saving";
-import { briefSchema, planSchema, checkpointCode, clarifyFields, kickoffMarkdown, kickoffSchema, kickoffSteps, newKickoff, restoreCheckpoint, stepIssue, syncBrainstorm, mindMapClusters, kickoffSizeIssue, type Kickoff } from "@/lib/kickoff";
+import { briefSchema, planSchema, checkpointCode, clarifyFields, kickoffMarkdown, kickoffSchema, kickoffSteps, newKickoff, restoreCheckpoint, stepIssue, syncBrainstorm, mindMapClusters, kickoffSizeIssue, CHECKPOINT_LIMIT, type Kickoff } from "@/lib/kickoff";
 import { KickoffMindMap, emptyMindMap } from "@/components/kickoff-mind-map";
 import { AppShell } from "@/components/shell";
 import { Field, field, ErrorBlock, LoadingBlock } from "@/components/kit";
@@ -80,6 +80,8 @@ function KickoffBody() {
           if (event.type === "draft") {
             const draft = mode === "brief" ? briefSchema.parse(event.draft) : planSchema.parse(event.draft);
             next = kickoffSchema.parse({ ...base, [mode]: draft });
+            // Keep the owner's previous value in the saved project until this step is reviewed with Continue.
+            if (!(mode in storage.held.current)) storage.held.current[mode] = base[mode] as never;
             edit(next);
           }
         }
@@ -181,7 +183,7 @@ function KickoffBody() {
       {k.step >= 2 && kickoffSizeIssue(k) && <p role="status" className="mt-6 rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm">{kickoffSizeIssue(k)}</p>}
       <footer className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t pt-5"><Button variant="ghost" disabled={k.step === 0 || locked} onClick={() => { setK(prev => ({ ...prev, step: prev.step - 1 })); setError(""); }}><ArrowLeft /> Back</Button><div className="flex flex-wrap gap-2"><Button variant="outline" disabled={busy || saving} onClick={pause}><Pause /> Save checkpoint & pause</Button>{k.step < 5 && <Button disabled={locked} onClick={continueStep}><ArrowRight />{k.step === 2 ? "Save reviewed brief & continue" : k.step === 3 ? "Save reviewed tasks & continue" : "Continue"}</Button>}</div></footer>
     </>}
-    <input type="file" accept=".json,application/json" ref={upload} className="hidden" aria-label="Upload checkpoint" onChange={async e => { const file = e.target.files?.[0]; if (!file) return; if (file.size > 1000000) setError("Checkpoint is too large."); else restore(await file.text()); e.target.value = ""; }} />
+    <input type="file" accept=".json,application/json" ref={upload} className="hidden" aria-label="Upload checkpoint" onChange={async e => { const file = e.target.files?.[0]; if (!file) return; if (file.size > CHECKPOINT_LIMIT) setError("Checkpoint is too large."); else restore(await file.text()); e.target.value = ""; }} />
     <Dialog open={pauseOpen} onOpenChange={setPauseOpen}><DialogContent className="max-w-lg"><DialogHeader><DialogTitle>Save checkpoint & pause</DialogTitle><DialogDescription>Step {k.step + 1} of 6 · {kickoffSteps[k.step]}. Your file or resume code contains your answers and drafts; keep it privately.</DialogDescription></DialogHeader><div className="flex flex-wrap gap-2"><Button onClick={() => { download(`relay-kickoff-step-${k.step + 1}.json`, JSON.stringify(kickoffSchema.parse(k), null, 2), "application/json;charset=utf-8"); setSecured(true); }}><Download /> Download checkpoint</Button><Button variant="outline" onClick={async () => { try { await navigator.clipboard.writeText(checkpointCode(k)); setCopied(true); setSecured(true); setCheckpointError(""); } catch { setCheckpointError("Could not copy. Select the resume code below and copy it, or download the file."); } }}>{copied ? <Check /> : <Copy />} {copied ? "Code copied" : "Copy resume code"}</Button></div><Field label="Resume code"><textarea aria-label="Checkpoint code" readOnly className={`${field} font-mono text-xs`} rows={4} value={checkpointCode(k)} onFocus={e => e.currentTarget.select()} /></Field>{checkpointError && <p role="alert" className="text-sm text-destructive">{checkpointError}</p>}{copied && <p role="status" className="text-sm text-accent">Resume code copied.</p>}<Button disabled={!secured} onClick={() => { setPauseOpen(false); setPaused(true); }}><Pause /> Pause now</Button></DialogContent></Dialog>
     <Dialog open={resumeOpen} onOpenChange={setResumeOpen}><DialogContent className="max-w-lg"><DialogHeader><DialogTitle>Resume Kickoff</DialogTitle><DialogDescription>Upload a checkpoint or paste its code. This replaces the current session’s answers.</DialogDescription></DialogHeader><Button variant="outline" onClick={() => upload.current?.click()}><Upload /> Upload checkpoint</Button><textarea aria-label="Resume code" className={field} rows={5} value={resume} onChange={e => setResume(e.target.value)} placeholder="RELAY1.…" /><Button disabled={!resume.trim()} onClick={() => restore(resume)}><ArrowRight /> Restore code</Button>{error && <p role="alert" className="text-sm text-destructive">{error}</p>}</DialogContent></Dialog>
   </>;

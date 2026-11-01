@@ -6,6 +6,9 @@ import { getKickoffsFn, saveKickoffFn } from "./hub/hub.functions";
 import type { Kickoff, SavedKickoff } from "./kickoff";
 import { errMessage } from "./workspace";
 
+/** AI drafts not yet reviewed with Continue: autosave keeps the previous (owner-written) value instead. */
+export type HeldDrafts = { brief?: Kickoff["brief"]; plan?: Kickoff["plan"] };
+
 export function useKickoffSaving(k: Kickoff) {
   const saveFn = useServerFn(saveKickoffFn);
   const listFn = useServerFn(getKickoffsFn);
@@ -15,24 +18,32 @@ export function useKickoffSaving(k: Kickoff) {
   const revisions = useRef(new Map<string, number>());
   const snapshots = useRef(new Map<string, string>());
   const completed = useRef(new Set<string>());
-  const savedStep = useRef(new Map<string, number>());
+  const held = useRef<HeldDrafts>({});
+  const seq = useRef(0);
+  const reviewedSeq = useRef(new Map<string, number>());
   const queue = useRef<Promise<unknown>>(Promise.resolve());
   const [status, setStatus] = useState("Not started");
   const [saveError, setSaveError] = useState("");
   const [projectId, setProjectId] = useState<string | null>(null);
   const persist = useCallback((draft: Kickoff, reviewedStep?: number): Promise<SavedKickoff | undefined> => {
     const snapshot = JSON.stringify(draft);
+    const mySeq = ++seq.current;
+    if (reviewedStep !== undefined) {
+      reviewedSeq.current.set(draft.id, mySeq);
+      if (reviewedStep >= 2) delete held.current.brief;
+      if (reviewedStep >= 3) delete held.current.plan;
+    }
+    const toSave = reviewedStep === undefined ? { ...draft, ...held.current } : draft;
     const work = queue.current.then(async () => {
       if (completed.current.has(draft.id) || (!draft.brainstorm.trim() && !revisions.current.has(draft.id))) return;
       if (reviewedStep === undefined && snapshots.current.get(draft.id) === snapshot) return;
-      // A stale autosave queued behind a reviewed "Continue" must not move the saved step backwards.
-      if (reviewedStep === undefined && draft.step < (savedStep.current.get(draft.id) ?? 0)) return;
+      // An autosave queued before a reviewed "Continue" is stale; later ones (e.g. after Back) are kept.
+      if (reviewedStep === undefined && mySeq < (reviewedSeq.current.get(draft.id) ?? 0)) return;
       setStatus("Saving…"); setSaveError("");
       try {
-        const result = await saveFn({ data: { data: { kickoff: draft, expectedRevision: revisions.current.get(draft.id) ?? 0, reviewedStep } } });
+        const result = await saveFn({ data: { data: { kickoff: toSave, expectedRevision: revisions.current.get(draft.id) ?? 0, reviewedStep } } });
         revisions.current.set(draft.id, result.revision);
         snapshots.current.set(draft.id, snapshot);
-        savedStep.current.set(draft.id, Math.max(draft.step, savedStep.current.get(draft.id) ?? 0));
         if (result.completed) completed.current.add(draft.id);
         setProjectId(result.projectId); setStatus("Saved to project");
         qc.setQueryData<SavedKickoff[]>(["kickoffs"], old => [...(old ?? []).filter(r => r.data.id !== result.data.id), result]);
@@ -61,10 +72,10 @@ export function useKickoffSaving(k: Kickoff) {
     if (record) {
       revisions.current.set(record.data.id, record.revision);
       snapshots.current.set(record.data.id, JSON.stringify(record.data));
-      savedStep.current.set(record.data.id, record.data.step);
       if (record.completed) completed.current.add(record.data.id);
     }
+    held.current = {};
     setProjectId(record?.projectId ?? null); setStatus(record ? "Saved to project" : "Not started"); setSaveError("");
   };
-  return { persist, flush, activate, projectId, status, saveError, saved: list.data ?? [], listError: list.error, loadingSaved: list.isLoading, reloadSaved: list.refetch };
+  return { persist, flush, activate, held, projectId, status, saveError, saved: list.data ?? [], listError: list.error, loadingSaved: list.isLoading, reloadSaved: list.refetch };
 }
