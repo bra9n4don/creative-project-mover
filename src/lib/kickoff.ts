@@ -76,7 +76,7 @@ export function restoreCheckpoint(input: string): Kickoff {
 /** Shared limits: exported brief becomes the project notes, which hold up to 10,000 characters. */
 export const KICKOFF_BRIEF_LIMIT = 10000;
 // Largest valid kickoff, as base64 code, stays below this, so any checkpoint the wizard makes can be restored.
-export const CHECKPOINT_LIMIT = 5_000_000;
+export const CHECKPOINT_LIMIT = 12_000_000;
 export function kickoffSizeIssue(k: Kickoff): string | null {
   const n = kickoffMarkdown(k).length;
   return n > KICKOFF_BRIEF_LIMIT ? `Your brief and plan are ${n.toLocaleString("en-US")} characters; shorten them to ${KICKOFF_BRIEF_LIMIT.toLocaleString("en-US")} so they fit in the project notes.` : null;
