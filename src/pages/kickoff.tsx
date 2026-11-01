@@ -42,6 +42,15 @@ function KickoffBody() {
   const controller = useRef<AbortController | null>(null);
   const upload = useRef<HTMLInputElement | null>(null);
   useEffect(() => () => controller.current?.abort(), []);
+  // Opened from a project's "Resume Kickoff" button: load that saved Kickoff once the list arrives.
+  const resumeId = useRef(typeof window === "undefined" ? null : new URLSearchParams(window.location.search).get("resume"));
+  useEffect(() => {
+    if (!resumeId.current || storage.loadingSaved) return;
+    const r = storage.saved.find(x => x.data.id === resumeId.current && !x.completed);
+    resumeId.current = null;
+    if (r) { storage.activate(r); setK(r.data); setNotice(`Resumed at step ${r.data.step + 1}: ${kickoffSteps[r.data.step]}.`); }
+    else setError("That Kickoff is finished or no longer exists.");
+  }, [storage.loadingSaved, storage.saved]);
   const edit = (patch: Partial<Kickoff>) => { setK(prev => ({ ...prev, ...patch, review: patch.review ?? { goal: false, scope: false, plan: false, risks: false, ready: false } })); setError(""); setNotice(""); };
   const restore = (value: string) => {
     try {

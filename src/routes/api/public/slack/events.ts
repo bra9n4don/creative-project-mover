@@ -30,13 +30,15 @@ export const Route = createFileRoute("/api/public/slack/events")({
         let parsed: z.infer<typeof eventSchema>;
         try { parsed = eventSchema.parse(JSON.parse(body)); } catch { return new Response("bad request", { status: 400 }); }
         if (parsed.type === "url_verification") return Response.json({ challenge: parsed.challenge });
-        if (request.headers.get("x-slack-retry-num")) return new Response("ok");
+        // Retries after a timeout may duplicate work still running; retries after our own error are safe.
+        if (request.headers.get("x-slack-retry-num") && request.headers.get("x-slack-retry-reason") !== "http_error") return new Response("ok");
         const secret = process.env.SLACK_SIGNING_SECRET;
         if (!secret) return new Response("ok");
         if (!(await validSignature(secret, request, body))) return new Response("invalid signature", { status: 401 });
 
         const ev = parsed.event;
         if (!ev || ev.bot_id || ev.subtype || !ev.channel || !["app_mention", "message"].includes(ev.type)) return new Response("ok");
+        let ideaSaved = false;
         try {
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
           const { data: owner } = await supabaseAdmin.from("hub_owner").select("user_id").eq("id", "personal").maybeSingle();
@@ -49,6 +51,7 @@ export const Route = createFileRoute("/api/public/slack/events")({
             if (action.idea) {
               const { addIdea } = await import("@/lib/hub/operations");
               await addIdea(actor, { title: action.idea.title, description: action.idea.description, tags: ["slack"] });
+              ideaSaved = true;
             }
             reply = action.reply;
           }
@@ -59,7 +62,11 @@ export const Route = createFileRoute("/api/public/slack/events")({
           });
           const out = await res.text();
           if (!res.ok || !JSON.parse(out).ok) console.error(`Slack reply failed [${res.status}]: ${out}`);
-        } catch (e) { console.error("Slack handler error", e); }
+        } catch (e) {
+          console.error("Slack handler error", e);
+          // Ask Slack to retry only if nothing was saved yet, so a retry can't duplicate an idea.
+          if (!ideaSaved) return new Response("retry", { status: 500 });
+        }
         return new Response("ok");
       },
     },

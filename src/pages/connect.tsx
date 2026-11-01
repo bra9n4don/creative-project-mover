@@ -8,12 +8,15 @@ const APP_NAME = "Carterhub";
 const SLUG = "carterhub";
 
 function CopyBox({ value, label }: { value: string; label: string }) {
-  const [done, setDone] = useState(false);
+  const [done, setDone] = useState<boolean | "failed">(false);
   return (
     <div className="flex items-center gap-2 rounded-lg border bg-secondary/40 p-2">
       <code className="flex-1 break-all px-2 font-mono text-sm">{value || "…"}</code>
-      <button type="button" className={btn.ghost} aria-label={label} onClick={() => { void navigator.clipboard.writeText(value); setDone(true); setTimeout(() => setDone(false), 1500); }}>
-        {done ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />} {done ? "Copied" : "Copy"}
+      <button type="button" className={btn.ghost} aria-label={label} onClick={async () => {
+        try { await navigator.clipboard.writeText(value); setDone(true); } catch { setDone("failed"); }
+        setTimeout(() => setDone(false), 2000);
+      }}>
+        {done === true ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />} {done === true ? "Copied" : done === "failed" ? "Couldn't copy, select it instead" : "Copy"}
       </button>
     </div>
   );

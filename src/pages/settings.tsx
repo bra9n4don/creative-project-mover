@@ -73,6 +73,11 @@ function GithubSyncPanel() {
   const sync = useSyncGithub();
   const result = useHubResult();
   const s = status.data;
+  if (!s && status.error) return (
+    <Panel title="GitHub sync · read only"><div className="p-5 text-sm" role="alert">
+      <p className="text-destructive">Couldn't check the GitHub sync status. Your GitHub connection may be fine.</p>
+      <button className={`${btn.ghost} mt-3`} onClick={() => void status.refetch()}><RefreshCw className="h-4 w-4" /> Try again</button>
+    </div></Panel>);
   const minutesSince = s?.lastSyncAt ? (Date.now() - +new Date(s.lastSyncAt)) / 60000 : null;
   const healthy = !!s?.autoSyncEnabled && s.lastSyncOk === true && minutesSince !== null && minutesSince < s.intervalMinutes * 2 + 2;
   const headline = !s ? "Checking…"
