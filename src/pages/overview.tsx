@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Link } from "@/lib/router-compat";
 import { ArrowRight, Bookmark, FolderPlus, Lightbulb, Play, Plug, ShieldCheck } from "lucide-react";
 import { AppShell } from "@/components/shell";
+import { SetupBanner } from "@/components/setup-banner";
 import { Bar, CopyButton, Dot, Empty, ErrorBlock, LoadingBlock, Panel, Pill, ago, btn } from "@/components/kit";
 import { CheckpointDialog, ProjectDialog } from "@/components/forms";
 import { checkpointText, lastTouched, latestCheckpoint, nextStep, progressOf, usePageTitle, useWorkspace } from "@/lib/workspace";
@@ -164,6 +165,7 @@ export default function OverviewPage() {
   usePageTitle("Where I left off", "Pick up exactly where you stopped, across every AI tool.");
   return (
     <AppShell>
+      <SetupBanner />
       <div className="mb-6 font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
         {new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}
       </div>

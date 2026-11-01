@@ -1,0 +1,1 @@
+GRANT EXECUTE ON FUNCTION public.is_hub_owner(uuid) TO authenticated;
