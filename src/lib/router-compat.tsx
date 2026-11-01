@@ -17,5 +17,5 @@ export function useLocation(): [string, (to: string) => void] {
 }
 
 export function useParams<T extends Record<string, string>>(): T {
-  return useRouterParams({ strict: false }) as T;
+  return (useRouterParams as unknown as (o: { strict: false }) => T)({ strict: false });
 }
