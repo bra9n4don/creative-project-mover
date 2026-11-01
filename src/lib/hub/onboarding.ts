@@ -1,6 +1,6 @@
 /** Pure step logic for the owner setup checklist (browser-safe). */
-export const PUBLISHED_HOSTS = ["creative-project-mover.lovable.app", "carterhomelab.dev", "www.carterhomelab.dev"];
-export const PUBLISHED_URL = "https://creative-project-mover.lovable.app";
+export const PUBLISHED_HOSTS = ["carterlab.app", "www.carterlab.app", "carterhub.lovable.app"];
+export const PUBLISHED_URL = "https://carterlab.app";
 
 export type OnboardingInput = {
   signedIn: boolean;

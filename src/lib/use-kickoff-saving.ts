@@ -15,6 +15,7 @@ export function useKickoffSaving(k: Kickoff) {
   const revisions = useRef(new Map<string, number>());
   const snapshots = useRef(new Map<string, string>());
   const completed = useRef(new Set<string>());
+  const savedStep = useRef(new Map<string, number>());
   const queue = useRef<Promise<unknown>>(Promise.resolve());
   const [status, setStatus] = useState("Not started");
   const [saveError, setSaveError] = useState("");
@@ -24,11 +25,14 @@ export function useKickoffSaving(k: Kickoff) {
     const work = queue.current.then(async () => {
       if (completed.current.has(draft.id) || (!draft.brainstorm.trim() && !revisions.current.has(draft.id))) return;
       if (reviewedStep === undefined && snapshots.current.get(draft.id) === snapshot) return;
+      // A stale autosave queued behind a reviewed "Continue" must not move the saved step backwards.
+      if (reviewedStep === undefined && draft.step < (savedStep.current.get(draft.id) ?? 0)) return;
       setStatus("Saving…"); setSaveError("");
       try {
         const result = await saveFn({ data: { data: { kickoff: draft, expectedRevision: revisions.current.get(draft.id) ?? 0, reviewedStep } } });
         revisions.current.set(draft.id, result.revision);
         snapshots.current.set(draft.id, snapshot);
+        savedStep.current.set(draft.id, Math.max(draft.step, savedStep.current.get(draft.id) ?? 0));
         if (result.completed) completed.current.add(draft.id);
         setProjectId(result.projectId); setStatus("Saved to project");
         qc.setQueryData<SavedKickoff[]>(["kickoffs"], old => [...(old ?? []).filter(r => r.data.id !== result.data.id), result]);
@@ -57,6 +61,7 @@ export function useKickoffSaving(k: Kickoff) {
     if (record) {
       revisions.current.set(record.data.id, record.revision);
       snapshots.current.set(record.data.id, JSON.stringify(record.data));
+      savedStep.current.set(record.data.id, record.data.step);
       if (record.completed) completed.current.add(record.data.id);
     }
     setProjectId(record?.projectId ?? null); setStatus(record ? "Saved to project" : "Not started"); setSaveError("");

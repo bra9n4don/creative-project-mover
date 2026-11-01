@@ -4,6 +4,7 @@ import { z } from "zod";
 const eventSchema = z.object({
   type: z.string(),
   challenge: z.string().optional(),
+  team_id: z.string().optional(),
   event: z.object({ type: z.string(), text: z.string().max(4000).optional(), channel: z.string().optional(), user: z.string().optional(), bot_id: z.string().optional(), subtype: z.string().optional(), thread_ts: z.string().optional(), ts: z.string().optional() }).optional(),
 });
 
