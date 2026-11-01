@@ -35,6 +35,7 @@ export default function ConnectPage() {
   const quoted = `'${url.replace(/'/g, "'\\''")}'`;
   const cmd = `claude mcp add --scope user --transport http ${SLUG} ${quoted}`;
   const claudeLink = `https://claude.ai/customize/connectors?modal=add-custom-connector&connectorName=${encodeURIComponent(APP_NAME)}&connectorUrl=${encodeURIComponent(url)}`;
+  const desktopConfig = JSON.stringify({ mcpServers: { [SLUG]: { command: "npx", args: ["-y", "mcp-remote", url] } } }, null, 2);
 
   return (
     <AppShell>
@@ -61,6 +62,25 @@ export default function ConnectPage() {
               <>If the window doesn't open, go to Claude's Connectors page, choose "Add custom connector", name it and paste the address.</>,
               <>Sign in to Relay and approve. Turn it on from the chat box, then ask Claude to use Relay.</>,
             ]} /></div>
+          </Panel>
+          <Panel title="Claude Desktop">
+            <div className="space-y-3 p-5 text-sm">
+              <p className="font-medium">Easiest: add it as a connector</p>
+              <Steps items={[
+                <>Open Claude Desktop and go to <b>Settings → Connectors</b>.</>,
+                <>Click <b>Add custom connector</b>, name it <b>{APP_NAME}</b> and paste the address above. Click Add.</>,
+                <>Click <b>Connect</b>, sign in to Relay and approve.</>,
+                <>Turn it on from the chat box's tools menu, then ask Claude to use Relay.</>,
+              ]} />
+              <p className="pt-2 font-medium">Alternative: config file</p>
+              <Steps items={[
+                <>Install <A href="https://nodejs.org">Node.js</A> if you don't have it.</>,
+                <>In Claude Desktop, go to <b>Settings → Developer → Edit Config</b>. This opens <code>claude_desktop_config.json</code>.</>,
+                <>Replace its contents with this (or add the <code>{SLUG}</code> entry inside your existing <code>mcpServers</code>):</>,
+              ]} />
+              <CopyBox value={url ? desktopConfig : ""} label="Copy Claude Desktop config" />
+              <Steps items={[<>Save the file and fully quit and reopen Claude Desktop.</>, <>A browser window opens: sign in to Relay and approve.</>, <>Ask Claude to use Relay.</>]} />
+            </div>
           </Panel>
           <Panel title="Claude Code">
             <div className="space-y-3 p-5 text-sm">
