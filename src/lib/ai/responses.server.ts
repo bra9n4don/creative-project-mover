@@ -9,8 +9,8 @@ import {
   withLovableAiGatewayRunIdHeader,
 } from "./run-id.ts";
 
-/** Claude model used for every Relay draft (Kickoff brief/plan, project updates). */
-export const DRAFT_MODEL = "anthropic/claude-sonnet-5";
+/** Claude model used for every Relay draft (Kickoff brief/plan, project updates). Single source: ./model.ts */
+export { DRAFT_MODEL } from "./model.ts";
 
 export function createResponsesCall<T = z.infer<typeof updateDraftSchema>>(
   request: Request,
