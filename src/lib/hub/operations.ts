@@ -1,6 +1,6 @@
 import { randomUUID } from "./store";
 import { reviewedUpdateSchema } from "./update-draft";
-import { kickoffExportSchema, kickoffMarkdown } from "../kickoff";
+import { kickoffExportSchema, kickoffMarkdown, saveKickoffSchema, stepIssue, kickoffSteps } from "../kickoff";
 import {
   CreateProjectBody, UpdateProjectBody, CreateIdeaBody, UpdateIdeaBody,
   CreateTaskBody, UpdateTaskBody, CreateHandoffBody, DecideApprovalBody,
@@ -42,6 +42,7 @@ export function removeProject(actor: Actor, id: string) {
     s.projects = s.projects.filter(p => p.id !== id);
     s.tasks = s.tasks.filter(t => t.projectId !== id);
     s.handoffs = s.handoffs.filter(h => h.projectId !== id);
+    s.kickoffs = s.kickoffs.filter(k => k.projectId !== id);
     s.approvals.filter(a => a.projectId === id && a.status === "pending").forEach(a => { a.status = "rejected"; });
     audit(s, actor, `Deleted project: ${p.title}`, "Project tasks and checkpoints were removed. This audit record remains.", id, "delete");
     return ok("Project and its tasks and checkpoints deleted.");
@@ -213,5 +214,78 @@ export function exportKickoff(actor: Actor, input: unknown) {
     if (idea) idea.status = "promoted"; // Relay's existing planned-idea status.
     audit(s, actor, "Exported reviewed Kickoff", k.id, id, "kickoff");
     return { projectId: id };
+  });
+}
+
+/** Draft answers persist immediately; AI-derived live records require an explicit step review. */
+export function saveKickoff(actor: Actor, input: unknown) {
+  requireOwner(actor);
+  const { kickoff: k, expectedRevision, reviewedStep } = saveKickoffSchema.parse(input);
+  if (reviewedStep !== undefined) {
+    const issue = stepIssue({ ...k, step: reviewedStep });
+    if (issue) throw new HubError(400, issue);
+    if (reviewedStep === 5) kickoffExportSchema.parse(k);
+  }
+  return mutateState(actor, s => {
+    let record = s.kickoffs.find(r => r.data.id === k.id);
+    if ((record?.revision ?? 0) !== expectedRevision) throw new HubError(409, "This Kickoff changed in another tab. Resume the saved project before editing again.");
+    if (record?.completed) throw new HubError(409, "This Kickoff is complete. Edit its project directly.");
+    const now = new Date().toISOString();
+    if (!record) {
+      if (k.exportedProjectId || s.activity.some(a => a.kind === "kickoff" && a.description === k.id)) throw new HubError(409, "This checkpoint has already been exported. Open its project instead.");
+      const idea = k.sourceIdeaId ? s.ideas.find(i => i.id === k.sourceIdeaId) : undefined;
+      if (k.sourceIdeaId && (!idea || idea.status === "promoted")) throw new HubError(409, "Choose an available idea before saving.");
+      const projectId = randomUUID();
+      s.projects.unshift({ id: projectId, title: idea?.title ?? k.brainstorm.trim().split("\n")[0].slice(0, 150) || "Untitled Kickoff", description: k.brainstorm, goal: "", status: "planning", priority: "medium", repository: "", color: "teal", version: 1, createdAt: now, updatedAt: now });
+      record = { data: k, projectId, revision: 0, completed: false, updatedAt: now, taskIds: {}, handoffIds: {} };
+      s.kickoffs.push(record);
+      if (idea) idea.status = "promoted";
+      audit(s, actor, "Started Kickoff project", k.id, projectId, "kickoff-start");
+    }
+    const p = project(s, record.projectId);
+    // Autosave never puts an unreviewed AI brief or plan into live project context.
+    if (k.step <= 1) { p.description = k.brainstorm; p.goal = k.clarify.goal; }
+    if (reviewedStep === 2 || reviewedStep === 5) {
+      p.title = k.brief.title.trim(); p.goal = k.brief.goal;
+      p.description = kickoffMarkdown({ ...k, plan: { milestones: [] } });
+    }
+    const upsertTasks = (group: string, items: { title: string; description: string; priority: "low" | "medium" | "high" }[]) => {
+      for (const [i, item] of items.entries()) {
+        const key = `${group}:${i}`;
+        const existing = s.tasks.find(t => t.id === record?.taskIds[key]);
+        if (existing) {
+          if (existing.title !== item.title.trim() || existing.description !== item.description || existing.priority !== item.priority) {
+            if (existing.status !== "todo" || existing.dependencies.length || s.tasks.some(t => t.dependencies.includes(existing.id))) throw new HubError(409, "A Kickoff task is already in use. Edit it from the project instead.");
+            Object.assign(existing, item, { title: item.title.trim(), version: existing.version + 1, updatedAt: now });
+          }
+        } else {
+          const id = randomUUID(); record.taskIds[key] = id;
+          s.tasks.push({ ...item, title: item.title.trim(), id, projectId: p.id, status: "todo", agent: "", evidence: "", dependencies: [], version: 1, createdAt: now, updatedAt: now });
+        }
+      }
+      const removed = Object.keys(record.taskIds).filter(key => key.startsWith(`${group}:`) && Number(key.split(":")[1]) >= items.length);
+      for (const key of removed) {
+        const id = record.taskIds[key], task = s.tasks.find(t => t.id === id);
+        if (task && (task.status !== "todo" || task.dependencies.length || s.tasks.some(t => t.dependencies.includes(id)))) throw new HubError(409, "A removed Kickoff task is already in use. Edit it from the project instead.");
+        s.tasks = s.tasks.filter(t => t.id !== id); delete record.taskIds[key];
+      }
+    };
+    if (reviewedStep === 3 || reviewedStep === 5) upsertTasks("plan", k.plan.milestones.flatMap(m => m.tasks.map(t => ({ ...t, description: `${m.title}\n${m.outcome}\n${t.description}` }))));
+    if (reviewedStep === 4 || reviewedStep === 5) upsertTasks("actions", k.firstActions.filter(title => !k.plan.milestones.some(m => m.tasks.some(t => t.title.trim().toLowerCase() === title.trim().toLowerCase()))).map(title => ({ title, description: "First action this week", priority: "high" as const })));
+    const step = reviewedStep ?? k.step;
+    if (reviewedStep !== undefined || [0, 1, 4].includes(step)) {
+      const summary = step === 0 ? k.brainstorm : step === 1 ? Object.entries(k.clarify).map(([key, value]) => `${key}: ${value}`).join("\n\n") : step === 4 ? `Risks\n${k.risks}\n\nFirst actions\n${k.firstActions.join("\n")}` : kickoffMarkdown(k);
+      const id = record.handoffIds[String(step)] ?? randomUUID();
+      record.handoffIds[String(step)] = id;
+      const handoff = { id, projectId: p.id, title: `Kickoff · ${kickoffSteps[step]}`, summary, nextAction: step === 5 ? k.firstActions[0] : `Continue Kickoff: ${kickoffSteps[Math.min(step + 1, 5)]}`, target: "Next session", source: "You · Kickoff", createdAt: now };
+      const old = s.handoffs.find(h => h.id === id);
+      if (old) Object.assign(old, handoff); else s.handoffs.unshift(handoff);
+    }
+    record.revision++; record.updatedAt = now;
+    record.completed = reviewedStep === 5;
+    record.data = { ...k, exportedProjectId: record.completed ? p.id : null };
+    p.version++; p.updatedAt = now;
+    if (reviewedStep !== undefined) audit(s, actor, `Saved Kickoff: ${kickoffSteps[reviewedStep]}`, k.id, p.id, "kickoff-step");
+    return record;
   });
 }

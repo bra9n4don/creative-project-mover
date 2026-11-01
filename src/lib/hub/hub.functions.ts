@@ -4,7 +4,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import * as ops from "./operations";
 import { getState } from "./context";
 import { demoState } from "./demo";
-import { HubError, type Actor, type HubDb } from "./store";
+import { HubError, readState, type Actor, type HubDb } from "./store";
 import { issueToken, revokeToken } from "./agent-auth.server";
 import { listRepos, syncAndRecord } from "./github.server";
 
@@ -48,6 +48,11 @@ export const deleteTaskFn = authed.inputValidator(idOnly).handler(({ context, da
 export const createHandoffFn = authed.inputValidator(dataOnly).handler(({ context, data }) => run(async () => ops.addHandoff(await ownerActor(context), data.data)));
 export const saveReviewedUpdateFn = authed.inputValidator(dataOnly).handler(({ context, data }) => run(async () => ops.saveReviewedUpdate(await ownerActor(context), data.data)));
 export const exportKickoffFn = authed.inputValidator(dataOnly).handler(({ context, data }) => run(async () => ops.exportKickoff(await ownerActor(context), data.data)));
+export const saveKickoffFn = authed.inputValidator(dataOnly).handler(({ context, data }) => run(async () => ops.saveKickoff(await ownerActor(context), data.data)));
+export const getKickoffsFn = authed.handler(({ context }) => run(async () => {
+  const actor = await ownerActor(context);
+  return (await readState(actor.db, actor.ownerId)).kickoffs;
+}));
 export const decideApprovalFn = authed.inputValidator(idData).handler(({ context, data }) => run(async () => ops.decide(await ownerActor(context), data.id, data.data)));
 export const issueAgentTokenFn = authed.inputValidator(idOnly).handler(({ context, data }) => run(async () => issueToken(await ownerActor(context), data.id)));
 export const revokeAgentTokenFn = authed.inputValidator(idOnly).handler(({ context, data }) => run(async () => revokeToken(await ownerActor(context), data.id)));

@@ -22,6 +22,16 @@ export const kickoffSchema = z.object({
   exportedProjectId: z.string().nullable(),
 }).strict();
 export type Kickoff = z.infer<typeof kickoffSchema>;
+export const savedKickoffSchema = z.object({
+  data: kickoffSchema, projectId: z.string(), revision: z.number().int(),
+  completed: z.boolean(), updatedAt: z.string(),
+  taskIds: z.record(z.string()), handoffIds: z.record(z.string()),
+});
+export type SavedKickoff = z.infer<typeof savedKickoffSchema>;
+export const saveKickoffSchema = z.object({
+  kickoff: kickoffSchema, expectedRevision: z.number().int().min(0),
+  reviewedStep: z.number().int().min(0).max(5).optional(),
+});
 export function newKickoff(): Kickoff {
   return { version: 1, id: crypto.randomUUID(), step: 0, sourceIdeaId: null, brainstorm: "", clarify: { goal: "", audience: "", scope: "", budget: "", timeline: "", timeAvailable: "", risks: "", unknowns: "" }, brief: { title: "", goal: "", audience: "", scope: "", outOfScope: "", success: "", constraints: "", unknowns: "" }, plan: { milestones: [] }, risks: "", firstActions: ["", "", ""], review: { goal: false, scope: false, plan: false, risks: false, ready: false }, exportedProjectId: null };
 }
