@@ -2,6 +2,8 @@ import { useMemo, useState } from "react";
 import { Link } from "@/lib/router-compat";
 import { ArrowRight, Bookmark, FolderPlus, Lightbulb, Play, Plug, ShieldCheck } from "lucide-react";
 import { AppShell } from "@/components/shell";
+import { useWebMCP } from "use-webmcp-tool";
+import { runWebMCPTool } from "@/lib/webmcp-telemetry";
 import { SetupBanner } from "@/components/setup-banner";
 import { Bar, CopyButton, Dot, Empty, ErrorBlock, LoadingBlock, Panel, Pill, ago, btn } from "@/components/kit";
 import { CheckpointDialog, ProjectDialog } from "@/components/forms";
@@ -20,6 +22,21 @@ export function OverviewBody() {
       .sort((a, b) => b.t - a.t)
       .map((x) => x.p);
   }, [state]);
+
+  useWebMCP({
+    name: "get_where_i_left_off",
+    description: "Read the projects shown on this screen, most recent first, with each one's next step and progress.",
+    annotations: { readOnlyHint: true, untrustedContentHint: true },
+    execute: () => runWebMCPTool("get_where_i_left_off", () => {
+      if (isLoading || !state) return "Still loading.";
+      const list = ordered.length ? ordered : state.projects;
+      if (!list.length) return "No projects yet.";
+      return list.slice(0, 10).map((p) => {
+        const prog = progressOf(state.tasks, p.id);
+        return `${p.id}: ${p.title} (${p.status}) — next: ${nextStep(state, p).text || "none"}; progress ${JSON.stringify(prog)}`;
+      }).join("\n");
+    }),
+  });
 
   if (isLoading) return <LoadingBlock />;
   if (error || !state) return <ErrorBlock error={error} onRetry={refetch} />;
