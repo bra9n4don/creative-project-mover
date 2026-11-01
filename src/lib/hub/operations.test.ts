@@ -56,7 +56,7 @@ describe("guarded automation rules", () => {
   it("agents cannot delete projects", async () => {
     const { owner, agent } = setup();
     const p = await ops.addProject(owner, { title: "Site" });
-    await expect(ops.removeProject(agent, p.id)).rejects.toThrow(/owner's approval/);
+    expect(() => ops.removeProject(agent, p.id)).toThrow(/owner.s approval/);
   });
 
   it("a task cannot start before its prerequisites are done", async () => {
