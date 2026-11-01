@@ -1,5 +1,5 @@
 import { defineTool } from "@lovable.dev/mcp-js";
-import { z } from "zod/v4";
+import { z } from "zod";
 import { getResumeContext } from "@/lib/hub/context";
 import { assistantActor, runHub, text } from "../actor";
 
