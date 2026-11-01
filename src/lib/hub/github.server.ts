@@ -20,28 +20,42 @@ async function github<T>(path: string): Promise<T> {
 /** Records the outcome of every sync so the owner can confirm automatic sync is running. */
 async function recordSync(ownerId: string, trigger: "manual" | "automatic", ok: boolean, message: string, enable: boolean) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  await supabaseAdmin.from("hub_owner").update({
+  const { error } = await supabaseAdmin.from("hub_owner").update({
     last_sync_at: new Date().toISOString(), last_sync_ok: ok, last_sync_message: message, last_sync_trigger: trigger,
     ...(enable ? { github_sync_enabled: true } : {}),
   }).eq("user_id", ownerId);
+  if (error) {
+    console.error("Could not record GitHub sync result", error);
+    throw new HubError(500, "The sync ran but its result could not be saved. Try again.");
+  }
 }
 
 export async function syncAndRecord(actor: Actor, trigger: "manual" | "automatic") {
+  let r: Awaited<ReturnType<typeof syncRepos>>;
   try {
-    const r = await syncRepos(actor);
-    // The first successful manual sync opts the workspace into automatic sync, as in the original app.
-    await recordSync(actor.ownerId, trigger, true, r.message, trigger === "manual");
-    return r;
+    r = await syncRepos(actor);
   } catch (e) {
     await recordSync(actor.ownerId, trigger, false, e instanceof Error ? e.message : "Sync failed", false);
     throw e;
   }
+  {
+    // The first successful manual sync opts the workspace into automatic sync, as in the original app.
+    await recordSync(actor.ownerId, trigger, true, r.message, trigger === "manual");
+    return r;
+  }
 }
 
+export const REPO_PAGES = 5; // up to 500 repositories
+export const ITEMS_PER_REPO = 30; // commits and pull requests checked per repository per sync
 type Repo = { full_name: string; html_url: string; description: string | null; private: boolean };
 export async function listRepos(actor: Actor) {
   requireOwner(actor);
-  const repos = await github<Repo[]>("/user/repos?sort=updated&per_page=100");
+  const repos: Repo[] = [];
+  for (let page = 1; page <= REPO_PAGES; page++) {
+    const batch = await github<Repo[]>(`/user/repos?sort=updated&per_page=100&page=${page}`);
+    repos.push(...batch);
+    if (batch.length < 100) break;
+  }
   return repos.map(r => ({ name: r.full_name, url: r.html_url, description: r.description ?? "", private: r.private }));
 }
 
@@ -51,11 +65,13 @@ export async function syncRepos(actor: Actor) {
   const linked = state.projects.filter(p => p.repository);
   if (!linked.length) return ok("Link a repository in a project's settings before syncing.");
   const events: { id: string; title: string; description: string; source: string; kind: string; projectId: string; url: string; createdAt: string }[] = [];
+  let capped = false;
   for (const p of linked) {
     const [commits, pulls] = await Promise.all([
-      github<{ sha: string; html_url: string; commit: { message: string; author: { date: string } } }[]>(`/repos/${p.repository}/commits?per_page=10`),
-      github<{ number: number; title: string; html_url: string; state: string; updated_at: string }[]>(`/repos/${p.repository}/pulls?state=all&sort=updated&direction=desc&per_page=10`),
+      github<{ sha: string; html_url: string; commit: { message: string; author: { date: string } } }[]>(`/repos/${p.repository}/commits?per_page=${ITEMS_PER_REPO}`),
+      github<{ number: number; title: string; html_url: string; state: string; updated_at: string }[]>(`/repos/${p.repository}/pulls?state=all&sort=updated&direction=desc&per_page=${ITEMS_PER_REPO}`),
     ]);
+    if (commits.length >= ITEMS_PER_REPO || pulls.length >= ITEMS_PER_REPO) capped = true;
     for (const c of commits) events.push({ id: `github:${p.id}:commit:${c.sha}`, title: c.commit.message.split("\n")[0]!, description: `Commit ${c.sha.slice(0, 7)} · ${p.repository}`, source: "GitHub", kind: "commit", projectId: p.id, url: c.html_url, createdAt: c.commit.author.date });
     for (const pr of pulls) events.push({ id: `github:${p.id}:pr:${pr.number}:${pr.updated_at}`, title: `PR #${pr.number}: ${pr.title}`, description: `${pr.state} · ${p.repository}`, source: "GitHub", kind: "pull_request", projectId: p.id, url: pr.html_url, createdAt: pr.updated_at });
   }
@@ -64,6 +80,6 @@ export async function syncRepos(actor: Actor) {
     for (const event of events) if (!s.activity.some(a => a.id === event.id) && s.projects.some(p => p.id === event.projectId)) { s.activity.push(event); added++; }
     s.activity.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
     if (added) audit(s, actor, "GitHub activity synced", `${added} new commits and pull request updates. Task completion was not inferred.`, "", "sync");
-    return ok(`Synced ${added} new updates. No repositories were changed.`);
+    return ok(`Synced ${added} new updates. No repositories were changed.${capped ? ` Only the latest ${ITEMS_PER_REPO} commits and pull requests per repository were checked; older ones were skipped.` : ""}`);
   });
 }
