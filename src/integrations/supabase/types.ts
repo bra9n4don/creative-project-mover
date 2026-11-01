@@ -46,18 +46,30 @@ export type Database = {
           created_at: string
           github_sync_enabled: boolean
           id: string
+          last_sync_at: string | null
+          last_sync_message: string | null
+          last_sync_ok: boolean | null
+          last_sync_trigger: string | null
           user_id: string
         }
         Insert: {
           created_at?: string
           github_sync_enabled?: boolean
           id?: string
+          last_sync_at?: string | null
+          last_sync_message?: string | null
+          last_sync_ok?: boolean | null
+          last_sync_trigger?: string | null
           user_id: string
         }
         Update: {
           created_at?: string
           github_sync_enabled?: boolean
           id?: string
+          last_sync_at?: string | null
+          last_sync_message?: string | null
+          last_sync_ok?: boolean | null
+          last_sync_trigger?: string | null
           user_id?: string
         }
         Relationships: []

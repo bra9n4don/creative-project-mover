@@ -73,3 +73,9 @@ export function useSyncGithub() {
   const fn = useServerFn(fns.syncGithubFn);
   return useMutation<ActionResult, HubClientError, void>({ mutationFn: wrap(() => fn() as Promise<ActionResult>) });
 }
+
+export type GithubSyncStatus = { githubConnected: boolean; autoSyncEnabled: boolean; lastSyncAt: string | null; lastSyncOk: boolean | null; lastSyncMessage: string | null; lastSyncTrigger: string | null; intervalMinutes: number };
+export function useGithubSyncStatus(o: QOpts<GithubSyncStatus> = {}) {
+  const fn = useServerFn(fns.getSyncStatusFn);
+  return useQuery({ queryKey: ["hub", "github", "sync-status"], queryFn: wrap(() => fn() as Promise<GithubSyncStatus>), ...o.query } as UseQueryOptions<GithubSyncStatus>);
+}

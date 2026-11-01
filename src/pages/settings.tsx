@@ -1,5 +1,8 @@
 import { Link } from "@/lib/router-compat";
-import { LogOut, ShieldCheck } from "lucide-react";
+import { LogOut, ShieldCheck, RefreshCw, Github } from "lucide-react";
+import { useGithubSyncStatus, useSyncGithub } from "@/lib/hub-api";
+import { useHubResult } from "@/lib/workspace";
+import { ago } from "@/components/kit";
 import { useClerk, useUser } from "@/lib/auth";
 import { AppShell } from "@/components/shell";
 import { ErrorBlock, LoadingBlock, PageHeader, Panel, btn } from "@/components/kit";
@@ -58,8 +61,45 @@ export default function SettingsPage() {
               )}
             </div>
           </Panel>
+          {!isDemo && <GithubSyncPanel />}
         </div>
       )}
     </AppShell>
+  );
+}
+
+function GithubSyncPanel() {
+  const status = useGithubSyncStatus({ query: { refetchInterval: 30000 } });
+  const sync = useSyncGithub();
+  const result = useHubResult();
+  const s = status.data;
+  const minutesSince = s?.lastSyncAt ? (Date.now() - +new Date(s.lastSyncAt)) / 60000 : null;
+  const healthy = !!s?.autoSyncEnabled && s.lastSyncOk === true && minutesSince !== null && minutesSince < s.intervalMinutes * 2 + 2;
+  const headline = !s ? "Checking…"
+    : !s.githubConnected ? "GitHub isn't connected"
+    : !s.autoSyncEnabled ? "Automatic sync is off until your first sync"
+    : s.lastSyncOk === false ? "Last sync failed"
+    : healthy ? "Automatic sync is working"
+    : "Waiting for the next automatic sync";
+  return (
+    <Panel title="GitHub sync · read only">
+      <div className="p-5 text-sm" data-testid="panel-github-sync">
+        <div className="flex items-center gap-3">
+          <span className={`h-2.5 w-2.5 rounded-full ${healthy ? "bg-accent" : s?.lastSyncOk === false || (s && !s.githubConnected) ? "bg-destructive" : "bg-muted-foreground/40"}`} />
+          <div className="font-medium" data-testid="text-sync-headline">{headline}</div>
+        </div>
+        <dl className="mt-4 grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-muted-foreground">
+          <dt>GitHub account</dt><dd className="text-foreground">{s?.githubConnected ? "Connected securely" : "Not connected"}</dd>
+          <dt>Runs</dt><dd className="text-foreground">{s?.autoSyncEnabled ? `Every ${s.intervalMinutes} minutes` : "After your first sync"}</dd>
+          <dt>Last sync</dt><dd className="text-foreground" data-testid="text-last-sync">{s?.lastSyncAt ? `${ago(s.lastSyncAt)} · ${s.lastSyncTrigger === "automatic" ? "automatic" : "by you"}` : "Never"}</dd>
+          {s?.lastSyncMessage && <><dt>Result</dt><dd className={s.lastSyncOk === false ? "text-destructive" : "text-foreground"}>{s.lastSyncMessage}</dd></>}
+        </dl>
+        <button className={`${btn.ghost} mt-5`} disabled={sync.isPending || !s?.githubConnected} data-testid="button-run-sync"
+          onClick={() => sync.mutate(undefined, result("GitHub synced", () => void status.refetch()))}>
+          <RefreshCw className={`h-4 w-4 ${sync.isPending ? "animate-spin" : ""}`} /> Sync now
+        </button>
+        <p className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground"><Github className="h-3.5 w-3.5" />Reads commits and pull requests for linked projects. Never changes your repositories.</p>
+      </div>
+    </Panel>
   );
 }

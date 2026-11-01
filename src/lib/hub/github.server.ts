@@ -1,14 +1,41 @@
 import { HubError, type Actor, mutateState, audit, ok, requireOwner, readState } from "./store";
 
-// Read-only GitHub access using a token the owner stores as the GITHUB_TOKEN secret.
+// Read-only GitHub access through the linked GitHub connection (credentials never reach the browser).
+const GATEWAY_URL = "https://connector-gateway.lovable.dev/github";
 async function github<T>(path: string): Promise<T> {
-  const token = process.env.GITHUB_TOKEN;
-  if (!token) throw new HubError(503, "GitHub isn't connected yet. Add a read-only GitHub token to enable repository sync.");
-  const response = await fetch(`https://api.github.com${path}`, {
-    headers: { Authorization: `Bearer ${token}`, Accept: "application/vnd.github+json", "User-Agent": "relay-project-hub" },
+  const lovableKey = process.env.LOVABLE_API_KEY;
+  const githubKey = process.env.GITHUB_API_KEY;
+  if (!lovableKey || !githubKey) throw new HubError(503, "GitHub isn't connected yet. Connect GitHub to enable repository sync.");
+  const response = await fetch(`${GATEWAY_URL}${path}`, {
+    headers: { Authorization: `Bearer ${lovableKey}`, "X-Connection-Api-Key": githubKey, Accept: "application/vnd.github+json" },
   });
-  if (!response.ok) throw new HubError(response.status === 401 || response.status === 403 ? 403 : 502, `GitHub request failed (${response.status}). Check the GitHub token and its permissions.`);
+  if (!response.ok) {
+    const body = await response.text();
+    console.error(`GitHub request failed [${response.status}]: ${body}`);
+    throw new HubError(response.status === 401 || response.status === 403 ? 403 : 502, `GitHub request failed (${response.status}). Check the connected GitHub account and its permissions.`);
+  }
   return response.json() as Promise<T>;
+}
+
+/** Records the outcome of every sync so the owner can confirm automatic sync is running. */
+async function recordSync(ownerId: string, trigger: "manual" | "automatic", ok: boolean, message: string, enable: boolean) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  await supabaseAdmin.from("hub_owner").update({
+    last_sync_at: new Date().toISOString(), last_sync_ok: ok, last_sync_message: message, last_sync_trigger: trigger,
+    ...(enable ? { github_sync_enabled: true } : {}),
+  }).eq("user_id", ownerId);
+}
+
+export async function syncAndRecord(actor: Actor, trigger: "manual" | "automatic") {
+  try {
+    const r = await syncRepos(actor);
+    // The first successful manual sync opts the workspace into automatic sync, as in the original app.
+    await recordSync(actor.ownerId, trigger, true, r.message, trigger === "manual");
+    return r;
+  } catch (e) {
+    await recordSync(actor.ownerId, trigger, false, e instanceof Error ? e.message : "Sync failed", false);
+    throw e;
+  }
 }
 
 type Repo = { full_name: string; html_url: string; description: string | null; private: boolean };

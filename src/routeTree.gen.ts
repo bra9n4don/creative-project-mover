@@ -29,6 +29,7 @@ import { Route as ApiPublicHubSplatRouteImport } from './routes/api/public/hub/$
 import { Route as ApiPublicHubDemoRouteImport } from './routes/api/public/hub/demo'
 import { Route as ApiPublicHubDocsRouteImport } from './routes/api/public/hub/docs'
 import { Route as ApiPublicHubSkillRouteImport } from './routes/api/public/hub/skill'
+import { Route as ApiPublicJobsGithubSyncRouteImport } from './routes/api/public/jobs/github-sync'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -130,6 +131,11 @@ const ApiPublicHubSkillRoute = ApiPublicHubSkillRouteImport.update({
   path: '/api/public/hub/skill',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicJobsGithubSyncRoute = ApiPublicJobsGithubSyncRouteImport.update({
+  id: '/api/public/jobs/github-sync',
+  path: '/api/public/jobs/github-sync',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -152,6 +158,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hub/demo': typeof ApiPublicHubDemoRoute
   '/api/public/hub/docs': typeof ApiPublicHubDocsRoute
   '/api/public/hub/skill': typeof ApiPublicHubSkillRoute
+  '/api/public/jobs/github-sync': typeof ApiPublicJobsGithubSyncRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -174,6 +181,7 @@ export interface FileRoutesByTo {
   '/api/public/hub/demo': typeof ApiPublicHubDemoRoute
   '/api/public/hub/docs': typeof ApiPublicHubDocsRoute
   '/api/public/hub/skill': typeof ApiPublicHubSkillRoute
+  '/api/public/jobs/github-sync': typeof ApiPublicJobsGithubSyncRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -197,6 +205,7 @@ export interface FileRoutesById {
   '/api/public/hub/demo': typeof ApiPublicHubDemoRoute
   '/api/public/hub/docs': typeof ApiPublicHubDocsRoute
   '/api/public/hub/skill': typeof ApiPublicHubSkillRoute
+  '/api/public/jobs/github-sync': typeof ApiPublicJobsGithubSyncRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -221,6 +230,7 @@ export interface FileRouteTypes {
     | '/api/public/hub/demo'
     | '/api/public/hub/docs'
     | '/api/public/hub/skill'
+    | '/api/public/jobs/github-sync'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -243,6 +253,7 @@ export interface FileRouteTypes {
     | '/api/public/hub/demo'
     | '/api/public/hub/docs'
     | '/api/public/hub/skill'
+    | '/api/public/jobs/github-sync'
   id:
     | '__root__'
     | '/'
@@ -265,6 +276,7 @@ export interface FileRouteTypes {
     | '/api/public/hub/demo'
     | '/api/public/hub/docs'
     | '/api/public/hub/skill'
+    | '/api/public/jobs/github-sync'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -288,6 +300,7 @@ export interface RootRouteChildren {
   ApiPublicHubDemoRoute: typeof ApiPublicHubDemoRoute
   ApiPublicHubDocsRoute: typeof ApiPublicHubDocsRoute
   ApiPublicHubSkillRoute: typeof ApiPublicHubSkillRoute
+  ApiPublicJobsGithubSyncRoute: typeof ApiPublicJobsGithubSyncRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -432,6 +445,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicHubSkillRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/jobs/github-sync': {
+      id: '/api/public/jobs/github-sync'
+      path: '/api/public/jobs/github-sync'
+      fullPath: '/api/public/jobs/github-sync'
+      preLoaderRoute: typeof ApiPublicJobsGithubSyncRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -456,6 +476,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHubDemoRoute: ApiPublicHubDemoRoute,
   ApiPublicHubDocsRoute: ApiPublicHubDocsRoute,
   ApiPublicHubSkillRoute: ApiPublicHubSkillRoute,
+  ApiPublicJobsGithubSyncRoute: ApiPublicJobsGithubSyncRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -53,16 +53,16 @@
     {
       "capability": "github provider",
       "source": "Replit GitHub connector (read-only)",
-      "outcome": "preserve via GITHUB_TOKEN secret",
-      "status": "blocked",
-      "next_action": "Owner adds a read-only GitHub token"
+      "outcome": "GitHub connector (read-only use)",
+      "status": "verified",
+      "next_action": ""
     },
     {
       "capability": "schedules",
       "source": "in-process 10-minute GitHub poll",
       "outcome": "migrate",
-      "status": "pending",
-      "next_action": "Add scheduled sync once GitHub token exists"
+      "status": "implemented",
+      "next_action": "Runs every 10 min after first manual sync; confirm in Settings once signed in"
     },
     {
       "capability": "uploaded file bytes",
