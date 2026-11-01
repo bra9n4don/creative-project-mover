@@ -1,6 +1,7 @@
+import { z } from "zod";
 import { randomUUID } from "./store";
 import { reviewedUpdateSchema } from "./update-draft";
-import { kickoffExportSchema, kickoffMarkdown, saveKickoffSchema, stepIssue, kickoffSteps, kickoffSizeIssue } from "../kickoff";
+import { kickoffExportSchema, kickoffMarkdown, saveKickoffSchema, mindMapSchema, stepIssue, kickoffSteps, kickoffSizeIssue } from "../kickoff";
 import {
   CreateProjectBody, UpdateProjectBody, CreateIdeaBody, UpdateIdeaBody,
   CreateTaskBody, UpdateTaskBody, CreateHandoffBody, DecideApprovalBody,
