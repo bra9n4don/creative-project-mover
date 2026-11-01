@@ -66,12 +66,20 @@ export function checkpointCode(k: Kickoff): string {
   return "RELAY1." + btoa(Array.from(bytes, b => String.fromCharCode(b)).join(""));
 }
 export function restoreCheckpoint(input: string): Kickoff {
-  if (input.length > 1000000) throw new Error("Checkpoint is too large.");
+  if (input.length > CHECKPOINT_LIMIT) throw new Error("Checkpoint is too large.");
   const raw = input.trim();
   try {
     const json = raw.startsWith("RELAY1.") ? new TextDecoder("utf-8", { fatal: true }).decode(Uint8Array.from(atob(raw.slice(7)), c => c.charCodeAt(0))) : raw;
     return kickoffSchema.parse(JSON.parse(json));
   } catch { throw new Error("This is not a valid Relay Kickoff checkpoint. Use a version 1 checkpoint file or code."); }
+}
+/** Shared limits: exported brief becomes the project notes, which hold up to 10,000 characters. */
+export const KICKOFF_BRIEF_LIMIT = 10000;
+// Largest valid kickoff, as base64 code, stays below this, so any checkpoint the wizard makes can be restored.
+export const CHECKPOINT_LIMIT = 5_000_000;
+export function kickoffSizeIssue(k: Kickoff): string | null {
+  const n = kickoffMarkdown(k).length;
+  return n > KICKOFF_BRIEF_LIMIT ? `Your brief and plan are ${n.toLocaleString("en-US")} characters; shorten them to ${KICKOFF_BRIEF_LIMIT.toLocaleString("en-US")} so they fit in the project notes.` : null;
 }
 export function stepIssue(k: Kickoff): string | null {
   if (k.step === 0 && !k.brainstorm.trim()) return "Add your ideas before continuing.";
@@ -84,4 +92,4 @@ export function stepIssue(k: Kickoff): string | null {
 export function kickoffMarkdown(k: Kickoff): string {
   return [`# ${k.brief.title || "Project brief"}`, `## Goal\n${k.brief.goal}`, `## Audience\n${k.brief.audience}`, `## Scope\n${k.brief.scope}`, `## Out of scope\n${k.brief.outOfScope}`, `## Success criteria\n${k.brief.success}`, `## Constraints\n${k.brief.constraints}`, `## Unknowns\n${k.brief.unknowns}`, `## Milestones\n${k.plan.milestones.map((m, i) => `### ${i + 1}. ${m.title}\n${m.outcome}\n${m.tasks.map(t => `- [ ] ${t.title} (${t.priority})\n  ${t.description}`).join("\n")}`).join("\n\n")}`, `## Risks\n${k.risks}`, `## First actions this week\n${k.firstActions.map((a, i) => `${i + 1}. ${a}`).join("\n")}`, `## Readiness\n${Object.entries(k.review).map(([key, done]) => `- [${done ? "x" : " "}] ${key}`).join("\n")}`].join("\n\n");
 }
-export const kickoffExportSchema = kickoffSchema.refine(k => k.step === 5 && Object.values(k.review).every(Boolean), "Complete the launch review before exporting.").refine(k => k.brief.title.trim() && k.brief.goal.trim() && k.plan.milestones.length > 0 && k.plan.milestones.every(m => m.title.trim() && m.tasks.length > 0 && m.tasks.every(t => t.title.trim())) && k.risks.trim() && k.firstActions.every(a => a.trim()), "Complete the brief, plan, risks and three first actions before exporting.");
+export const kickoffExportSchema = kickoffSchema.refine(k => k.step === 5 && Object.values(k.review).every(Boolean), "Complete the launch review before exporting.").refine(k => k.brief.title.trim() && k.brief.goal.trim() && k.plan.milestones.length > 0 && k.plan.milestones.every(m => m.title.trim() && m.tasks.length > 0 && m.tasks.every(t => t.title.trim())) && k.risks.trim() && k.firstActions.every(a => a.trim()), "Complete the brief, plan, risks and three first actions before exporting.").refine(k => !kickoffSizeIssue(k), "Shorten your brief and plan before exporting.");

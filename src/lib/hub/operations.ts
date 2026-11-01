@@ -207,8 +207,8 @@ export function exportKickoff(actor: Actor, input: unknown) {
     if (idea?.status === "promoted") throw new HubError(409, "This idea is already a project.");
     const id = randomUUID(), now = new Date().toISOString();
     const markdown = kickoffMarkdown(k);
-    if (markdown.length > 15000) throw new HubError(400, "Shorten your brief and plan to 15,000 characters before exporting.");
-    s.projects.unshift({ id, title: k.brief.title.trim(), goal: k.brief.goal, description: markdown.slice(0, 10000), status: "planning", priority: "medium", repository: "", color: "teal", version: 1, createdAt: now, updatedAt: now });
+    const tooLong = kickoffSizeIssue(k); if (tooLong) throw new HubError(400, tooLong);
+    s.projects.unshift({ id, title: k.brief.title.trim(), goal: k.brief.goal, description: markdown, status: "planning", priority: "medium", repository: "", color: "teal", version: 1, createdAt: now, updatedAt: now });
     for (const m of k.plan.milestones) for (const t of m.tasks) s.tasks.push({ id: randomUUID(), projectId: id, title: t.title.trim(), description: `${m.title}\n${t.description}`.slice(0, 10000), priority: t.priority, status: "todo", agent: "", evidence: "", dependencies: [], version: 1, createdAt: now, updatedAt: now });
     for (const title of k.firstActions) if (!s.tasks.some(t => t.projectId === id && t.title.toLowerCase() === title.trim().toLowerCase())) s.tasks.push({ id: randomUUID(), projectId: id, title: title.trim(), description: "First action this week", priority: "high", status: "todo", agent: "", evidence: "", dependencies: [], version: 1, createdAt: now, updatedAt: now });
     s.handoffs.unshift({ id: randomUUID(), projectId: id, title: "Kickoff checkpoint", summary: markdown, nextAction: k.firstActions[0], target: "Next session", source: "You · Kickoff", createdAt: now });
