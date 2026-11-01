@@ -80,6 +80,16 @@ export default function ConnectPage() {
               ]} />
               <CopyBox value={url ? desktopConfig : ""} label="Copy Claude Desktop config" />
               <Steps items={[<>Save the file and fully quit and reopen Claude Desktop.</>, <>A browser window opens: sign in to Relay and approve.</>, <>Ask Claude to use Relay.</>]} />
+              <p className="pt-2 font-medium">If it doesn't work</p>
+              <ul className="list-disc space-y-2 pl-5 leading-relaxed">
+                <li><b>Relay doesn't appear in the tools menu.</b> Fully quit Claude Desktop (not just the window) and reopen it. Custom connectors only load at startup. On macOS, use Cmd+Q; on Windows, right-click the tray icon and quit.</li>
+                <li><b>The sign-in window never opens.</b> Click <b>Connect</b> again, and check that your computer's default browser opens links normally. If Claude shows "waiting for approval", complete the sign-in in the browser window that opened behind it.</li>
+                <li><b>Config file error or the app won't start after editing it.</b> The file must be valid JSON: straight quotes, no trailing comma after the last entry, and the <code>{SLUG}</code> block inside <code>mcpServers</code>. Paste the config above again to be safe, then quit and reopen Claude Desktop.</li>
+                <li><b>"mcp-remote" or "command not found" error.</b> Install or update <A href="https://nodejs.org">Node.js</A>, then quit and reopen Claude Desktop. If you used the connector method instead, skip this — it doesn't need Node.</li>
+                <li><b>Tools are listed but Claude says it can't use them.</b> Open a new chat and turn the connector on from the chat box's tools menu — older chats keep the tool list from when they started.</li>
+                <li><b>Sign-in fails or keeps looping.</b> Sign in with the same account that owns your Relay workspace. If you changed the address (for example after renaming the site), remove the connector, re-add it with the current address from the box above, and approve again.</li>
+                <li><b>Still stuck?</b> Remove the connector or config entry, restart Claude Desktop, then add it back fresh. Most problems clear after a full restart with the current address.</li>
+              </ul>
             </div>
           </Panel>
           <Panel title="Claude Code">
