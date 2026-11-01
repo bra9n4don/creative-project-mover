@@ -78,7 +78,7 @@ function KickoffBody() {
       if (!next && !abort.signal.aborted) throw new Error("No draft was returned. Your answers have been kept.");
       return next;
   };
-  /** AI Expand: drafts the brief from the mind map, then the plan from that brief. Both stay editable drafts for review. */
+  /** AI Expand: drafts only the brief from the mind map (one AI call). The plan is drafted on request in step 4. */
   const expand = async () => {
     if (busy) return;
     setBusy(true); setError(""); setNotice("");
@@ -86,8 +86,7 @@ function KickoffBody() {
     try {
       const base = k.mindMap ? { ...k, brainstorm: syncBrainstorm(k.brainstorm, k.mindMap).slice(0, 10000) } : k;
       const withBrief = await draftOne("brief", base, abort);
-      const withPlan = withBrief && !abort.signal.aborted ? await draftOne("plan", withBrief, abort) : null;
-      if (withPlan) setNotice("Brief and plan drafted from your mind map. Review them in steps 3 and 4 before continuing.");
+      if (withBrief) setNotice("Brief drafted from your mind map. Review it in step 3, then use Draft plan in step 4 when you're ready.");
     } catch (e) { if (!abort.signal.aborted) setError(errMessage(e)); }
     finally { if (abort.signal.aborted) setNotice("Drafting stopped. Anything already drafted is kept for review."); setBusy(false); controller.current = null; }
   };

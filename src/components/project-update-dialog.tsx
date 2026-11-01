@@ -4,7 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Loader2, Save, Sparkles, Square, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { saveReviewedUpdateFn } from "@/lib/hub/hub.functions";
-import { reviewedUpdateSchema, updateDraftSchema, type UpdateDraft } from "@/lib/hub/update-draft";
+import { reviewedUpdateSchema, updateDraftSchema, UPDATE_INPUT_LIMIT, type UpdateDraft } from "@/lib/hub/update-draft";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Field, field } from "@/components/kit";
