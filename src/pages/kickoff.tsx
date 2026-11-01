@@ -8,6 +8,7 @@ import { briefSchema, planSchema, checkpointCode, clarifyFields, kickoffMarkdown
 import { KickoffMindMap, emptyMindMap } from "@/components/kickoff-mind-map";
 import { AppShell } from "@/components/shell";
 import { Field, field, ErrorBlock, LoadingBlock } from "@/components/kit";
+import { ModelBadge } from "@/components/model-badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { KickoffGuidance } from "@/components/kickoff-guidance";
@@ -138,7 +139,7 @@ function KickoffBody() {
   if (workspaceError || !state) return <ErrorBlock error={workspaceError} onRetry={refetch} />;
   const locked = busy || saving || !!k.exportedProjectId;
   const textInput = (label: string, value: string, change: (v: string) => void, max = 10000, rows = 3) => <Field label={label}><textarea aria-label={label} className={field} maxLength={max} rows={rows} value={value} disabled={locked} onChange={e => change(e.target.value)} /></Field>;
-  const aiButton = (mode: "brief" | "plan") => <div className="flex flex-wrap items-center gap-3">{busy ? <Button variant="outline" onClick={() => controller.current?.abort()}><Square /> Stop drafting</Button> : <Button variant="secondary" disabled={locked || !k.brainstorm.trim()} onClick={() => generate(mode)}><Sparkles />{mode === "brief" ? "Draft brief with AI" : "Draft plan with AI"}</Button>}<span className="text-xs text-muted-foreground">Uses workspace AI credits · replaces the current {mode} draft</span></div>;
+  const aiButton = (mode: "brief" | "plan") => <div className="flex flex-wrap items-center gap-3">{busy ? <Button variant="outline" onClick={() => controller.current?.abort()}><Square /> Stop drafting</Button> : <Button variant="secondary" disabled={locked || !k.brainstorm.trim()} onClick={() => generate(mode)}><Sparkles />{mode === "brief" ? "Draft brief with AI" : "Draft plan with AI"}</Button>}<ModelBadge /><span className="text-xs text-muted-foreground">Uses workspace AI credits · replaces the current {mode} draft</span></div>;
   return <>
     <header className="mb-6 flex flex-wrap items-start justify-between gap-4"><div><div className="mb-2 flex items-center gap-2 text-sm text-primary"><Rocket className="h-4 w-4" /> New project</div><h1 className="font-display text-3xl font-semibold">Kickoff</h1><p className="mt-2 text-sm text-muted-foreground">From a rough idea to a plan you’re ready to start.</p></div><Button variant="outline" disabled={busy || saving} onClick={() => { setResumeOpen(true); setError(""); }}><Upload /> Resume checkpoint</Button></header>
     <nav aria-label="Kickoff steps" className="mb-8 grid grid-cols-2 gap-2 border-y py-4 md:grid-cols-3 xl:grid-cols-6">{kickoffSteps.map((name, i) => <div key={name} aria-current={k.step === i ? "step" : undefined} className={`flex items-start gap-2 text-sm ${k.step === i ? "font-semibold text-primary" : "text-muted-foreground"}`}><span className="mt-0.5 font-mono text-xs">{i < k.step ? <Check className="h-4 w-4" /> : `0${i + 1}`}</span><span>{name}</span></div>)}</nav>
