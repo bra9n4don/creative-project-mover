@@ -18,14 +18,13 @@ export function handleMessage(raw: string, s: HubState): BotAction {
     }
     case "projects": {
       if (!s.projects.length) return { reply: "No projects yet." };
-      return { reply: s.projects.slice(0, 15).map(p => `• *${p.name}* — ${p.status}`).join("\n") };
+      return { reply: s.projects.slice(0, 15).map(p => `• *${p.title}* — ${p.status}`).join("\n") };
     }
     case "where": case "context": case "resume": {
-      const c = buildResumeContext(s) as { focus?: { name?: string; status?: string; openTasks?: { title: string }[]; latestHandoff?: { summary?: string } | null } | null };
-      const f = c.focus;
+      const f = buildResumeContext(s).focus;
       if (!f) return { reply: "No projects yet — start one with Kickoff." };
-      const tasks = (f.openTasks ?? []).slice(0, 5).map(t => `• ${t.title}`).join("\n") || "• No open tasks";
-      return { reply: `*${f.name}* (${f.status ?? ""})\n${f.latestHandoff?.summary ? `Last handoff: ${f.latestHandoff.summary}\n` : ""}Open tasks:\n${tasks}` };
+      const tasks = f.openTasks.slice(0, 5).map(t => `• ${t.title}`).join("\n") || "• No open tasks";
+      return { reply: `*${f.project.title}* (${f.project.status})\nWhere you left off: ${f.whereYouLeftOff}\nNext: ${f.nextAction}\nOpen tasks:\n${tasks}` };
     }
     default: return { reply: HELP };
   }
