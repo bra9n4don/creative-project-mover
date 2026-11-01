@@ -1,5 +1,6 @@
 import { randomUUID } from "./store";
 import { reviewedUpdateSchema } from "./update-draft";
+import { kickoffExportSchema, kickoffMarkdown } from "../kickoff";
 import {
   CreateProjectBody, UpdateProjectBody, CreateIdeaBody, UpdateIdeaBody,
   CreateTaskBody, UpdateTaskBody, CreateHandoffBody, DecideApprovalBody,
@@ -186,5 +187,31 @@ export function decide(actor: Actor, id: string, input: unknown) {
     a.status = data.decision;
     audit(s, actor, `${data.decision === "approved" ? "Approved" : "Rejected"} plan change`, a.description, a.projectId, "approval");
     return ok(`Proposal ${data.decision}.`);
+  });
+}
+
+export function exportKickoff(actor: Actor, input: unknown) {
+  requireOwner(actor);
+  const k = kickoffExportSchema.parse(input);
+  return mutateState(actor, s => {
+    // Stable checkpoint id makes retry/resume safe without a second project.
+    const existing = s.activity.find(a => a.kind === "kickoff" && a.description === k.id);
+    if (existing) {
+      project(s, existing.projectId);
+      return { projectId: existing.projectId };
+    }
+    const idea = k.sourceIdeaId ? s.ideas.find(i => i.id === k.sourceIdeaId) : undefined;
+    if (k.sourceIdeaId && !idea) throw new HubError(409, "The source idea was removed. Resume without it or choose another idea.");
+    if (idea?.status === "promoted") throw new HubError(409, "This idea is already a project.");
+    const id = randomUUID(), now = new Date().toISOString();
+    const markdown = kickoffMarkdown(k);
+    if (markdown.length > 15000) throw new HubError(400, "Shorten your brief and plan to 15,000 characters before exporting.");
+    s.projects.unshift({ id, title: k.brief.title.trim(), goal: k.brief.goal, description: markdown.slice(0, 10000), status: "planning", priority: "medium", repository: "", color: "teal", version: 1, createdAt: now, updatedAt: now });
+    for (const m of k.plan.milestones) for (const t of m.tasks) s.tasks.push({ id: randomUUID(), projectId: id, title: t.title.trim(), description: `${m.title}\n${t.description}`.slice(0, 10000), priority: t.priority, status: "todo", agent: "", evidence: "", dependencies: [], version: 1, createdAt: now, updatedAt: now });
+    for (const title of k.firstActions) if (!s.tasks.some(t => t.projectId === id && t.title.toLowerCase() === title.trim().toLowerCase())) s.tasks.push({ id: randomUUID(), projectId: id, title: title.trim(), description: "First action this week", priority: "high", status: "todo", agent: "", evidence: "", dependencies: [], version: 1, createdAt: now, updatedAt: now });
+    s.handoffs.unshift({ id: randomUUID(), projectId: id, title: "Kickoff checkpoint", summary: markdown, nextAction: k.firstActions[0], target: "Next session", source: "You · Kickoff", createdAt: now });
+    if (idea) idea.status = "promoted"; // Relay's existing planned-idea status.
+    audit(s, actor, "Exported reviewed Kickoff", k.id, id, "kickoff");
+    return { projectId: id };
   });
 }

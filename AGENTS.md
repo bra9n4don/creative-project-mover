@@ -19,3 +19,4 @@
 - The app-hosted MCP server (`src/lib/mcp/`, served at `/mcp`) uses OAuth through Lovable Cloud auth and calls `operations.ts` as an agent actor with an RLS-scoped user client — assistants get the same guardrails as `relay_` token tools without copying tokens.
 - File storage uses the private `hub-files` bucket (5MB cap) with owner-only RLS on `storage.objects` via `is_hub_owner()` — matches the single-owner model, so no per-user path prefixing is needed.
 - AI project updates stream through an authenticated owner-only server route; drafts stay local until `saveReviewedUpdate` atomically saves reviewed tasks, handoff, and audit — prevents unreviewed writes and partial saves.
+- Kickoff keeps session answers in memory and uses validated versioned file/code checkpoints; its owner-reviewed export is an idempotent aggregate mutation keyed by checkpoint id — preserves explicit pause/resume and prevents duplicate projects on retry.

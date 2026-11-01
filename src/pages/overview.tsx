@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link } from "@/lib/router-compat";
-import { ArrowRight, Bookmark, FolderPlus, Lightbulb, Play, Plug, ShieldCheck } from "lucide-react";
+import { ArrowRight, Bookmark, FolderPlus, Lightbulb, Play, Plug, Rocket, ShieldCheck } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { AppShell } from "@/components/shell";
 import { useWebMCP } from "use-webmcp-tool";
 import { runWebMCPTool } from "@/lib/webmcp-telemetry";
@@ -53,6 +54,7 @@ export function OverviewBody() {
       <>
         <Panel className="overflow-hidden">
           <Empty icon={<FolderPlus className="h-5 w-5" />} title="Nothing to remember yet" body="Add the first thing you're working on. When you step away, save a checkpoint and Relay will hand it back to you here, word for word.">
+            <Button asChild variant="outline"><Link href="/kickoff"><Rocket /> Start Kickoff</Link></Button>
             <button className={btn.primary} data-testid="button-first-project" onClick={() => guard("Creating projects needs your own workspace.", () => setNewProject(true))}>
               <FolderPlus className="h-4 w-4" /> Create my first project
             </button>

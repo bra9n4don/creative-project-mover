@@ -16,6 +16,7 @@ import { Route as ConnectionsRouteImport } from './routes/connections'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as HandoffsRouteImport } from './routes/handoffs'
 import { Route as IdeasRouteImport } from './routes/ideas'
+import { Route as KickoffRouteImport } from './routes/kickoff'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as OverviewRouteImport } from './routes/overview'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
@@ -24,6 +25,7 @@ import { Route as SetupRouteImport } from './routes/setup'
 import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as SignUpRouteImport } from './routes/sign-up'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
+import { Route as ApiKickoffDraftRouteImport } from './routes/api/kickoff-draft'
 import { Route as ApiProjectUpdateRouteImport } from './routes/api/project-update'
 import { Route as ProjectsIndexRouteImport } from './routes/projects.index'
 import { Route as ProjectsIdRouteImport } from './routes/projects.$id'
@@ -71,6 +73,11 @@ const IdeasRoute = IdeasRouteImport.update({
   path: '/ideas',
   getParentRoute: () => rootRouteImport,
 } as any)
+const KickoffRoute = KickoffRouteImport.update({
+  id: '/kickoff',
+  path: '/kickoff',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const McpRoute = McpRouteImport.update({
   id: '/mcp',
   path: '/mcp',
@@ -112,6 +119,11 @@ const Char91DotwellKnownChar93OauthProtectedResourceRoute =
     path: '/.well-known/oauth-protected-resource',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiKickoffDraftRoute = ApiKickoffDraftRouteImport.update({
+  id: '/api/kickoff-draft',
+  path: '/api/kickoff-draft',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiProjectUpdateRoute = ApiProjectUpdateRouteImport.update({
   id: '/api/project-update',
   path: '/api/project-update',
@@ -176,6 +188,7 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof ForgotPasswordRoute
   '/handoffs': typeof HandoffsRoute
   '/ideas': typeof IdeasRoute
+  '/kickoff': typeof KickoffRoute
   '/mcp': typeof McpRoute
   '/overview': typeof OverviewRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -184,6 +197,7 @@ export interface FileRoutesByFullPath {
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  '/api/kickoff-draft': typeof ApiKickoffDraftRoute
   '/api/project-update': typeof ApiProjectUpdateRoute
   '/projects/$id': typeof ProjectsIdRoute
   '/projects/': typeof ProjectsIndexRoute
@@ -204,6 +218,7 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
   '/handoffs': typeof HandoffsRoute
   '/ideas': typeof IdeasRoute
+  '/kickoff': typeof KickoffRoute
   '/mcp': typeof McpRoute
   '/overview': typeof OverviewRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -212,6 +227,7 @@ export interface FileRoutesByTo {
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  '/api/kickoff-draft': typeof ApiKickoffDraftRoute
   '/api/project-update': typeof ApiProjectUpdateRoute
   '/projects/$id': typeof ProjectsIdRoute
   '/projects': typeof ProjectsIndexRoute
@@ -233,6 +249,7 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/handoffs': typeof HandoffsRoute
   '/ideas': typeof IdeasRoute
+  '/kickoff': typeof KickoffRoute
   '/mcp': typeof McpRoute
   '/overview': typeof OverviewRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -241,6 +258,7 @@ export interface FileRoutesById {
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  '/api/kickoff-draft': typeof ApiKickoffDraftRoute
   '/api/project-update': typeof ApiProjectUpdateRoute
   '/projects/$id': typeof ProjectsIdRoute
   '/projects/': typeof ProjectsIndexRoute
@@ -263,6 +281,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/handoffs'
     | '/ideas'
+    | '/kickoff'
     | '/mcp'
     | '/overview'
     | '/reset-password'
@@ -271,6 +290,7 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/sign-up'
     | '/.well-known/oauth-protected-resource'
+    | '/api/kickoff-draft'
     | '/api/project-update'
     | '/projects/$id'
     | '/projects/'
@@ -291,6 +311,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/handoffs'
     | '/ideas'
+    | '/kickoff'
     | '/mcp'
     | '/overview'
     | '/reset-password'
@@ -299,6 +320,7 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/sign-up'
     | '/.well-known/oauth-protected-resource'
+    | '/api/kickoff-draft'
     | '/api/project-update'
     | '/projects/$id'
     | '/projects'
@@ -319,6 +341,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/handoffs'
     | '/ideas'
+    | '/kickoff'
     | '/mcp'
     | '/overview'
     | '/reset-password'
@@ -327,6 +350,7 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/sign-up'
     | '/.well-known/oauth-protected-resource'
+    | '/api/kickoff-draft'
     | '/api/project-update'
     | '/projects/$id'
     | '/projects/'
@@ -348,6 +372,7 @@ export interface RootRouteChildren {
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   HandoffsRoute: typeof HandoffsRoute
   IdeasRoute: typeof IdeasRoute
+  KickoffRoute: typeof KickoffRoute
   McpRoute: typeof McpRoute
   OverviewRoute: typeof OverviewRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
@@ -356,6 +381,7 @@ export interface RootRouteChildren {
   SignInRoute: typeof SignInRoute
   SignUpRoute: typeof SignUpRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  ApiKickoffDraftRoute: typeof ApiKickoffDraftRoute
   ApiProjectUpdateRoute: typeof ApiProjectUpdateRoute
   ProjectsIdRoute: typeof ProjectsIdRoute
   ProjectsIndexRoute: typeof ProjectsIndexRoute
@@ -420,6 +446,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IdeasRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/kickoff': {
+      id: '/kickoff'
+      path: '/kickoff'
+      fullPath: '/kickoff'
+      preLoaderRoute: typeof KickoffRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/mcp': {
       id: '/mcp'
       path: '/mcp'
@@ -474,6 +507,13 @@ declare module '@tanstack/react-router' {
       path: '/.well-known/oauth-protected-resource'
       fullPath: '/.well-known/oauth-protected-resource'
       preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/kickoff-draft': {
+      id: '/api/kickoff-draft'
+      path: '/api/kickoff-draft'
+      fullPath: '/api/kickoff-draft'
+      preLoaderRoute: typeof ApiKickoffDraftRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/project-update': {
@@ -564,6 +604,7 @@ const rootRouteChildren: RootRouteChildren = {
   ForgotPasswordRoute: ForgotPasswordRoute,
   HandoffsRoute: HandoffsRoute,
   IdeasRoute: IdeasRoute,
+  KickoffRoute: KickoffRoute,
   McpRoute: McpRoute,
   OverviewRoute: OverviewRoute,
   ResetPasswordRoute: ResetPasswordRoute,
@@ -573,6 +614,7 @@ const rootRouteChildren: RootRouteChildren = {
   SignUpRoute: SignUpRoute,
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
+  ApiKickoffDraftRoute: ApiKickoffDraftRoute,
   ApiProjectUpdateRoute: ApiProjectUpdateRoute,
   ProjectsIdRoute: ProjectsIdRoute,
   ProjectsIndexRoute: ProjectsIndexRoute,
