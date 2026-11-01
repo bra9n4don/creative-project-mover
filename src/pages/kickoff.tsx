@@ -1,11 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "@/lib/router-compat";
 import { useAuth } from "@/lib/auth";
 import { useWorkspace, errMessage } from "@/lib/workspace";
 import { supabase } from "@/integrations/supabase/client";
-import { exportKickoffFn } from "@/lib/hub/hub.functions";
+import { useKickoffSaving } from "@/lib/use-kickoff-saving";
 import { briefSchema, planSchema, checkpointCode, clarifyFields, kickoffMarkdown, kickoffSchema, kickoffSteps, newKickoff, restoreCheckpoint, stepIssue, type Kickoff } from "@/lib/kickoff";
 import { AppShell } from "@/components/shell";
 import { Field, field, ErrorBlock, LoadingBlock } from "@/components/kit";
@@ -25,6 +24,7 @@ function download(name: string, content: string, type: string) {
 function KickoffBody() {
   const { state, isLoading, error: workspaceError, refetch } = useWorkspace();
   const [k, setK] = useState<Kickoff>(newKickoff);
+  const storage = useKickoffSaving(k);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
@@ -37,16 +37,10 @@ function KickoffBody() {
   const [copied, setCopied] = useState(false);
   const controller = useRef<AbortController | null>(null);
   const upload = useRef<HTMLInputElement | null>(null);
-  const exporting = useServerFn(exportKickoffFn);
-  const qc = useQueryClient();
   useEffect(() => () => controller.current?.abort(), []);
-  useEffect(() => {
-    const warn = (e: BeforeUnloadEvent) => { if (k.brainstorm && !paused && !k.exportedProjectId) { e.preventDefault(); } };
-    window.addEventListener("beforeunload", warn); return () => window.removeEventListener("beforeunload", warn);
-  }, [k.brainstorm, k.exportedProjectId, paused]);
   const edit = (patch: Partial<Kickoff>) => { setK(prev => ({ ...prev, ...patch, review: patch.review ?? { goal: false, scope: false, plan: false, risks: false, ready: false } })); setError(""); setNotice(""); };
   const restore = (value: string) => {
-    try { setK(restoreCheckpoint(value)); setPaused(false); setResumeOpen(false); setError(""); setNotice("Checkpoint restored."); }
+    try { const restored = restoreCheckpoint(value); const existing = storage.saved.find(r => r.data.id === restored.id); storage.activate(existing); setK(existing?.data ?? restored); setPaused(false); setResumeOpen(false); setError(""); setNotice(existing ? "Resumed the latest saved project." : "Checkpoint restored."); }
     catch (e) { setError(errMessage(e)); }
   };
   const generate = async (mode: "brief" | "plan") => {
@@ -82,11 +76,26 @@ function KickoffBody() {
     if (saving) return;
     setSaving(true); setError("");
     try {
-      const result = await exporting({ data: { data: k } });
+      const result = await storage.persist(k, 5);
+      if (!result) throw new Error("Your project could not be saved. Try again.");
       setK(prev => ({ ...prev, exportedProjectId: result.projectId }));
-      await qc.invalidateQueries({ queryKey: ["hub", "state"] });
-      setNotice("Your project, tasks and starting checkpoint are in Relay.");
+      setNotice("Kickoff complete. Your project, reviewed tasks and handoffs are saved.");
     } catch (e) { setError(errMessage(e)); }
+    finally { setSaving(false); }
+  };
+  const continueStep = async () => {
+    const issue = stepIssue(k); if (issue) { setError(issue); return; }
+    setSaving(true); setError("");
+    try {
+      await storage.persist({ ...k, step: k.step + 1 }, k.step);
+      setK(prev => ({ ...prev, step: prev.step + 1 })); setNotice("");
+    } catch (e) { setError(errMessage(e)); }
+    finally { setSaving(false); }
+  };
+  const pause = async () => {
+    setSaving(true); setError("");
+    try { await storage.flush(); setSecured(true); setCopied(false); setPauseOpen(true); }
+    catch (e) { setError(errMessage(e)); }
     finally { setSaving(false); }
   };
   if (isLoading) return <LoadingBlock />;
@@ -98,9 +107,12 @@ function KickoffBody() {
     <header className="mb-6 flex flex-wrap items-start justify-between gap-4"><div><div className="mb-2 flex items-center gap-2 text-sm text-primary"><Rocket className="h-4 w-4" /> New project</div><h1 className="font-display text-3xl font-semibold">Kickoff</h1><p className="mt-2 text-sm text-muted-foreground">From a rough idea to a plan you’re ready to start.</p></div><Button variant="outline" disabled={busy || saving} onClick={() => { setResumeOpen(true); setError(""); }}><Upload /> Resume checkpoint</Button></header>
     <nav aria-label="Kickoff steps" className="mb-8 grid grid-cols-2 gap-2 border-y py-4 md:grid-cols-3 xl:grid-cols-6">{kickoffSteps.map((name, i) => <div key={name} aria-current={k.step === i ? "step" : undefined} className={`flex items-start gap-2 text-sm ${k.step === i ? "font-semibold text-primary" : "text-muted-foreground"}`}><span className="mt-0.5 font-mono text-xs">{i < k.step ? <Check className="h-4 w-4" /> : `0${i + 1}`}</span><span>{name}</span></div>)}</nav>
     {error && <p role="alert" className="mb-4 break-words text-sm text-destructive">{error}</p>}
+    {storage.saveError && <div role="alert" className="mb-4 text-sm text-destructive">{storage.saveError}<Button size="sm" variant="outline" onClick={() => { void storage.flush().catch(() => undefined); }}>Retry saving</Button></div>}
+    <div className="mb-4 flex flex-wrap items-center gap-3 text-sm text-muted-foreground"><span role="status">{storage.status}</span>{storage.projectId && <Link className="text-primary" href={`/projects/${storage.projectId}`}>Open saved project</Link>}</div>
+    {!k.brainstorm && !storage.projectId && <section className="mb-6 border-b pb-5"><h2 className="mb-3 font-display text-xl">Saved Kickoffs</h2>{storage.loadingSaved ? <p>Loading saved projects…</p> : storage.listError ? <Button variant="outline" onClick={() => { void storage.reloadSaved(); }}>Retry loading saved projects</Button> : storage.saved.filter(r => !r.completed).length ? <div className="flex flex-wrap gap-2">{storage.saved.filter(r => !r.completed).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)).map(r => <Button key={r.data.id} variant="outline" onClick={() => { storage.activate(r); setK(r.data); setPaused(false); }}><ArrowRight />{state.projects.find(p => p.id === r.projectId)?.title ?? "Saved project"} · Step {r.data.step + 1}</Button>)}</div> : <p className="text-sm text-muted-foreground">No unfinished Kickoffs.</p>}</section>}
     {notice && <p role="status" className="mb-4 text-sm text-accent">{notice}</p>}
     {busy && <p role="status" className="mb-4 flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin motion-reduce:animate-none" /> Drafting {k.step === 2 ? "brief" : "plan"}…</p>}
-    {paused ? <section className="py-12"><h2 className="font-display text-2xl">Kickoff paused</h2><p className="my-4 text-muted-foreground">Keep your downloaded checkpoint or copied code. Nothing saves automatically between visits.</p><Button onClick={() => setPaused(false)}><ArrowRight /> Continue this session</Button></section> : <>
+    {paused ? <section className="py-12"><h2 className="font-display text-2xl">Kickoff paused</h2><p className="my-4 text-muted-foreground">Your answers are saved in your project. Resume from Saved Kickoffs when you return.</p><Button onClick={() => setPaused(false)}><ArrowRight /> Continue this session</Button></section> : <>
       <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_240px]"><section className="min-w-0 space-y-5"><div><p className="mb-1 font-mono text-xs text-muted-foreground">STEP {k.step + 1} OF 6</p><h2 className="font-display text-2xl font-semibold">{kickoffSteps[k.step]}</h2></div>
         {k.step === 0 && <>
           <Field label="Start from an idea"><select aria-label="Start from an idea" className={field} disabled={locked} value={k.sourceIdeaId ?? ""} onChange={e => { const idea = state.ideas.find(i => i.id === e.target.value); edit({ sourceIdeaId: idea?.id ?? null, brainstorm: idea ? `${idea.title}\n\n${idea.description}` : k.brainstorm }); }}><option value="">Freeform brainstorm</option>{state.ideas.filter(i => i.status !== "promoted" && i.status !== "archived").map(i => <option key={i.id} value={i.id}>{i.title}</option>)}</select></Field>
@@ -123,14 +135,13 @@ function KickoffBody() {
           <div className="border-y py-4"><h3 className="font-display text-xl">{k.brief.title}</h3><p className="mt-2 whitespace-pre-wrap text-sm">{k.brief.goal}</p><p className="mt-3 text-sm text-muted-foreground">{k.plan.milestones.length} milestones · {k.plan.milestones.reduce((n, m) => n + m.tasks.length, 0)} planned tasks · 3 first actions</p></div>
           <details><summary className="cursor-pointer text-sm font-medium text-primary">Review full brief and plan</summary><pre className="mt-4 whitespace-pre-wrap break-words font-sans text-sm leading-relaxed">{kickoffMarkdown(k)}</pre></details>
           <div className="space-y-3">{(Object.keys(reviewLabels) as (keyof typeof reviewLabels)[]).map(key => <label key={key} className="flex items-start gap-3 text-sm"><input type="checkbox" aria-label={reviewLabels[key]} className="mt-1" checked={k.review[key]} disabled={locked} onChange={e => setK(prev => ({ ...prev, review: { ...prev.review, [key]: e.target.checked } }))} />{reviewLabels[key]}</label>)}</div>
-          <div className="flex flex-wrap gap-3"><Button variant="outline" onClick={() => download("relay-project-brief.md", kickoffMarkdown(k), "text/markdown")}><Download /> Download brief</Button>{k.exportedProjectId ? <Button asChild><Link href={`/projects/${k.exportedProjectId}`}><ArrowRight /> Open project</Link></Button> : <Button disabled={saving || !Object.values(k.review).every(Boolean)} onClick={exportToRelay}>{saving ? <Loader2 className="animate-spin" /> : <Rocket />} Export to Relay</Button>}</div>
+          <div className="flex flex-wrap gap-3"><Button variant="outline" onClick={() => download("relay-project-brief.md", kickoffMarkdown(k), "text/markdown")}><Download /> Download brief</Button>{k.exportedProjectId ? <Button asChild><Link href={`/projects/${k.exportedProjectId}`}><ArrowRight /> Open project</Link></Button> : <Button disabled={saving || !Object.values(k.review).every(Boolean)} onClick={exportToRelay}>{saving ? <Loader2 className="animate-spin" /> : <Rocket />} Complete Kickoff</Button>}</div>
         </>}
       </section><KickoffGuidance step={k.step} /></div>
-      <footer className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t pt-5"><Button variant="ghost" disabled={k.step === 0 || locked} onClick={() => { setK(prev => ({ ...prev, step: prev.step - 1 })); setError(""); }}><ArrowLeft /> Back</Button><div className="flex flex-wrap gap-2"><Button variant="outline" disabled={busy || saving} onClick={() => { setSecured(false); setCopied(false); setPauseOpen(true); }}><Pause /> Save checkpoint & pause</Button>{k.step < 5 && <Button disabled={locked} onClick={() => { const issue = stepIssue(k); if (issue) { setError(issue); return; } setK(prev => ({ ...prev, step: prev.step + 1 })); setError(""); setNotice(""); }}><ArrowRight /> Continue</Button>}</div></footer>
-      <p className="mt-3 text-xs text-muted-foreground">No automatic saving. Download a checkpoint or copy its code before leaving.</p>
+      <footer className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t pt-5"><Button variant="ghost" disabled={k.step === 0 || locked} onClick={() => { setK(prev => ({ ...prev, step: prev.step - 1 })); setError(""); }}><ArrowLeft /> Back</Button><div className="flex flex-wrap gap-2"><Button variant="outline" disabled={busy || saving} onClick={pause}><Pause /> Save checkpoint & pause</Button>{k.step < 5 && <Button disabled={locked} onClick={continueStep}><ArrowRight />{k.step === 2 ? "Save reviewed brief & continue" : k.step === 3 ? "Save reviewed tasks & continue" : "Continue"}</Button>}</div></footer>
     </>}
     <input type="file" accept=".json,application/json" ref={upload} className="hidden" aria-label="Upload checkpoint" onChange={async e => { const file = e.target.files?.[0]; if (!file) return; if (file.size > 1000000) setError("Checkpoint is too large."); else restore(await file.text()); e.target.value = ""; }} />
-    <Dialog open={pauseOpen} onOpenChange={setPauseOpen}><DialogContent className="max-w-lg"><DialogHeader><DialogTitle>Save checkpoint & pause</DialogTitle><DialogDescription>Keep the file or code to return to step {k.step + 1}. It contains your project answers; store it privately.</DialogDescription></DialogHeader><div className="flex flex-wrap gap-2"><Button onClick={() => { download("relay-kickoff-checkpoint.json", JSON.stringify(k, null, 2), "application/json"); setSecured(true); }}><Download /> Download checkpoint</Button><Button variant="outline" onClick={async () => { try { await navigator.clipboard.writeText(checkpointCode(k)); setCopied(true); setSecured(true); } catch { setError("Could not copy. Select the code below or download the file."); } }}>{copied ? <Check /> : <Copy />} Copy code</Button></div><textarea aria-label="Checkpoint code" readOnly className={`${field} font-mono text-xs`} rows={3} value={checkpointCode(k)} /><Button disabled={!secured} onClick={() => { setPauseOpen(false); setPaused(true); }}><Pause /> Pause now</Button></DialogContent></Dialog>
+    <Dialog open={pauseOpen} onOpenChange={setPauseOpen}><DialogContent className="max-w-lg"><DialogHeader><DialogTitle>Save checkpoint & pause</DialogTitle><DialogDescription>Your project is saved at step {k.step + 1}. Optionally keep a private file or code backup.</DialogDescription></DialogHeader><div className="flex flex-wrap gap-2"><Button onClick={() => { download("relay-kickoff-checkpoint.json", JSON.stringify(k, null, 2), "application/json"); setSecured(true); }}><Download /> Download checkpoint</Button><Button variant="outline" onClick={async () => { try { await navigator.clipboard.writeText(checkpointCode(k)); setCopied(true); setSecured(true); } catch { setError("Could not copy. Select the code below or download the file."); } }}>{copied ? <Check /> : <Copy />} Copy code</Button></div><textarea aria-label="Checkpoint code" readOnly className={`${field} font-mono text-xs`} rows={3} value={checkpointCode(k)} /><Button disabled={!secured} onClick={() => { setPauseOpen(false); setPaused(true); }}><Pause /> Pause now</Button></DialogContent></Dialog>
     <Dialog open={resumeOpen} onOpenChange={setResumeOpen}><DialogContent className="max-w-lg"><DialogHeader><DialogTitle>Resume Kickoff</DialogTitle><DialogDescription>Upload a checkpoint or paste its code. This replaces the current session’s answers.</DialogDescription></DialogHeader><Button variant="outline" onClick={() => upload.current?.click()}><Upload /> Upload checkpoint</Button><textarea aria-label="Resume code" className={field} rows={5} value={resume} onChange={e => setResume(e.target.value)} placeholder="RELAY1.…" /><Button disabled={!resume.trim()} onClick={() => restore(resume)}><ArrowRight /> Restore code</Button>{error && <p role="alert" className="text-sm text-destructive">{error}</p>}</DialogContent></Dialog>
   </>;
 }
