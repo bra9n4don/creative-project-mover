@@ -10,8 +10,8 @@ import { cn } from "@/lib/utils";
 
 const origin = window.location.origin;
 const host = window.location.hostname;
-const isDev = /\.replit\.dev$|localhost|127\.0\.0\.1|-00-/.test(host);
-const mcpUrl = `${origin}/api/mcp`;
+const isDev = /localhost|127\.0\.0\.1|id-preview--|lovableproject\.com/.test(host);
+const mcpUrl = `${origin}/api/public/mcp`;
 
 const nativeSnippet = JSON.stringify({ mcpServers: { relay: { type: "http", url: mcpUrl, headers: { Authorization: "Bearer YOUR_RELAY_TOKEN" } } } }, null, 2);
 const bridgeSnippet = JSON.stringify(
