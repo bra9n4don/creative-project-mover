@@ -14,7 +14,7 @@ export { DRAFT_MODEL } from "./model.ts";
 
 export function createResponsesCall<T = z.infer<typeof updateDraftSchema>>(
   request: Request,
-  config: { baseURL: string; apiKey: string; model: string; reasoningEffort?: "low" | "medium" | "high" },
+  config: { baseURL: string; apiKey: string; model: string; reasoningEffort?: "low" | "medium" | "high"; maxOutputTokens?: number },
   messages: ModelMessage[],
   instructions?: string,
   schema?: z.ZodType<T>,
@@ -39,7 +39,7 @@ export function createResponsesCall<T = z.infer<typeof updateDraftSchema>>(
     ...(instructions ? { system: instructions } : {}),
     messages,
     maxRetries: 0,
-    maxOutputTokens: 16000,
+    maxOutputTokens: config.maxOutputTokens ?? 8000,
     output: Output.object({ schema: schema ?? updateDraftSchema as unknown as z.ZodType<T> }),
     abortSignal: request.signal,
     providerOptions: {

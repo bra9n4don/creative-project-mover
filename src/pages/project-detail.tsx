@@ -239,6 +239,7 @@ export default function ProjectDetail() {
                   <li key={t.id} data-testid={`row-task-${t.id}`} className="group px-4 py-3.5">
                     <div className="flex items-start gap-3">
                       <select
+                        aria-label={`Status of ${t.title}`}
                         data-testid={`select-task-status-${t.id}`}
                         value={t.status === "verified" ? "verified" : t.status}
                         disabled={t.status === "verified"}

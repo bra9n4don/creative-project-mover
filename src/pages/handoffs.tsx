@@ -35,7 +35,7 @@ export default function HandoffsPage() {
         </div>
       ) : (
         <>
-          <select data-testid="select-filter-project" className={`${field} mb-5 md:w-72`} value={proj} onChange={(e) => setProj(e.target.value)}>
+          <select aria-label="Filter by project" data-testid="select-filter-project" className={`${field} mb-5 md:w-72`} value={proj} onChange={(e) => setProj(e.target.value)}>
             <option value="all">All projects</option>
             {state.projects.map((p) => <option key={p.id} value={p.id}>{p.title}</option>)}
           </select>

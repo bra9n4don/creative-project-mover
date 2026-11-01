@@ -26,7 +26,7 @@ export async function handleProjectUpdate(request: Request): Promise<Response> {
   const { data: owner, error: ownerError } = await db.rpc("is_hub_owner", { _uid: auth.user.id });
   if (ownerError || !owner) return jsonError(403, "Only the workspace owner can generate project updates.");
   const parsed = inputSchema.safeParse(await request.json().catch(() => null));
-  if (!parsed.success) return jsonError(400, "Choose a project and paste an update of up to 20,000 characters.");
+  if (!parsed.success) return jsonError(400, "Choose a project and paste an update of up to 8,000 characters.");
   try {
     const state = await readState(db, auth.user.id);
     const p = project(state, parsed.data.projectId);
@@ -34,7 +34,7 @@ export async function handleProjectUpdate(request: Request): Promise<Response> {
     const done = (s: string) => s === "done" || s === "verified";
     const openTasks = projectTasks.filter(t => !done(t.status)).map(t => ({ title: t.title, status: t.status }));
     const finishedTasks = projectTasks.filter(t => done(t.status)).map(t => t.title);
-    const call = createResponsesCall(request, { baseURL: "https://ai.gateway.lovable.dev/v1", apiKey: aiKey, model: DRAFT_MODEL, reasoningEffort: "low" }, [{ role: "user", content: JSON.stringify(compact({ project: { title: p.title, goal: p.goal }, openTasks, finishedTasks, update: parsed.data.update })) }],
+    const call = createResponsesCall(request, { baseURL: "https://ai.gateway.lovable.dev/v1", apiKey: aiKey, model: DRAFT_MODEL, reasoningEffort: "low", maxOutputTokens: 6000 }, [{ role: "user", content: JSON.stringify(compact({ project: { title: p.title, goal: p.goal }, openTasks, finishedTasks, update: parsed.data.update })) }],
       "Turn the owner's project update into actionable future tasks and a factual handoff. " + DRAFT_PREAMBLE + " Avoid duplicating existing tasks or creating tasks for work already completed. Never claim verification. Return 0-10 concrete tasks, each title <=200 characters and description <=600, priority low/medium/high. Return one handoff: title <=200, summary <=2000 describing progress/blockers/unknowns, nextAction <=400 with a concrete next step, target <=100 (Next session if unspecified).");
     // Start consuming immediately; wait only for upstream headers, not the answer.
     const outputPromise = Promise.resolve(call.result.output);
@@ -46,8 +46,9 @@ export async function handleProjectUpdate(request: Request): Promise<Response> {
     const stream = new ReadableStream({ async start(controller) {
       const send = (v: unknown) => controller.enqueue(encoder.encode(JSON.stringify(v) + "\n"));
       try {
+        let lastProgress = 0;
         for await (const part of call.result.fullStream) {
-          if (part.type === "reasoning-delta" || part.type === "text-delta") send({ type: "progress" });
+          if ((part.type === "reasoning-delta" || part.type === "text-delta") && Date.now() - lastProgress > 1000) { lastProgress = Date.now(); send({ type: "progress" }); }
           if (part.type === "error") throw part.error;
         }
         const draft = await outputPromise;

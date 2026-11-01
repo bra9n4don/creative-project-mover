@@ -76,7 +76,7 @@ export default function IdeasPage() {
         <>
           <div className="mb-4 flex gap-1 overflow-x-auto border-b">
             {tabs.map((t) => (
-              <button key={t} data-testid={`tab-${t}`} onClick={() => setTab(t)} className={cn("-mb-px border-b-2 px-3 py-2 text-sm capitalize", tab === t ? "border-primary font-medium" : "border-transparent text-muted-foreground")}>
+              <button key={t} aria-pressed={tab === t} data-testid={`tab-${t}`} onClick={() => setTab(t)} className={cn("-mb-px border-b-2 px-3 py-2 text-sm capitalize", tab === t ? "border-primary font-medium" : "border-transparent text-muted-foreground")}>
                 {t} <span className="font-mono text-xs opacity-60">{state.ideas.filter((i) => i.status === t).length}</span>
               </button>
             ))}

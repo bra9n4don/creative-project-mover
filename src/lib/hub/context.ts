@@ -21,6 +21,7 @@ export async function getResumeContext(actor: Actor, projectId?: string) {
 
 const clip = (s: string, n: number) => (s.length > n ? s.slice(0, n) + "…" : s);
 const CLOSED = ["done", "verified"];
+export const OPEN_TASK_LIMIT = 25, FINISHED_TITLE_LIMIT = 15, OTHER_PROJECT_LIMIT = 20;
 
 /** Compact context for assistants: full detail for one focus project, one-line summaries for the rest. */
 export function buildResumeContext(s: HubState, projectId?: string) {
@@ -37,9 +38,11 @@ export function buildResumeContext(s: HubState, projectId?: string) {
       project: { id: p.id, title: p.title, goal: p.goal, status: p.status, priority: p.priority, version: p.version, repository: p.repository || undefined },
       whereYouLeftOff: last?.summary ?? "No checkpoint saved yet.",
       nextAction: last?.nextAction ?? next?.title ?? "Save a checkpoint with your progress and one next action.",
-      checkpoint: last ? { title: last.title, nextAction: last.nextAction, createdAt: last.createdAt } : null,
-      openTasks: open.map(t => ({ id: t.id, title: t.title, status: t.status, priority: t.priority, version: t.version, description: t.description ? clip(t.description, 300) : undefined, dependencies: t.dependencies.length ? t.dependencies : undefined })),
-      finishedTaskTitles: tasks.filter(t => CLOSED.includes(t.status)).map(t => t.title),
+      checkpoint: last ? { title: last.title, createdAt: last.createdAt } : null,
+      openTaskCount: open.length,
+      openTasks: open.slice(0, OPEN_TASK_LIMIT).map(t => ({ id: t.id, title: t.title, status: t.status, priority: t.priority, version: t.version, description: t.description ? clip(t.description, 300) : undefined, dependencies: t.dependencies.length ? t.dependencies : undefined })),
+      finishedTaskCount: tasks.filter(t => CLOSED.includes(t.status)).length,
+      finishedTaskTitles: tasks.filter(t => CLOSED.includes(t.status)).slice(-FINISHED_TITLE_LIMIT).map(t => clip(t.title, 120)),
       pendingChanges: s.approvals.filter(a => a.projectId === p.id && a.status === "pending").length,
       recentActivity: s.activity.filter(a => a.projectId === p.id).slice(0, 5).map(a => ({ title: a.title, source: a.source, createdAt: a.createdAt })),
     };
@@ -47,7 +50,8 @@ export function buildResumeContext(s: HubState, projectId?: string) {
   return {
     policy: s.policy,
     focus: focus ? detail(focus) : null,
-    otherProjects: others.map(p => ({ id: p.id, title: p.title, status: p.status, updatedAt: p.updatedAt })),
+    otherProjectCount: others.length,
+    otherProjects: others.slice(0, OTHER_PROJECT_LIMIT).map(p => ({ id: p.id, title: p.title, status: p.status, updatedAt: p.updatedAt })),
     ideas: s.ideas.filter(i => i.status === "inbox").slice(0, 10).map(i => ({ id: i.id, title: i.title })),
     instructions: "Read this at session start. Pass projectId for another project's details. Before switching projects or ending work, save a checkpoint with completed work, blockers, evidence, and exactly one next action. Do not invent progress.",
   };

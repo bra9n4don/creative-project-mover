@@ -146,11 +146,7 @@ export function removeTask(actor: Actor, id: string) {
     if (!t) throw new HubError(404, "Task not found");
     if (s.tasks.some(other => other.dependencies.includes(id))) throw new HubError(409, "Remove this task from other tasks' dependencies before deleting it.");
     s.tasks = s.tasks.filter(t => t.id !== id);
-    // Pending proposals for a deleted task can never be approved, so close them out.
-    for (const a of s.approvals) {
-      if (a.status !== "pending") continue;
-      try { if (JSON.parse(a.changes).taskId === id) a.status = "rejected"; } catch { /* malformed proposal: leave as is */ }
-    }
+    closeTaskApprovals(s, id);
     audit(s, actor, `Deleted task: ${t.title}`, "", t.projectId, "delete"); return ok("Task deleted.");
   });
 }
@@ -308,6 +304,7 @@ export function saveKickoff(actor: Actor, input: unknown) {
         if (!id) continue;
         if (task && (task.status !== "todo" || task.dependencies.length || s.tasks.some(t => t.dependencies.includes(id)))) throw new HubError(409, "A removed Kickoff task is already in use. Edit it from the project instead.");
         s.tasks = s.tasks.filter(t => t.id !== id); delete record.taskIds[key];
+        closeTaskApprovals(s, id);
       }
     };
     if (reviewedStep === 3 || reviewedStep === 5) upsertTasks("plan", k.plan.milestones.flatMap(m => m.tasks.map(t => ({ ...t, description: `${m.title}\n${m.outcome}\n${t.description}` }))));
@@ -329,4 +326,12 @@ export function saveKickoff(actor: Actor, input: unknown) {
     if (reviewedStep !== undefined) audit(s, actor, `Saved Kickoff: ${kickoffSteps[reviewedStep]}`, k.id, p.id, "kickoff-step");
     return record;
   });
+}
+
+/** Pending proposals for a deleted task can never be approved, so close them out. */
+function closeTaskApprovals(s: HubState, taskId: string) {
+  for (const a of s.approvals) {
+    if (a.status !== "pending") continue;
+    try { if (JSON.parse(a.changes).taskId === taskId) a.status = "rejected"; } catch { /* malformed proposal: leave as is */ }
+  }
 }

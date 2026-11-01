@@ -55,6 +55,9 @@ export function KickoffMindMap({ value, onChange, disabled, onExpand, hint, canv
   }, [edges, value, onChange, disabled]);
   const onConnect = useCallback((c: Connection) => {
     if (disabled || !c.source || !c.target || c.source === c.target) return;
+    // No loops: the new child can't be the source or one of its ancestors.
+    const parentOf = new Map(value.edges.map(e => [e.target, e.source]));
+    for (let n: string | undefined = c.source, i = 0; n && i < 500; n = parentOf.get(n), i++) if (n === c.target) return;
     // One parent per node keeps the outline a clean tree.
     const edgesNext = value.edges.filter(e => e.target !== c.target);
     onChange({ ...value, edges: [...edgesNext, { id: `${c.source}-${c.target}`, source: c.source, target: c.target }] });

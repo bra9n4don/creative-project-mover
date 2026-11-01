@@ -35,3 +35,16 @@ describe("assistant resume context", () => {
     expect(c.otherProjects).toEqual([]);
   });
 });
+
+describe("assistant context caps", () => {
+  it("lists at most 25 open tasks and 20 other projects, with full counts", () => {
+    const s = state();
+    s.tasks.push(...Array.from({ length: 40 }, (_, i) => task(`o${i}`, "recent", "todo")));
+    s.projects.push(...Array.from({ length: 30 }, (_, i) => proj(`p${i}`, "2026-02-01")));
+    const c = buildResumeContext(s);
+    expect(c.focus?.openTasks).toHaveLength(25);
+    expect(c.focus?.openTaskCount).toBe(41);
+    expect(c.otherProjects).toHaveLength(20);
+    expect(c.otherProjectCount).toBe(31);
+  });
+});

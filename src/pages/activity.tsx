@@ -23,9 +23,9 @@ export default function ActivityPage() {
           <div className="mb-4 flex flex-col gap-2 md:flex-row">
             <div className="relative md:w-72">
               <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-              <input data-testid="input-search-activity" className={cn(field, "pl-9")} placeholder="Search the log" value={q} onChange={(e) => setQ(e.target.value)} />
+              <input aria-label="Search the log" data-testid="input-search-activity" className={cn(field, "pl-9")} placeholder="Search the log" value={q} onChange={(e) => setQ(e.target.value)} />
             </div>
-            <select data-testid="select-source" className={cn(field, "md:w-48")} value={src} onChange={(e) => setSrc(e.target.value)}>
+            <select aria-label="Filter by source" data-testid="select-source" className={cn(field, "md:w-48")} value={src} onChange={(e) => setSrc(e.target.value)}>
               <option value="all">All sources</option>
               {sources.map((s) => <option key={s} value={s}>{s}</option>)}
             </select>

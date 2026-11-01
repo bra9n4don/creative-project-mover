@@ -69,7 +69,7 @@ export default function SettingsPage() {
 }
 
 function GithubSyncPanel() {
-  const status = useGithubSyncStatus({ query: { refetchInterval: 30000 } });
+  const status = useGithubSyncStatus({ query: { refetchInterval: 300000 } });
   const sync = useSyncGithub();
   const result = useHubResult();
   const s = status.data;
@@ -89,6 +89,7 @@ function GithubSyncPanel() {
   return (
     <Panel title="GitHub sync · read only">
       <div className="p-5 text-sm" data-testid="panel-github-sync">
+        {s && status.error && <p role="alert" className="mb-3 text-destructive">Couldn't refresh the sync status, so this may be out of date. <button className="underline" onClick={() => void status.refetch()}>Try again</button></p>}
         <div className="flex items-center gap-3">
           <span className={`h-2.5 w-2.5 rounded-full ${healthy ? "bg-accent" : s?.lastSyncOk === false || (s && !s.githubConnected) ? "bg-destructive" : "bg-muted-foreground/40"}`} />
           <div className="font-medium" data-testid="text-sync-headline">{headline}</div>
