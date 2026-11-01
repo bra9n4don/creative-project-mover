@@ -1,6 +1,7 @@
 import { createOpenAI } from "@ai-sdk/openai";
 import { streamText, Output, type ModelMessage } from "ai";
 import { updateDraftSchema } from "@/lib/hub/update-draft";
+import type { z } from "zod";
 
 import {
   createLovableAiGatewayRunIdFetch,
@@ -8,11 +9,12 @@ import {
   withLovableAiGatewayRunIdHeader,
 } from "./run-id.ts";
 
-export function createResponsesCall(
+export function createResponsesCall<T = z.infer<typeof updateDraftSchema>>(
   request: Request,
   config: { baseURL: string; apiKey: string; model: string },
   messages: ModelMessage[],
   instructions?: string,
+  schema?: z.ZodType<T>,
 ) {
   const runIdFetch = createLovableAiGatewayRunIdFetch(getLovableAiGatewayRunId(request));
   let upstreamFailure: { status: number; message: string } | null = null;
@@ -36,7 +38,7 @@ export function createResponsesCall(
     ...(instructions ? { system: instructions } : {}),
     messages,
     maxRetries: 0,
-    output: Output.object({ schema: updateDraftSchema }),
+    output: Output.object({ schema: schema ?? updateDraftSchema as unknown as z.ZodType<T> }),
     abortSignal: request.signal,
     providerOptions: {
       openai: {
