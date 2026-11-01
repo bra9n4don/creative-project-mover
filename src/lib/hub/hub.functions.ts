@@ -6,7 +6,7 @@ import { getState } from "./context";
 import { demoState } from "./demo";
 import { HubError, type Actor, type HubDb } from "./store";
 import { issueToken, revokeToken } from "./agent-auth.server";
-import { listRepos, syncRepos } from "./github.server";
+import { listRepos, syncAndRecord } from "./github.server";
 
 /** Thrown errors keep the HTTP-like status so the UI can explain conflicts and denials. */
 function toError(e: unknown): never {
@@ -50,4 +50,16 @@ export const decideApprovalFn = authed.inputValidator(idData).handler(({ context
 export const issueAgentTokenFn = authed.inputValidator(idOnly).handler(({ context, data }) => run(async () => issueToken(await ownerActor(context), data.id)));
 export const revokeAgentTokenFn = authed.inputValidator(idOnly).handler(({ context, data }) => run(async () => revokeToken(await ownerActor(context), data.id)));
 export const listGithubReposFn = authed.handler(({ context }) => run(async () => listRepos(await ownerActor(context))));
-export const syncGithubFn = authed.handler(({ context }) => run(async () => syncRepos(await ownerActor(context))));
+export const syncGithubFn = authed.handler(({ context }) => run(async () => syncAndRecord(await ownerActor(context), "manual")));
+
+export const getSyncStatusFn = authed.handler(({ context }) => run(async () => {
+  const actor = await ownerActor(context);
+  const { data } = await actor.db.from("hub_owner").select("github_sync_enabled, last_sync_at, last_sync_ok, last_sync_message, last_sync_trigger").eq("user_id", actor.ownerId).maybeSingle();
+  return {
+    githubConnected: !!(process.env.LOVABLE_API_KEY && process.env.GITHUB_API_KEY),
+    autoSyncEnabled: !!data?.github_sync_enabled,
+    lastSyncAt: data?.last_sync_at ?? null, lastSyncOk: data?.last_sync_ok ?? null,
+    lastSyncMessage: data?.last_sync_message ?? null, lastSyncTrigger: data?.last_sync_trigger ?? null,
+    intervalMinutes: 10,
+  };
+}));
