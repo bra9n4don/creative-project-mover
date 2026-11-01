@@ -11,7 +11,7 @@ import { Field, field, ErrorBlock, LoadingBlock } from "@/components/kit";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { KickoffGuidance } from "@/components/kickoff-guidance";
-import { ArrowLeft, ArrowRight, Check, Copy, Download, Loader2, Pause, Plus, Rocket, Sparkles, Square, Trash2, Upload } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Copy, Download, Loader2, Network, Pause, Plus, Rocket, Sparkles, Square, Trash2, Upload } from "lucide-react";
 
 const labels = { goal: "Goal", audience: "Audience", scope: "Scope", budget: "Budget", timeline: "Timeline", timeAvailable: "Time available", risks: "Risks", unknowns: "Unknowns" };
 const briefLabels = { title: "Project title", goal: "Project goal", audience: "Who it is for", scope: "In scope", outOfScope: "Out of scope", success: "Success criteria", constraints: "Constraints", unknowns: "Open questions" };
