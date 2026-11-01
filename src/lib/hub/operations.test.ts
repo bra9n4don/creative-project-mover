@@ -198,6 +198,6 @@ describe("promoteCluster", () => {
   });
   it("is owner-only", async () => {
     const { owner } = mk();
-    await expect(ops.promoteCluster({ ...owner, agent: true }, { title: "X", outcome: "", tasks: [] })).rejects.toThrow();
+    await expect(async () => ops.promoteCluster({ ...owner, agent: true }, { title: "X", outcome: "", tasks: [] })).rejects.toThrow("owner");
   });
 });
