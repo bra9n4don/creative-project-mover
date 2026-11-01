@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from "react";
 import { Link, useLocation } from "@/lib/router-compat";
 import { useUser } from "@/lib/auth";
-import { ListChecks, Bookmark, FolderKanban, History, Lightbulb, Menu, Plug, Rocket, Settings, ShieldCheck, Sunrise, X } from "lucide-react";
+import { ListChecks, Bookmark, FolderKanban, History, Lightbulb, Menu, Network, Plug, Rocket, Settings, ShieldCheck, Sunrise, X } from "lucide-react";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { useWorkspace } from "@/lib/workspace";
@@ -13,6 +13,7 @@ const primaryNav = [
   { href: "/kickoff", label: "Kickoff", icon: Rocket },
   { href: "/handoffs", label: "Checkpoints", icon: Bookmark },
   { href: "/ideas", label: "Ideas", icon: Lightbulb },
+  { href: "/mind-map", label: "Mind map", icon: Network },
 ];
 const secondaryNav = [
   { href: "/connections", label: "AI tools", icon: Plug },
