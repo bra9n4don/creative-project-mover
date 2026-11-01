@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { ReactFlow, Background, Controls, Handle, Position, applyNodeChanges, type Connection, type Edge, type Node, type NodeChange, type EdgeChange, type NodeProps, applyEdgeChanges } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Sparkles, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { MindMap } from "@/lib/kickoff";
 
@@ -30,7 +30,7 @@ export function emptyMindMap(seed: string): MindMap {
   return { nodes: [{ id: "root", label: seed.split("\n")[0]?.slice(0, 200) || "My project", kind: "idea", x: 0, y: 0 }], edges: [] };
 }
 
-export function KickoffMindMap({ value, onChange, disabled }: { value: MindMap; onChange: (m: MindMap) => void; disabled?: boolean }) {
+export function KickoffMindMap({ value, onChange, disabled, onExpand, hint }: { value: MindMap; onChange: (m: MindMap) => void; disabled?: boolean; onExpand?: () => void; hint?: string }) {
   const [selected, setSelected] = useState<string | null>(null);
   const nodes: Node<Data>[] = useMemo(() => value.nodes.map(n => ({ id: n.id, type: "idea", position: { x: n.x, y: n.y }, data: { label: n.label, kind: n.kind }, selected: n.id === selected })), [value.nodes, selected]);
   const edges: Edge[] = useMemo(() => value.edges.map(e => ({ ...e })), [value.edges]);
@@ -75,6 +75,7 @@ export function KickoffMindMap({ value, onChange, disabled }: { value: MindMap; 
     <div className="space-y-3">
       <div className="flex flex-wrap items-end gap-2">
         <Button size="sm" variant="secondary" disabled={disabled || value.nodes.length >= 150} onClick={addChild}><Plus /> Add {sel ? "branch" : "idea"}</Button>
+        {onExpand && <Button size="sm" disabled={disabled || value.nodes.every(n => !n.label.trim())} onClick={onExpand}><Sparkles /> AI Expand</Button>}
         {sel && <>
           <input aria-label="Node label" maxLength={200} disabled={disabled} className="min-w-[180px] flex-1 rounded-lg border border-input bg-card px-3 py-1.5 text-sm" value={sel.label} onChange={e => update({ label: e.target.value })} />
           <select aria-label="Node type" disabled={disabled} className="rounded-lg border border-input bg-card px-2 py-1.5 text-sm" value={sel.kind} onChange={e => update({ kind: e.target.value as Kind })}>{kinds.map(k => <option key={k.value} value={k.value}>{k.label}</option>)}</select>
@@ -87,7 +88,7 @@ export function KickoffMindMap({ value, onChange, disabled }: { value: MindMap; 
           <Controls showInteractive={false} />
         </ReactFlow>
       </div>
-      <p className="text-xs text-muted-foreground">Click a node to rename it or change its type. Drag from a node's right dot to another node to link them. The map is written into your ideas as an outline, so AI drafts can use it.</p>
+      <p className="text-xs text-muted-foreground">{hint ?? "Click a node to rename it or change its type. Drag from a node's right dot to another node to link them. The map is written into your ideas as an outline, so AI drafts can use it."}</p>
     </div>
   );
 }

@@ -4,7 +4,7 @@ import { useAuth } from "@/lib/auth";
 import { useWorkspace, errMessage } from "@/lib/workspace";
 import { supabase } from "@/integrations/supabase/client";
 import { useKickoffSaving } from "@/lib/use-kickoff-saving";
-import { briefSchema, planSchema, checkpointCode, clarifyFields, kickoffMarkdown, kickoffSchema, kickoffSteps, newKickoff, restoreCheckpoint, stepIssue, syncBrainstorm, kickoffSizeIssue, type Kickoff } from "@/lib/kickoff";
+import { briefSchema, planSchema, checkpointCode, clarifyFields, kickoffMarkdown, kickoffSchema, kickoffSteps, newKickoff, restoreCheckpoint, stepIssue, syncBrainstorm, mindMapClusters, kickoffSizeIssue, type Kickoff } from "@/lib/kickoff";
 import { KickoffMindMap, emptyMindMap } from "@/components/kickoff-mind-map";
 import { AppShell } from "@/components/shell";
 import { Field, field, ErrorBlock, LoadingBlock } from "@/components/kit";
@@ -53,17 +53,14 @@ function KickoffBody() {
     }
     catch (e) { setError(errMessage(e)); }
   };
-  const generate = async (mode: "brief" | "plan") => {
-    if (busy) return;
-    setBusy(true); setError(""); setNotice("");
-    const abort = new AbortController(); controller.current = abort;
-    try {
+  /** Streams one draft from base and returns the updated kickoff (null if stopped/failed). */
+  const draftOne = async (mode: "brief" | "plan", base: Kickoff, abort: AbortController): Promise<Kickoff | null> => {
       const { data } = await supabase.auth.getSession();
       if (!data.session) throw new Error("Sign in again to draft your Kickoff.");
-      const res = await fetch("/api/kickoff-draft", { method: "POST", signal: abort.signal, headers: { "Content-Type": "application/json", Authorization: `Bearer ${data.session.access_token}` }, body: JSON.stringify({ mode, kickoff: k }) });
+      const res = await fetch("/api/kickoff-draft", { method: "POST", signal: abort.signal, headers: { "Content-Type": "application/json", Authorization: `Bearer ${data.session.access_token}` }, body: JSON.stringify({ mode, kickoff: base }) });
       if (!res.ok) { const e = await res.json(); throw new Error(e.message); }
       const reader = res.body?.getReader(); if (!reader) throw new Error("The AI response was empty.");
-      const decoder = new TextDecoder(); let buffer = ""; let received = false;
+      const decoder = new TextDecoder(); let buffer = ""; let next: Kickoff | null = null;
       while (true) {
         const chunk = await reader.read(); buffer += decoder.decode(chunk.value, { stream: !chunk.done });
         const lines = buffer.split("\n"); buffer = lines.pop() ?? "";
@@ -72,14 +69,34 @@ function KickoffBody() {
           if (event.type === "error") throw new Error(event.message);
           if (event.type === "draft") {
             const draft = mode === "brief" ? briefSchema.parse(event.draft) : planSchema.parse(event.draft);
-            const next = kickoffSchema.parse({ ...k, [mode]: draft });
-            edit(next); received = true; setNotice("Draft ready for your review.");
+            next = kickoffSchema.parse({ ...base, [mode]: draft });
+            edit(next);
           }
         }
         if (chunk.done) break;
       }
-      if (!received && !abort.signal.aborted) throw new Error("No draft was returned. Your answers have been kept.");
-    } catch (e) { if (!abort.signal.aborted) setError(errMessage(e)); else setNotice("Drafting stopped. Your previous draft is unchanged."); }
+      if (!next && !abort.signal.aborted) throw new Error("No draft was returned. Your answers have been kept.");
+      return next;
+  };
+  /** AI Expand: drafts the brief from the mind map, then the plan from that brief. Both stay editable drafts for review. */
+  const expand = async () => {
+    if (busy) return;
+    setBusy(true); setError(""); setNotice("");
+    const abort = new AbortController(); controller.current = abort;
+    try {
+      const base = k.mindMap ? { ...k, brainstorm: syncBrainstorm(k.brainstorm, k.mindMap).slice(0, 10000) } : k;
+      const withBrief = await draftOne("brief", base, abort);
+      const withPlan = withBrief && !abort.signal.aborted ? await draftOne("plan", withBrief, abort) : null;
+      if (withPlan) setNotice("Brief and plan drafted from your mind map. Review them in steps 3 and 4 before continuing.");
+    } catch (e) { if (!abort.signal.aborted) setError(errMessage(e)); }
+    finally { if (abort.signal.aborted) setNotice("Drafting stopped. Anything already drafted is kept for review."); setBusy(false); controller.current = null; }
+  };
+  const generate = async (mode: "brief" | "plan") => {
+    if (busy) return;
+    setBusy(true); setError(""); setNotice("");
+    const abort = new AbortController(); controller.current = abort;
+    try { if (await draftOne(mode, k, abort)) setNotice("Draft ready for your review."); }
+    catch (e) { if (!abort.signal.aborted) setError(errMessage(e)); else setNotice("Drafting stopped. Your previous draft is unchanged."); }
     finally { setBusy(false); controller.current = null; }
   };
   const exportToRelay = async () => {
@@ -122,20 +139,20 @@ function KickoffBody() {
     <div className="mb-4 flex flex-wrap items-center gap-3 text-sm text-muted-foreground"><span role="status">{storage.status}</span>{storage.projectId && <Link className="text-primary" href={`/projects/${storage.projectId}`}>Open saved project</Link>}</div>
     {!k.brainstorm && !storage.projectId && <section className="mb-6 border-b pb-5"><h2 className="mb-3 font-display text-xl">Saved Kickoffs</h2>{storage.loadingSaved ? <p>Loading saved projects…</p> : storage.listError ? <Button variant="outline" onClick={() => { void storage.reloadSaved(); }}>Retry loading saved projects</Button> : storage.saved.filter(r => !r.completed).length ? <div className="flex flex-wrap gap-2">{storage.saved.filter(r => !r.completed).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)).map(r => <Button key={r.data.id} variant="outline" onClick={() => { storage.activate(r); setK(r.data); setPaused(false); }}><ArrowRight />{state.projects.find(p => p.id === r.projectId)?.title ?? "Saved project"} · Step {r.data.step + 1}</Button>)}</div> : <p className="text-sm text-muted-foreground">No unfinished Kickoffs.</p>}</section>}
     {notice && <p role="status" className="mb-4 text-sm text-accent">{notice}</p>}
-    {busy && <p role="status" className="mb-4 flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin motion-reduce:animate-none" /> Drafting {k.step === 2 ? "brief" : "plan"}…</p>}
+    {busy && <p role="status" className="mb-4 flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin motion-reduce:animate-none" /> Drafting {k.step === 0 ? "brief and plan" : k.step === 2 ? "brief" : "plan"}…</p>}
     {paused ? <section className="py-12"><h2 className="font-display text-2xl">Kickoff paused</h2><p className="my-4 text-muted-foreground">Your answers are saved in your project. Resume from Saved Kickoffs when you return.</p><Button onClick={() => setPaused(false)}><ArrowRight /> Continue this session</Button></section> : <>
       <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_240px]"><section className="min-w-0 space-y-5"><div><p className="mb-1 font-mono text-xs text-muted-foreground">STEP {k.step + 1} OF 6</p><h2 className="font-display text-2xl font-semibold">{kickoffSteps[k.step]}</h2></div>
         {k.step === 0 && <>
           <Field label="Start from an idea"><select aria-label="Start from an idea" className={field} disabled={locked} value={k.sourceIdeaId ?? ""} onChange={e => { const idea = state.ideas.find(i => i.id === e.target.value); edit({ sourceIdeaId: idea?.id ?? null, brainstorm: idea ? `${idea.title}\n\n${idea.description}` : k.brainstorm }); }}><option value="">Freeform brainstorm</option>{state.ideas.filter(i => i.status !== "promoted" && i.status !== "archived").map(i => <option key={i.id} value={i.id}>{i.title}</option>)}</select></Field>
           <div role="tablist" aria-label="Brainstorm view" className="inline-flex rounded-lg border p-0.5">{(["text", "map"] as const).map(v => <button key={v} role="tab" aria-selected={view === v} onClick={() => setView(v)} className={`rounded-md px-3 py-1 text-sm ${view === v ? "bg-secondary font-medium" : "text-muted-foreground"}`}>{v === "text" ? "Text" : "Mind map"}</button>)}</div>
           {view === "map"
-            ? <KickoffMindMap disabled={locked} value={k.mindMap ?? emptyMindMap(k.brainstorm)} onChange={m => edit({ mindMap: m, brainstorm: syncBrainstorm(k.brainstorm, m).slice(0, 10000) })} />
+            ? <KickoffMindMap disabled={locked} onExpand={expand} value={k.mindMap ?? emptyMindMap(k.brainstorm)} onChange={m => edit({ mindMap: m, brainstorm: syncBrainstorm(k.brainstorm, m).slice(0, 10000) })} />
             : textInput("Your ideas", k.brainstorm, v => edit({ brainstorm: v }), 10000, 8)}
           <div className="flex flex-wrap gap-2">{["What problem do I want to solve?", "Who would benefit?", "What is the smallest useful version?"].map(prompt => <Button key={prompt} size="sm" variant="ghost" disabled={locked} onClick={() => edit({ brainstorm: `${k.brainstorm}\n\n${prompt}\n`.trimStart() })}><Plus />{prompt}</Button>)}</div>
         </>}
         {k.step === 1 && <div className="grid gap-4 sm:grid-cols-2">{clarifyFields.map(key => <div key={key}>{textInput(labels[key], k.clarify[key], v => edit({ clarify: { ...k.clarify, [key]: v } }), 10000, 3)}<Button size="sm" variant="ghost" disabled={locked} onClick={() => edit({ clarify: { ...k.clarify, [key]: "not sure yet" } })}>Not sure yet</Button></div>)}</div>}
         {k.step === 2 && <>{aiButton("brief")}{(Object.keys(briefLabels) as (keyof typeof briefLabels)[]).map(key => <div key={key}>{textInput(briefLabels[key], k.brief[key], v => edit({ brief: { ...k.brief, [key]: v } }), key === "title" ? 150 : 10000, key === "title" ? 1 : 3)}</div>)}</>}
-        {k.step === 3 && <>{aiButton("plan")}{k.plan.milestones.map((m, i) => <div key={i} className="space-y-3 border-b pb-6"><div className="flex items-center justify-between"><h3 className="font-medium">Milestone {i + 1}</h3><Button variant="ghost" size="icon" title="Remove milestone" aria-label={`Remove milestone ${i + 1}`} disabled={locked} onClick={() => edit({ plan: { milestones: k.plan.milestones.filter((_, j) => i !== j) } })}><Trash2 /></Button></div>
+        {k.step === 3 && <>{aiButton("plan")}{k.mindMap && mindMapClusters(k.mindMap).length > 0 && <div className="flex flex-wrap items-center gap-3"><Button variant="outline" disabled={locked || k.plan.milestones.length >= 8} onClick={() => { const add = mindMapClusters(k.mindMap!).filter(c => !k.plan.milestones.some(m => m.title.trim().toLowerCase() === c.title.toLowerCase())); edit({ plan: { milestones: [...k.plan.milestones, ...add].slice(0, 8) } }); setNotice(add.length ? `Added ${Math.min(add.length, 8 - k.plan.milestones.length)} milestones from your mind map.` : "Every mind map cluster is already a milestone."); }}><Network /> Promote mind map clusters</Button><span className="text-xs text-muted-foreground">Each main branch becomes a milestone; its features and ideas become tasks</span></div>}{k.plan.milestones.map((m, i) => <div key={i} className="space-y-3 border-b pb-6"><div className="flex items-center justify-between"><h3 className="font-medium">Milestone {i + 1}</h3><Button variant="ghost" size="icon" title="Remove milestone" aria-label={`Remove milestone ${i + 1}`} disabled={locked} onClick={() => edit({ plan: { milestones: k.plan.milestones.filter((_, j) => i !== j) } })}><Trash2 /></Button></div>
           {textInput(`Milestone ${i + 1} title`, m.title, v => edit({ plan: { milestones: k.plan.milestones.map((x, j) => i === j ? { ...x, title: v } : x) } }), 200, 1)}
           {textInput(`Milestone ${i + 1} outcome`, m.outcome, v => edit({ plan: { milestones: k.plan.milestones.map((x, j) => i === j ? { ...x, outcome: v } : x) } }), 10000, 2)}
           {m.tasks.map((t, n) => <div key={n} className="space-y-2 border-l-2 pl-4"><div className="flex items-center gap-2"><input aria-label={`Milestone ${i + 1} task ${n + 1} title`} className={field} maxLength={200} disabled={locked} value={t.title} onChange={e => edit({ plan: { milestones: k.plan.milestones.map((x, j) => i === j ? { ...x, tasks: x.tasks.map((a, b) => b === n ? { ...a, title: e.target.value } : a) } : x) } })} /><Button size="icon" variant="ghost" title="Remove task" aria-label={`Remove milestone ${i + 1} task ${n + 1}`} disabled={locked} onClick={() => edit({ plan: { milestones: k.plan.milestones.map((x, j) => i === j ? { ...x, tasks: x.tasks.filter((_, b) => b !== n) } : x) } })}><Trash2 /></Button></div>
