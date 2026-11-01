@@ -32,8 +32,13 @@ const run = <T,>(fn: () => Promise<T>) => fn().catch(toError);
 
 export const getDemoStateFn = createServerFn({ method: "GET" }).handler(async () => demoState());
 
+// The 15-second refresh only needs recent history; older activity stays stored.
+export const ACTIVITY_REFRESH_LIMIT = 200;
 export const getHubStateFn = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth])
-  .handler(({ context }) => run(async () => getState(await ownerActor(context))));
+  .handler(({ context }) => run(async () => {
+    const s = await getState(await ownerActor(context));
+    return { ...s, activity: s.activity.slice(0, ACTIVITY_REFRESH_LIMIT) };
+  }));
 
 export const createProjectFn = authed.inputValidator(dataOnly).handler(({ context, data }) => run(async () => ops.addProject(await ownerActor(context), data.data)));
 export const updateProjectFn = authed.inputValidator(idData).handler(({ context, data }) => run(async () => ops.editProject(await ownerActor(context), data.id, data.data)));
