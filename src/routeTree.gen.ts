@@ -16,6 +16,7 @@ import { Route as ConnectionsRouteImport } from './routes/connections'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as HandoffsRouteImport } from './routes/handoffs'
 import { Route as IdeasRouteImport } from './routes/ideas'
+import { Route as KickoffRouteImport } from './routes/kickoff'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as OverviewRouteImport } from './routes/overview'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
@@ -70,6 +71,11 @@ const HandoffsRoute = HandoffsRouteImport.update({
 const IdeasRoute = IdeasRouteImport.update({
   id: '/ideas',
   path: '/ideas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const KickoffRoute = KickoffRouteImport.update({
+  id: '/kickoff',
+  path: '/kickoff',
   getParentRoute: () => rootRouteImport,
 } as any)
 const McpRoute = McpRouteImport.update({
@@ -182,6 +188,7 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof ForgotPasswordRoute
   '/handoffs': typeof HandoffsRoute
   '/ideas': typeof IdeasRoute
+  '/kickoff': typeof KickoffRoute
   '/mcp': typeof McpRoute
   '/overview': typeof OverviewRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -211,6 +218,7 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
   '/handoffs': typeof HandoffsRoute
   '/ideas': typeof IdeasRoute
+  '/kickoff': typeof KickoffRoute
   '/mcp': typeof McpRoute
   '/overview': typeof OverviewRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -241,6 +249,7 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/handoffs': typeof HandoffsRoute
   '/ideas': typeof IdeasRoute
+  '/kickoff': typeof KickoffRoute
   '/mcp': typeof McpRoute
   '/overview': typeof OverviewRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -272,6 +281,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/handoffs'
     | '/ideas'
+    | '/kickoff'
     | '/mcp'
     | '/overview'
     | '/reset-password'
@@ -301,6 +311,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/handoffs'
     | '/ideas'
+    | '/kickoff'
     | '/mcp'
     | '/overview'
     | '/reset-password'
@@ -330,6 +341,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/handoffs'
     | '/ideas'
+    | '/kickoff'
     | '/mcp'
     | '/overview'
     | '/reset-password'
@@ -360,6 +372,7 @@ export interface RootRouteChildren {
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   HandoffsRoute: typeof HandoffsRoute
   IdeasRoute: typeof IdeasRoute
+  KickoffRoute: typeof KickoffRoute
   McpRoute: typeof McpRoute
   OverviewRoute: typeof OverviewRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
@@ -431,6 +444,13 @@ declare module '@tanstack/react-router' {
       path: '/ideas'
       fullPath: '/ideas'
       preLoaderRoute: typeof IdeasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/kickoff': {
+      id: '/kickoff'
+      path: '/kickoff'
+      fullPath: '/kickoff'
+      preLoaderRoute: typeof KickoffRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mcp': {
@@ -584,6 +604,7 @@ const rootRouteChildren: RootRouteChildren = {
   ForgotPasswordRoute: ForgotPasswordRoute,
   HandoffsRoute: HandoffsRoute,
   IdeasRoute: IdeasRoute,
+  KickoffRoute: KickoffRoute,
   McpRoute: McpRoute,
   OverviewRoute: OverviewRoute,
   ResetPasswordRoute: ResetPasswordRoute,

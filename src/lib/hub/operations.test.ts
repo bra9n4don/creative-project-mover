@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import * as ops from "./operations";
 import { emptyState, type Actor, type HubDb, type HubState } from "./store";
+import { newKickoff } from "../kickoff";
 
 // In-memory stand-in for the hub_workspaces table, enough for mutateState's read + revision-checked write.
 function fakeDb() {
@@ -36,6 +37,36 @@ describe("guarded automation rules", () => {
     const agent: Actor = { ...owner, source: "Claude Code", agent: true };
     return { db, owner, agent };
   };
+
+  it("Kickoff export creates a project, tasks and checkpoint and plans its source idea atomically", async () => {
+    const { db, owner } = setup();
+    const idea = await ops.addIdea(owner, { title: "Recipe scaler" });
+    const k = newKickoff();
+    k.step = 5; k.sourceIdeaId = idea.id; k.brief.title = "Recipe scaler"; k.brief.goal = "Scale portions";
+    k.plan.milestones = [{ title: "Working form", outcome: "Scale a recipe", tasks: [{ title: "Test calculations", description: "Double a recipe", priority: "medium" }] }];
+    k.risks = "Limited time"; k.firstActions = ["Ask three cooks", "Sketch the form", "Test calculations"];
+    k.review = { goal: true, scope: true, plan: true, risks: true, ready: true };
+    const result = await ops.exportKickoff(owner, k);
+    expect(db.state.projects[0]).toMatchObject({ id: result.projectId, title: "Recipe scaler", goal: "Scale portions" });
+    expect(db.state.tasks).toHaveLength(3);
+    expect(db.state.tasks.every(t => t.status === "todo" && t.projectId === result.projectId)).toBe(true);
+    expect(db.state.handoffs[0]).toMatchObject({ projectId: result.projectId, nextAction: "Ask three cooks" });
+    expect(db.state.ideas[0]?.status).toBe("promoted");
+    await ops.exportKickoff(owner, k);
+    expect(db.state.projects).toHaveLength(1);
+    expect(db.state.handoffs).toHaveLength(1);
+  });
+
+  it("Kickoff export rejects an incomplete review without saving anything", () => {
+    const { db, owner } = setup();
+    expect(() => ops.exportKickoff(owner, newKickoff())).toThrow();
+    expect(db.state.projects).toHaveLength(0);
+  });
+
+  it("agents cannot export Kickoff projects", () => {
+    const { agent } = setup();
+    expect(() => ops.exportKickoff(agent, newKickoff())).toThrow(/owner.s approval/);
+  });
 
   it("pasted update suggestions cannot save before owner review", async () => {
     const { db, owner } = setup();
