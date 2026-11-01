@@ -1,0 +1,17 @@
+{
+  "source": "Replit export, app AI-Project-Hub (Relay)",
+  "capabilities": [
+    {"capability": "code", "source": "React+Vite web + Express API", "outcome": "migrate", "status": "done", "next_action": "TanStack routes + server functions; original screens kept"},
+    {"capability": "schema", "source": "Postgres/Drizzle hub_workspaces, hub_owner, hub_agent_keys", "outcome": "migrate", "status": "done", "next_action": "Recreated in Lovable Cloud with RLS"},
+    {"capability": "records", "source": "Replit Postgres", "outcome": "migrate", "status": "pending", "next_action": "User exports hub_workspaces/hub_owner as CSV"},
+    {"capability": "auth identities", "source": "Clerk", "outcome": "replace with Lovable Cloud auth (email, Google, Lovable)", "status": "pending", "next_action": "Owner signs up with the same verified email; legacy_user_map links old Clerk ID once records arrive"},
+    {"capability": "authorization", "source": "single owner claim + guarded agent ops", "outcome": "migrate", "status": "implemented", "next_action": "First verified-email account claims the hub (GitHub email match dropped: no GitHub sign-in provider)"},
+    {"capability": "agent credentials", "source": "relay_ bearer tokens, SHA-256 hashes", "outcome": "migrate", "status": "implemented", "next_action": "Old tokens cannot carry over; reissue per tool in Connections"},
+    {"capability": "public endpoints", "source": "/api/mcp, /api/hub/*, /api/hub/demo|docs|skill, /api/healthz", "outcome": "moved to /api/public/*", "status": "implemented", "next_action": "Reconfigure AI tools with the new URL after publishing"},
+    {"capability": "github provider", "source": "Replit GitHub connector (read-only)", "outcome": "preserve via GITHUB_TOKEN secret", "status": "blocked", "next_action": "Owner adds a read-only GitHub token"},
+    {"capability": "schedules", "source": "in-process 10-minute GitHub poll", "outcome": "migrate", "status": "pending", "next_action": "Add scheduled sync once GitHub token exists"},
+    {"capability": "uploaded file bytes", "source": "none detected", "outcome": "n/a", "status": "n/a", "next_action": ""},
+    {"capability": "secrets", "source": "CLERK_*, DATABASE_URL, REPL_*", "outcome": "replaced / platform metadata", "status": "done", "next_action": ""},
+    {"capability": "verification", "source": "", "outcome": "", "status": "in_progress", "next_action": "Browser CRUD check as signed-in owner"}
+  ]
+}

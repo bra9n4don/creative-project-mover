@@ -23,6 +23,12 @@ import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as SignUpRouteImport } from './routes/sign-up'
 import { Route as ProjectsIndexRouteImport } from './routes/projects.index'
 import { Route as ProjectsIdRouteImport } from './routes/projects.$id'
+import { Route as ApiPublicHealthzRouteImport } from './routes/api/public/healthz'
+import { Route as ApiPublicMcpRouteImport } from './routes/api/public/mcp'
+import { Route as ApiPublicHubSplatRouteImport } from './routes/api/public/hub/$'
+import { Route as ApiPublicHubDemoRouteImport } from './routes/api/public/hub/demo'
+import { Route as ApiPublicHubDocsRouteImport } from './routes/api/public/hub/docs'
+import { Route as ApiPublicHubSkillRouteImport } from './routes/api/public/hub/skill'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -94,6 +100,36 @@ const ProjectsIdRoute = ProjectsIdRouteImport.update({
   path: '/projects/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHealthzRoute = ApiPublicHealthzRouteImport.update({
+  id: '/api/public/healthz',
+  path: '/api/public/healthz',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicMcpRoute = ApiPublicMcpRouteImport.update({
+  id: '/api/public/mcp',
+  path: '/api/public/mcp',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicHubSplatRoute = ApiPublicHubSplatRouteImport.update({
+  id: '/api/public/hub/$',
+  path: '/api/public/hub/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicHubDemoRoute = ApiPublicHubDemoRouteImport.update({
+  id: '/api/public/hub/demo',
+  path: '/api/public/hub/demo',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicHubDocsRoute = ApiPublicHubDocsRouteImport.update({
+  id: '/api/public/hub/docs',
+  path: '/api/public/hub/docs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicHubSkillRoute = ApiPublicHubSkillRouteImport.update({
+  id: '/api/public/hub/skill',
+  path: '/api/public/hub/skill',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -110,6 +146,12 @@ export interface FileRoutesByFullPath {
   '/sign-up': typeof SignUpRoute
   '/projects/$id': typeof ProjectsIdRoute
   '/projects/': typeof ProjectsIndexRoute
+  '/api/public/healthz': typeof ApiPublicHealthzRoute
+  '/api/public/mcp': typeof ApiPublicMcpRoute
+  '/api/public/hub/$': typeof ApiPublicHubSplatRoute
+  '/api/public/hub/demo': typeof ApiPublicHubDemoRoute
+  '/api/public/hub/docs': typeof ApiPublicHubDocsRoute
+  '/api/public/hub/skill': typeof ApiPublicHubSkillRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -126,6 +168,12 @@ export interface FileRoutesByTo {
   '/sign-up': typeof SignUpRoute
   '/projects/$id': typeof ProjectsIdRoute
   '/projects': typeof ProjectsIndexRoute
+  '/api/public/healthz': typeof ApiPublicHealthzRoute
+  '/api/public/mcp': typeof ApiPublicMcpRoute
+  '/api/public/hub/$': typeof ApiPublicHubSplatRoute
+  '/api/public/hub/demo': typeof ApiPublicHubDemoRoute
+  '/api/public/hub/docs': typeof ApiPublicHubDocsRoute
+  '/api/public/hub/skill': typeof ApiPublicHubSkillRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -143,6 +191,12 @@ export interface FileRoutesById {
   '/sign-up': typeof SignUpRoute
   '/projects/$id': typeof ProjectsIdRoute
   '/projects/': typeof ProjectsIndexRoute
+  '/api/public/healthz': typeof ApiPublicHealthzRoute
+  '/api/public/mcp': typeof ApiPublicMcpRoute
+  '/api/public/hub/$': typeof ApiPublicHubSplatRoute
+  '/api/public/hub/demo': typeof ApiPublicHubDemoRoute
+  '/api/public/hub/docs': typeof ApiPublicHubDocsRoute
+  '/api/public/hub/skill': typeof ApiPublicHubSkillRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -161,6 +215,12 @@ export interface FileRouteTypes {
     | '/sign-up'
     | '/projects/$id'
     | '/projects/'
+    | '/api/public/healthz'
+    | '/api/public/mcp'
+    | '/api/public/hub/$'
+    | '/api/public/hub/demo'
+    | '/api/public/hub/docs'
+    | '/api/public/hub/skill'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -177,6 +237,12 @@ export interface FileRouteTypes {
     | '/sign-up'
     | '/projects/$id'
     | '/projects'
+    | '/api/public/healthz'
+    | '/api/public/mcp'
+    | '/api/public/hub/$'
+    | '/api/public/hub/demo'
+    | '/api/public/hub/docs'
+    | '/api/public/hub/skill'
   id:
     | '__root__'
     | '/'
@@ -193,6 +259,12 @@ export interface FileRouteTypes {
     | '/sign-up'
     | '/projects/$id'
     | '/projects/'
+    | '/api/public/healthz'
+    | '/api/public/mcp'
+    | '/api/public/hub/$'
+    | '/api/public/hub/demo'
+    | '/api/public/hub/docs'
+    | '/api/public/hub/skill'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -210,6 +282,12 @@ export interface RootRouteChildren {
   SignUpRoute: typeof SignUpRoute
   ProjectsIdRoute: typeof ProjectsIdRoute
   ProjectsIndexRoute: typeof ProjectsIndexRoute
+  ApiPublicHealthzRoute: typeof ApiPublicHealthzRoute
+  ApiPublicMcpRoute: typeof ApiPublicMcpRoute
+  ApiPublicHubSplatRoute: typeof ApiPublicHubSplatRoute
+  ApiPublicHubDemoRoute: typeof ApiPublicHubDemoRoute
+  ApiPublicHubDocsRoute: typeof ApiPublicHubDocsRoute
+  ApiPublicHubSkillRoute: typeof ApiPublicHubSkillRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -312,6 +390,48 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProjectsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/healthz': {
+      id: '/api/public/healthz'
+      path: '/api/public/healthz'
+      fullPath: '/api/public/healthz'
+      preLoaderRoute: typeof ApiPublicHealthzRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/mcp': {
+      id: '/api/public/mcp'
+      path: '/api/public/mcp'
+      fullPath: '/api/public/mcp'
+      preLoaderRoute: typeof ApiPublicMcpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hub/$': {
+      id: '/api/public/hub/$'
+      path: '/api/public/hub/$'
+      fullPath: '/api/public/hub/$'
+      preLoaderRoute: typeof ApiPublicHubSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hub/demo': {
+      id: '/api/public/hub/demo'
+      path: '/api/public/hub/demo'
+      fullPath: '/api/public/hub/demo'
+      preLoaderRoute: typeof ApiPublicHubDemoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hub/docs': {
+      id: '/api/public/hub/docs'
+      path: '/api/public/hub/docs'
+      fullPath: '/api/public/hub/docs'
+      preLoaderRoute: typeof ApiPublicHubDocsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hub/skill': {
+      id: '/api/public/hub/skill'
+      path: '/api/public/hub/skill'
+      fullPath: '/api/public/hub/skill'
+      preLoaderRoute: typeof ApiPublicHubSkillRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -330,6 +450,12 @@ const rootRouteChildren: RootRouteChildren = {
   SignUpRoute: SignUpRoute,
   ProjectsIdRoute: ProjectsIdRoute,
   ProjectsIndexRoute: ProjectsIndexRoute,
+  ApiPublicHealthzRoute: ApiPublicHealthzRoute,
+  ApiPublicMcpRoute: ApiPublicMcpRoute,
+  ApiPublicHubSplatRoute: ApiPublicHubSplatRoute,
+  ApiPublicHubDemoRoute: ApiPublicHubDemoRoute,
+  ApiPublicHubDocsRoute: ApiPublicHubDocsRoute,
+  ApiPublicHubSkillRoute: ApiPublicHubSkillRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
