@@ -59,7 +59,7 @@
             "description": {
               "description": "Details.",
               "type": "string",
-              "maxLength": 10000
+              "maxLength": 2000
             },
             "tags": {
               "description": "Tags.",
@@ -103,7 +103,7 @@
             "description": {
               "description": "Details.",
               "type": "string",
-              "maxLength": 10000
+              "maxLength": 2000
             },
             "priority": {
               "description": "Priority.",
@@ -167,7 +167,7 @@
             "evidence": {
               "description": "Real evidence of the work done.",
               "type": "string",
-              "maxLength": 10000
+              "maxLength": 2000
             },
             "title": {
               "description": "Proposed new title (needs owner approval).",
@@ -178,7 +178,7 @@
             "description": {
               "description": "Proposed new description (needs owner approval).",
               "type": "string",
-              "maxLength": 10000
+              "maxLength": 2000
             },
             "priority": {
               "description": "Proposed new priority (needs owner approval).",
@@ -223,13 +223,13 @@
             "summary": {
               "type": "string",
               "minLength": 1,
-              "maxLength": 10000,
+              "maxLength": 2000,
               "description": "What actually happened."
             },
             "nextAction": {
               "type": "string",
               "minLength": 1,
-              "maxLength": 10000,
+              "maxLength": 1000,
               "description": "One small next action."
             },
             "target": {

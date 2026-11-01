@@ -32,7 +32,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   const { isLoaded, isSignedIn } = useAuth();
   const signedIn = !!isSignedIn;
   const hub = useGetHubState({
-    query: { enabled: isLoaded && signedIn, queryKey: getGetHubStateQueryKey(), refetchInterval: 15000 },
+    query: { enabled: isLoaded && signedIn, queryKey: getGetHubStateQueryKey(), refetchInterval: 60000, refetchOnWindowFocus: true },
   });
   const demo = useGetDemoState({
     query: { enabled: isLoaded && !signedIn, queryKey: getGetDemoStateQueryKey() },
