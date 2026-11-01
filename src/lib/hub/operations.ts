@@ -279,8 +279,7 @@ export function saveKickoff(actor: Actor, input: unknown) {
     // Never overwrite project details the owner edited directly after Kickoff last wrote them.
     const untouched = p.version === (record.projectVersion ?? p.version);
     const writeProject = (patch: Partial<typeof p>) => {
-      Object.assign(p, patch, { version: p.version + 1, updatedAt: now });
-      record!.projectVersion = p.version;
+      Object.assign(p, patch);
     };
     // Autosave never puts an unreviewed AI brief or plan into live project context.
     if (k.step <= 1 && untouched && (p.description !== k.brainstorm || p.goal !== k.clarify.goal)) writeProject({ description: k.brainstorm, goal: k.clarify.goal });
@@ -326,6 +325,7 @@ export function saveKickoff(actor: Actor, input: unknown) {
     record.completed = reviewedStep === 5;
     record.data = { ...k, exportedProjectId: record.completed ? p.id : null };
     p.version++; p.updatedAt = now;
+    if (untouched) record.projectVersion = p.version;
     if (reviewedStep !== undefined) audit(s, actor, `Saved Kickoff: ${kickoffSteps[reviewedStep]}`, k.id, p.id, "kickoff-step");
     return record;
   });

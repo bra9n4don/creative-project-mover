@@ -201,6 +201,11 @@ describe("promoteCluster", () => {
     await expect(async () => ops.promoteCluster({ ...owner, agent: true }, { title: "X", outcome: "", tasks: [] })).rejects.toThrow("owner");
   });
 
+  const setup = () => {
+    const db = fakeDb();
+    const owner: Actor = { ownerId: "o", source: "You", agent: false, db: db as unknown as HubDb };
+    return { db, owner, agent: { ...owner, source: "Claude Code", agent: true } as Actor };
+  };
   it("deleting a task closes its pending assistant proposals", async () => {
     const { db, owner, agent } = setup();
     const p = await ops.addProject(owner, { title: "Site" }) as { id: string };
