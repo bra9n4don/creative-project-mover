@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
 import { Link, useLocation, useParams } from "@/lib/router-compat";
-import { ArrowLeft, BadgeCheck, Bookmark, Github, GitPullRequest, Link2, Lock, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
+import { ArrowLeft, BadgeCheck, Bookmark, Github, GitPullRequest, Link2, Lock, Pencil, Plus, RefreshCw, Sparkles, Trash2 } from "lucide-react";
+import { ProjectUpdateDialog } from "@/components/project-update-dialog";
+import { Button } from "@/components/ui/button";
 import {
   useDeleteProject,
   useDeleteTask,
@@ -139,6 +141,7 @@ export default function ProjectDetail() {
   const [taskDlg, setTaskDlg] = useState<{ task?: Task } | null>(null);
   const [verify, setVerify] = useState<Task | null>(null);
   const [cp, setCp] = useState(false);
+  const [updateOpen, setUpdateOpen] = useState(false);
   const del = useDeleteProject();
   const delTask = useDeleteTask();
   const upTask = useUpdateTask();
@@ -176,7 +179,8 @@ export default function ProjectDetail() {
           {project.goal && <p className="mt-2 text-[15px] text-muted-foreground"><span className="font-medium text-foreground">Goal:</span> {project.goal}</p>}
           {project.description && <p className="mt-2 whitespace-pre-line text-sm text-muted-foreground">{project.description}</p>}
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <Button variant="secondary" onClick={() => w("AI drafting needs your own workspace.", () => setUpdateOpen(true))}><Sparkles /> Project update</Button>
           <button className={btn.ghost} data-testid="button-edit-project" onClick={() => w("Editing needs your own workspace.", () => setEdit(true))}><Pencil className="h-4 w-4" /> Edit</button>
           <Confirm
             trigger={<button className={btn.danger} data-testid="button-delete-project"><Trash2 className="h-4 w-4" /></button>}
@@ -292,6 +296,7 @@ export default function ProjectDetail() {
       <TaskDialog open={!!taskDlg} onOpenChange={(o) => !o && setTaskDlg(null)} projectId={project.id} task={taskDlg?.task} siblings={tasks} />
       <VerifyDialog task={verify} onClose={() => setVerify(null)} />
       <CheckpointDialog open={cp} onOpenChange={setCp} projectId={project.id} />
+      <ProjectUpdateDialog open={updateOpen} onOpenChange={setUpdateOpen} projectId={project.id} />
     </AppShell>
   );
 }
