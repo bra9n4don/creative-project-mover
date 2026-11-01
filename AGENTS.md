@@ -16,3 +16,4 @@
 - GitHub calls go through the linked GitHub connector, and every sync run is recorded on `hub_owner` (last_sync_*) — lets the owner confirm the 10-minute automatic sync in Settings.
 - Original Replit screens are kept in `src/pages` behind small shims (`router-compat`, `auth`, `hub-api`) — preserves the source UI with minimal edits.
 - tsconfig relaxes exactOptionalPropertyTypes, noPropertyAccessFromIndexSignature and noImplicitOverride — imported source code was written without them.
+- The app-hosted MCP server (`src/lib/mcp/`, served at `/mcp`) uses OAuth through Lovable Cloud auth and calls `operations.ts` as an agent actor with an RLS-scoped user client — assistants get the same guardrails as `relay_` token tools without copying tokens.

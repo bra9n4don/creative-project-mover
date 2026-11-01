@@ -5,6 +5,7 @@ import { lovable } from "@/integrations/lovable/index";
 import "@lovable.dev/cloud-auth-js/styles.css";
 import { useAuth } from "@/lib/auth";
 import { btn, field } from "@/components/kit";
+import { oauthReturnPath } from "@/lib/oauth-return-path";
 
 function AuthFrame({ children, mode }: { children: ReactNode; mode: "in" | "up" }) {
   return (
@@ -37,10 +38,16 @@ export function AuthPage({ mode }: { mode: "in" | "up" | "forgot" | "reset" }) {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
+  // Validated same-origin return path (e.g. the AI connection consent page); "/" means none.
+  const [next, setNext] = useState("/");
+  useEffect(() => setNext(oauthReturnPath(new URLSearchParams(window.location.search).get("next"))), []);
+  const dest = next === "/" ? "/overview" : next;
+  const goDest = () => void navigate({ href: dest });
+  const nextSearch = next === "/" ? "" : `?next=${encodeURIComponent(next)}`;
 
   useEffect(() => {
-    if (isSignedIn && (mode === "in" || mode === "up")) void navigate({ to: "/overview" });
-  }, [isSignedIn, mode, navigate]);
+    if (isSignedIn && (mode === "in" || mode === "up")) goDest();
+  }, [isSignedIn, mode, dest]);
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
@@ -49,9 +56,9 @@ export function AuthPage({ mode }: { mode: "in" | "up" | "forgot" | "reset" }) {
       if (mode === "in") {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        void navigate({ to: "/overview" });
+        goDest();
       } else if (mode === "up") {
-        const { error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: `${window.location.origin}/overview` } });
+        const { error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: new URL(dest, window.location.origin).href } });
         if (error) throw error;
         setMsg({ kind: "ok", text: "Check your email to confirm your address, then come back to sign in." });
       } else if (mode === "forgot") {
@@ -71,10 +78,10 @@ export function AuthPage({ mode }: { mode: "in" | "up" | "forgot" | "reset" }) {
 
   const social = async (provider: "google" | "lovable") => {
     setMsg(null);
-    const result = await lovable.auth.signInWithOAuth(provider, { redirect_uri: window.location.origin });
+    const result = await lovable.auth.signInWithOAuth(provider, { redirect_uri: new URL(dest, window.location.origin).href });
     if (result.error) { setMsg({ kind: "err", text: result.error.message ?? "Sign-in failed." }); return; }
     if (result.redirected) return;
-    void navigate({ to: "/overview" });
+    goDest();
   };
 
   const titles = {
@@ -113,8 +120,8 @@ export function AuthPage({ mode }: { mode: "in" | "up" | "forgot" | "reset" }) {
           </button>
         </form>
         <div className="mt-5 flex flex-wrap justify-between gap-2 text-sm text-muted-foreground">
-          {mode === "in" && <><Link to="/forgot-password" className="text-primary">Forgot password?</Link><span>New here? <Link to="/sign-up" className="font-semibold text-primary">Create account</Link></span></>}
-          {mode === "up" && <span>Already have one? <Link to="/sign-in" className="font-semibold text-primary">Sign in</Link></span>}
+          {mode === "in" && <><Link to="/forgot-password" className="text-primary">Forgot password?</Link><span>New here? <Link to={`/sign-up${nextSearch}` as "/sign-up"} className="font-semibold text-primary">Create account</Link></span></>}
+          {mode === "up" && <span>Already have one? <Link to={`/sign-in${nextSearch}` as "/sign-in"} className="font-semibold text-primary">Sign in</Link></span>}
           {(mode === "forgot" || mode === "reset") && <Link to="/sign-in" className="text-primary">Back to sign in</Link>}
         </div>
       </div>

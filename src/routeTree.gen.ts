@@ -16,14 +16,17 @@ import { Route as ConnectionsRouteImport } from './routes/connections'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as HandoffsRouteImport } from './routes/handoffs'
 import { Route as IdeasRouteImport } from './routes/ideas'
+import { Route as McpRouteImport } from './routes/mcp'
 import { Route as OverviewRouteImport } from './routes/overview'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SetupRouteImport } from './routes/setup'
 import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as SignUpRouteImport } from './routes/sign-up'
+import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as ProjectsIndexRouteImport } from './routes/projects.index'
 import { Route as ProjectsIdRouteImport } from './routes/projects.$id'
+import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as ApiPublicHealthzRouteImport } from './routes/api/public/healthz'
 import { Route as ApiPublicMcpRouteImport } from './routes/api/public/mcp'
 import { Route as ApiPublicHubSplatRouteImport } from './routes/api/public/hub/$'
@@ -67,6 +70,11 @@ const IdeasRoute = IdeasRouteImport.update({
   path: '/ideas',
   getParentRoute: () => rootRouteImport,
 } as any)
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OverviewRoute = OverviewRouteImport.update({
   id: '/overview',
   path: '/overview',
@@ -97,6 +105,12 @@ const SignUpRoute = SignUpRouteImport.update({
   path: '/sign-up',
   getParentRoute: () => rootRouteImport,
 } as any)
+const Char91DotwellKnownChar93OauthProtectedResourceRoute =
+  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
+    id: '/.well-known/oauth-protected-resource',
+    path: '/.well-known/oauth-protected-resource',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ProjectsIndexRoute = ProjectsIndexRouteImport.update({
   id: '/projects/',
   path: '/projects/',
@@ -105,6 +119,11 @@ const ProjectsIndexRoute = ProjectsIndexRouteImport.update({
 const ProjectsIdRoute = ProjectsIdRouteImport.update({
   id: '/projects/$id',
   path: '/projects/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
+  id: '/.lovable/oauth/consent',
+  path: '/.lovable/oauth/consent',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicHealthzRoute = ApiPublicHealthzRouteImport.update({
@@ -151,14 +170,17 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof ForgotPasswordRoute
   '/handoffs': typeof HandoffsRoute
   '/ideas': typeof IdeasRoute
+  '/mcp': typeof McpRoute
   '/overview': typeof OverviewRoute
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/setup': typeof SetupRoute
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/projects/$id': typeof ProjectsIdRoute
   '/projects/': typeof ProjectsIndexRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/api/public/healthz': typeof ApiPublicHealthzRoute
   '/api/public/mcp': typeof ApiPublicMcpRoute
   '/api/public/hub/$': typeof ApiPublicHubSplatRoute
@@ -175,14 +197,17 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
   '/handoffs': typeof HandoffsRoute
   '/ideas': typeof IdeasRoute
+  '/mcp': typeof McpRoute
   '/overview': typeof OverviewRoute
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/setup': typeof SetupRoute
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/projects/$id': typeof ProjectsIdRoute
   '/projects': typeof ProjectsIndexRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/api/public/healthz': typeof ApiPublicHealthzRoute
   '/api/public/mcp': typeof ApiPublicMcpRoute
   '/api/public/hub/$': typeof ApiPublicHubSplatRoute
@@ -200,14 +225,17 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/handoffs': typeof HandoffsRoute
   '/ideas': typeof IdeasRoute
+  '/mcp': typeof McpRoute
   '/overview': typeof OverviewRoute
   '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/setup': typeof SetupRoute
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
+  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/projects/$id': typeof ProjectsIdRoute
   '/projects/': typeof ProjectsIndexRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/api/public/healthz': typeof ApiPublicHealthzRoute
   '/api/public/mcp': typeof ApiPublicMcpRoute
   '/api/public/hub/$': typeof ApiPublicHubSplatRoute
@@ -226,14 +254,17 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/handoffs'
     | '/ideas'
+    | '/mcp'
     | '/overview'
     | '/reset-password'
     | '/settings'
     | '/setup'
     | '/sign-in'
     | '/sign-up'
+    | '/.well-known/oauth-protected-resource'
     | '/projects/$id'
     | '/projects/'
+    | '/.lovable/oauth/consent'
     | '/api/public/healthz'
     | '/api/public/mcp'
     | '/api/public/hub/$'
@@ -250,14 +281,17 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/handoffs'
     | '/ideas'
+    | '/mcp'
     | '/overview'
     | '/reset-password'
     | '/settings'
     | '/setup'
     | '/sign-in'
     | '/sign-up'
+    | '/.well-known/oauth-protected-resource'
     | '/projects/$id'
     | '/projects'
+    | '/.lovable/oauth/consent'
     | '/api/public/healthz'
     | '/api/public/mcp'
     | '/api/public/hub/$'
@@ -274,14 +308,17 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/handoffs'
     | '/ideas'
+    | '/mcp'
     | '/overview'
     | '/reset-password'
     | '/settings'
     | '/setup'
     | '/sign-in'
     | '/sign-up'
+    | '/.well-known/oauth-protected-resource'
     | '/projects/$id'
     | '/projects/'
+    | '/.lovable/oauth/consent'
     | '/api/public/healthz'
     | '/api/public/mcp'
     | '/api/public/hub/$'
@@ -299,14 +336,17 @@ export interface RootRouteChildren {
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   HandoffsRoute: typeof HandoffsRoute
   IdeasRoute: typeof IdeasRoute
+  McpRoute: typeof McpRoute
   OverviewRoute: typeof OverviewRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   SettingsRoute: typeof SettingsRoute
   SetupRoute: typeof SetupRoute
   SignInRoute: typeof SignInRoute
   SignUpRoute: typeof SignUpRoute
+  Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   ProjectsIdRoute: typeof ProjectsIdRoute
   ProjectsIndexRoute: typeof ProjectsIndexRoute
+  DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   ApiPublicHealthzRoute: typeof ApiPublicHealthzRoute
   ApiPublicMcpRoute: typeof ApiPublicMcpRoute
   ApiPublicHubSplatRoute: typeof ApiPublicHubSplatRoute
@@ -367,6 +407,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IdeasRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/overview': {
       id: '/overview'
       path: '/overview'
@@ -409,6 +456,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SignUpRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/.well-known/oauth-protected-resource': {
+      id: '/.well-known/oauth-protected-resource'
+      path: '/.well-known/oauth-protected-resource'
+      fullPath: '/.well-known/oauth-protected-resource'
+      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/projects/': {
       id: '/projects/'
       path: '/projects'
@@ -421,6 +475,13 @@ declare module '@tanstack/react-router' {
       path: '/projects/$id'
       fullPath: '/projects/$id'
       preLoaderRoute: typeof ProjectsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.lovable/oauth/consent': {
+      id: '/.lovable/oauth/consent'
+      path: '/.lovable/oauth/consent'
+      fullPath: '/.lovable/oauth/consent'
+      preLoaderRoute: typeof DotlovableOauthConsentRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/healthz': {
@@ -483,14 +544,18 @@ const rootRouteChildren: RootRouteChildren = {
   ForgotPasswordRoute: ForgotPasswordRoute,
   HandoffsRoute: HandoffsRoute,
   IdeasRoute: IdeasRoute,
+  McpRoute: McpRoute,
   OverviewRoute: OverviewRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   SettingsRoute: SettingsRoute,
   SetupRoute: SetupRoute,
   SignInRoute: SignInRoute,
   SignUpRoute: SignUpRoute,
+  Char91DotwellKnownChar93OauthProtectedResourceRoute:
+    Char91DotwellKnownChar93OauthProtectedResourceRoute,
   ProjectsIdRoute: ProjectsIdRoute,
   ProjectsIndexRoute: ProjectsIndexRoute,
+  DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   ApiPublicHealthzRoute: ApiPublicHealthzRoute,
   ApiPublicMcpRoute: ApiPublicMcpRoute,
   ApiPublicHubSplatRoute: ApiPublicHubSplatRoute,
