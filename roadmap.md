@@ -25,3 +25,4 @@
 - [x] Mind map AI Expand (drafts brief + plan for review), promote clusters to Step 4 milestones, standalone saved /mind-map page
 - [x] Mind map page: full canvas, save node to Ideas / make project, promote clusters to projects
 - [x] Forced postcss-selector-parser 6.1.5 for @tailwindcss/typography
+- [x] Add assistant connection instructions page (/connect)
