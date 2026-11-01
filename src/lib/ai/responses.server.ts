@@ -11,7 +11,7 @@ import {
 
 export function createResponsesCall<T = z.infer<typeof updateDraftSchema>>(
   request: Request,
-  config: { baseURL: string; apiKey: string; model: string },
+  config: { baseURL: string; apiKey: string; model: string; reasoningEffort?: "low" | "medium" | "high" },
   messages: ModelMessage[],
   instructions?: string,
   schema?: z.ZodType<T>,
@@ -46,7 +46,7 @@ export function createResponsesCall<T = z.infer<typeof updateDraftSchema>>(
         ...(reasoning
           ? {
               forceReasoning: true,
-              reasoningEffort: "medium",
+              reasoningEffort: config.reasoningEffort ?? "medium",
               reasoningSummary: "auto",
               include: ["reasoning.encrypted_content"],
             }

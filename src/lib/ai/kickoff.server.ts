@@ -25,7 +25,7 @@ export async function handleKickoffDraft(request: Request): Promise<Response> {
     : "Draft 2-5 milestones, each with a title (max 200 characters), measurable outcome (max 1000 characters), and 1-5 concrete starter tasks. Each task has title (max 200), description (max 1500), priority low/medium/high. Fit the scope, budget, timeline and available time. Do not claim tasks are done. Do not invent deadlines.");
   try {
     const schema: z.ZodTypeAny = mode === "brief" ? briefSchema : planSchema;
-    const call = createResponsesCall(request, { baseURL: "https://ai.gateway.lovable.dev/v1", apiKey: aiKey, model: "openai/gpt-6-astra" }, [{ role: "user", content: JSON.stringify({ brainstorm: kickoff.brainstorm, answers: kickoff.clarify, brief: mode === "plan" ? kickoff.brief : undefined }) }], prompt, schema);
+    const call = createResponsesCall(request, { baseURL: "https://ai.gateway.lovable.dev/v1", apiKey: aiKey, model: "openai/gpt-6-astra", reasoningEffort: mode === "brief" ? "low" : "medium" }, [{ role: "user", content: JSON.stringify({ brainstorm: kickoff.brainstorm, answers: kickoff.clarify, brief: mode === "plan" ? kickoff.brief : undefined }) }], prompt, schema);
     const output = Promise.resolve(call.result.output); void output.catch(() => {});
     await call.runIdFetch.waitForRunId();
     const failure = call.getFailure();

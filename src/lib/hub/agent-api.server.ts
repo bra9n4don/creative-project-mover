@@ -52,7 +52,7 @@ export async function handleMcp(request: Request) {
         if (!tool) return { jsonrpc: "2.0", id: m.id ?? null, error: { code: -32602, message: "Unknown tool" } };
         try {
           const args = tool.schema.parse(m.params?.arguments ?? {}) as Record<string, unknown>;
-          return reply({ content: [{ type: "text", text: JSON.stringify(await tool.run(actor, args), null, 2) }] });
+          return reply({ content: [{ type: "text", text: JSON.stringify(await tool.run(actor, args)) }] });
         } catch (e) {
           return reply({ isError: true, content: [{ type: "text", text: e instanceof Error ? e.message : "Operation failed" }] });
         }
