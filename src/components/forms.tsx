@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { useLocation } from "wouter";
+import { useLocation } from "@/lib/router-compat";
 import {
   useCreateProject,
   useUpdateProject,
@@ -8,7 +8,7 @@ import {
   useUpdateTask,
   type Project,
   type Task,
-} from "@workspace/api-client-react";
+} from "@/lib/hub-api";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Field, btn, field } from "@/components/kit";
 import { useHubResult, useWorkspace } from "@/lib/workspace";

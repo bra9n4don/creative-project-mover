@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
-import { useAuth } from "@clerk/react";
-import { Link } from "wouter";
+import { useAuth } from "@/lib/auth";
+import { Link } from "@/lib/router-compat";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   useGetHubState,
@@ -11,7 +11,7 @@ import {
   type Handoff,
   type Project,
   type Task,
-} from "@workspace/api-client-react";
+} from "@/lib/hub-api";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Lock } from "lucide-react";

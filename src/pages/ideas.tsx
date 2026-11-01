@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Archive, ArrowUpRight, Lightbulb, Pencil, Trash2 } from "lucide-react";
-import { useCreateIdea, useUpdateIdea, useDeleteIdea, usePromoteIdea, type Idea } from "@workspace/api-client-react";
+import { useCreateIdea, useUpdateIdea, useDeleteIdea, usePromoteIdea, type Idea } from "@/lib/hub-api";
 import { AppShell } from "@/components/shell";
 import { Confirm, Empty, ErrorBlock, Field, LoadingBlock, PageHeader, Pill, ago, btn, field } from "@/components/kit";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";

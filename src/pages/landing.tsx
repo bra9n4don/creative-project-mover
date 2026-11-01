@@ -1,4 +1,4 @@
-import { Link } from "wouter";
+import { Link } from "@/lib/router-compat";
 import { ArrowRight } from "lucide-react";
 import { AppShell } from "@/components/shell";
 import { OverviewBody } from "@/pages/overview";

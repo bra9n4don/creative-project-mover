@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from "react";
-import { Link, useLocation } from "wouter";
-import { useUser } from "@clerk/react";
+import { Link, useLocation } from "@/lib/router-compat";
+import { useUser } from "@/lib/auth";
 import { Bookmark, FolderKanban, History, Lightbulb, Menu, Plug, Settings, ShieldCheck, Sunrise, X } from "lucide-react";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";

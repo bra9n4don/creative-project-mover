@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Link } from "wouter";
+import { Link } from "@/lib/router-compat";
 import { ArrowRight, Bookmark, FolderPlus, Lightbulb, Play, Plug, ShieldCheck } from "lucide-react";
 import { AppShell } from "@/components/shell";
 import { Bar, CopyButton, Dot, Empty, ErrorBlock, LoadingBlock, Panel, Pill, ago, btn } from "@/components/kit";

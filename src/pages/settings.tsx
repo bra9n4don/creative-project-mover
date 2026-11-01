@@ -1,6 +1,6 @@
-import { Link } from "wouter";
+import { Link } from "@/lib/router-compat";
 import { LogOut, ShieldCheck } from "lucide-react";
-import { useClerk, useUser } from "@clerk/react";
+import { useClerk, useUser } from "@/lib/auth";
 import { AppShell } from "@/components/shell";
 import { ErrorBlock, LoadingBlock, PageHeader, Panel, btn } from "@/components/kit";
 import { usePageTitle, useWorkspace } from "@/lib/workspace";

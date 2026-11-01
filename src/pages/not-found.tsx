@@ -1,4 +1,4 @@
-import { Link } from "wouter";
+import { Link } from "@/lib/router-compat";
 import { btn } from "@/components/kit";
 
 export default function NotFound() {

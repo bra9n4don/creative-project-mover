@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { AlertTriangle, BookOpen, ChevronDown, Download, KeyRound, Plug } from "lucide-react";
-import { useHealthCheck, useIssueAgentToken, useRevokeAgentToken, type Connection, type TokenResult } from "@workspace/api-client-react";
+import { useHealthCheck, useIssueAgentToken, useRevokeAgentToken, type Connection, type TokenResult } from "@/lib/hub-api";
 import { AppShell } from "@/components/shell";
 import { Confirm, CopyButton, ErrorBlock, LoadingBlock, PageHeader, Pill, ago, btn } from "@/components/kit";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -149,8 +149,8 @@ export default function ConnectionsPage() {
   return (
     <AppShell>
       <PageHeader eyebrow="Behind the scenes" title="AI tools" lede="Give each tool its own token so it can read your plans and save checkpoints. Tokens last 90 days and are shown once.">
-        <a href="/api/hub/skill" download className={btn.ghost} data-testid="link-download-skill"><Download className="h-4 w-4" /> Agent skill</a>
-        <a href="/api/hub/docs" target="_blank" rel="noreferrer" className={btn.ghost} data-testid="link-api-docs"><BookOpen className="h-4 w-4" /> API docs</a>
+        <a href="/api/public/hub/skill" download className={btn.ghost} data-testid="link-download-skill"><Download className="h-4 w-4" /> Agent skill</a>
+        <a href="/api/public/hub/docs" target="_blank" rel="noreferrer" className={btn.ghost} data-testid="link-api-docs"><BookOpen className="h-4 w-4" /> API docs</a>
       </PageHeader>
       <div className="rise mb-6 grid gap-3 rounded-2xl border bg-card p-4 text-sm md:grid-cols-[1fr_auto] md:items-center">
         <div>

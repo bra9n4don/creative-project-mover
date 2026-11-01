@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Link } from "wouter";
+import { Link } from "@/lib/router-compat";
 import { ArrowRight, Bookmark, Play } from "lucide-react";
 import { AppShell } from "@/components/shell";
 import { CopyButton, Dot, Empty, ErrorBlock, LoadingBlock, PageHeader, ago, btn, field } from "@/components/kit";

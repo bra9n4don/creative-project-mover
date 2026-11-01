@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Link, useLocation, useParams } from "wouter";
+import { Link, useLocation, useParams } from "@/lib/router-compat";
 import { ArrowLeft, BadgeCheck, Bookmark, Github, GitPullRequest, Link2, Lock, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
 import {
   useDeleteProject,
@@ -11,7 +11,7 @@ import {
   getListGithubReposQueryKey,
   type Task,
   type Project,
-} from "@workspace/api-client-react";
+} from "@/lib/hub-api";
 import { AppShell } from "@/components/shell";
 import { Bar, Confirm, CopyButton, Dot, Empty, ErrorBlock, Field, LoadingBlock, Panel, Pill, ago, btn, field } from "@/components/kit";
 import { CheckpointDialog, ProjectDialog, TaskDialog } from "@/components/forms";

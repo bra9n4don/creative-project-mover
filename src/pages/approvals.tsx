@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { Link } from "wouter";
+import { Link } from "@/lib/router-compat";
 import { Check, ShieldCheck, X } from "lucide-react";
-import { useDecideApproval, type Approval } from "@workspace/api-client-react";
+import { useDecideApproval, type Approval } from "@/lib/hub-api";
 import { AppShell } from "@/components/shell";
 import { Confirm, Empty, ErrorBlock, LoadingBlock, PageHeader, Pill, ago } from "@/components/kit";
 import { useHubResult, usePageTitle, useWorkspace } from "@/lib/workspace";
