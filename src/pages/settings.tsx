@@ -40,7 +40,7 @@ export default function SettingsPage() {
             <div className="p-5">
               {isDemo ? (
                 <>
-                  <p className="text-sm text-muted-foreground">You're in the preview. Relay is a single-owner space: the first account you create, with a verified email that matches your linked GitHub account, becomes the owner.</p>
+                  <p className="text-sm text-muted-foreground">You're in the preview. Relay is a single-owner space: the first account to sign in with a verified email becomes the owner.</p>
                   <div className="mt-4 flex gap-2">
                     <Link href="/sign-up" className={btn.primary} data-testid="link-settings-signup">Create my workspace</Link>
                     <Link href="/sign-in" className={btn.ghost} data-testid="link-settings-signin">Sign in</Link>

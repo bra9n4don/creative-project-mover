@@ -8,8 +8,8 @@ import { errMessage, useHubResult, usePageTitle, useWorkspace } from "@/lib/work
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
-const origin = window.location.origin;
-const host = window.location.hostname;
+const origin = typeof window === "undefined" ? "" : window.location.origin;
+const host = typeof window === "undefined" ? "" : window.location.hostname;
 const isDev = /localhost|127\.0\.0\.1|id-preview--|lovableproject\.com/.test(host);
 const mcpUrl = `${origin}/api/public/mcp`;
 

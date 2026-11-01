@@ -105,7 +105,7 @@ function GithubPanel({ project }: { project: Project }) {
             {repos.isLoading && <div className="p-3 text-xs text-muted-foreground">Asking GitHub…</div>}
             {repos.error && (
               <div className="p-3 text-xs text-destructive">
-                {status === 403 ? "GitHub access denied. Your verified sign-in email must match the GitHub account connected to Relay." : errMessage(repos.error)}
+                {status === 403 ? "GitHub access denied. Check that the GitHub token connected to Relay can read your repositories." : errMessage(repos.error)}
               </div>
             )}
             {repos.data?.map((r) => (
