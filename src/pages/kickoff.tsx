@@ -4,7 +4,7 @@ import { useAuth } from "@/lib/auth";
 import { useWorkspace, errMessage } from "@/lib/workspace";
 import { supabase } from "@/integrations/supabase/client";
 import { useKickoffSaving } from "@/lib/use-kickoff-saving";
-import { briefSchema, planSchema, checkpointCode, clarifyFields, kickoffMarkdown, kickoffSchema, kickoffSteps, newKickoff, restoreCheckpoint, stepIssue, syncBrainstorm, type Kickoff } from "@/lib/kickoff";
+import { briefSchema, planSchema, checkpointCode, clarifyFields, kickoffMarkdown, kickoffSchema, kickoffSteps, newKickoff, restoreCheckpoint, stepIssue, syncBrainstorm, kickoffSizeIssue, type Kickoff } from "@/lib/kickoff";
 import { KickoffMindMap, emptyMindMap } from "@/components/kickoff-mind-map";
 import { AppShell } from "@/components/shell";
 import { Field, field, ErrorBlock, LoadingBlock } from "@/components/kit";
@@ -152,6 +152,7 @@ function KickoffBody() {
           <div className="flex flex-wrap gap-3"><Button variant="outline" onClick={() => download("relay-project-brief.md", kickoffMarkdown(k), "text/markdown")}><Download /> Download brief</Button>{k.exportedProjectId ? <Button asChild><Link href={`/projects/${k.exportedProjectId}`}><ArrowRight /> Open project</Link></Button> : <Button disabled={saving || !Object.values(k.review).every(Boolean)} onClick={exportToRelay}>{saving ? <Loader2 className="animate-spin" /> : <Rocket />} Complete Kickoff</Button>}</div>
         </>}
       </section><KickoffGuidance step={k.step} /></div>
+      {k.step >= 2 && kickoffSizeIssue(k) && <p role="status" className="mt-6 rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm">{kickoffSizeIssue(k)}</p>}
       <footer className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t pt-5"><Button variant="ghost" disabled={k.step === 0 || locked} onClick={() => { setK(prev => ({ ...prev, step: prev.step - 1 })); setError(""); }}><ArrowLeft /> Back</Button><div className="flex flex-wrap gap-2"><Button variant="outline" disabled={busy || saving} onClick={pause}><Pause /> Save checkpoint & pause</Button>{k.step < 5 && <Button disabled={locked} onClick={continueStep}><ArrowRight />{k.step === 2 ? "Save reviewed brief & continue" : k.step === 3 ? "Save reviewed tasks & continue" : "Continue"}</Button>}</div></footer>
     </>}
     <input type="file" accept=".json,application/json" ref={upload} className="hidden" aria-label="Upload checkpoint" onChange={async e => { const file = e.target.files?.[0]; if (!file) return; if (file.size > 1000000) setError("Checkpoint is too large."); else restore(await file.text()); e.target.value = ""; }} />

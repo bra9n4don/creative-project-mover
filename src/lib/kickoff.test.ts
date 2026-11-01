@@ -49,3 +49,21 @@ describe("Kickoff mind map", () => {
     expect(restoreCheckpoint(checkpointCode(k))).toEqual(k);
   });
 });
+
+import { kickoffSizeIssue, KICKOFF_BRIEF_LIMIT, CHECKPOINT_LIMIT } from "./kickoff";
+describe("Kickoff length limits", () => {
+  it("flags a brief longer than the 10,000-character project notes", () => {
+    const k = newKickoff(); k.brief.goal = "x".repeat(KICKOFF_BRIEF_LIMIT);
+    expect(kickoffSizeIssue(k)).not.toBeNull();
+    expect(kickoffSizeIssue(newKickoff())).toBeNull();
+  });
+  it("can restore the largest checkpoint the wizard allows", () => {
+    const k = newKickoff(); const big = "é".repeat(10000);
+    k.brainstorm = big; k.risks = big;
+    for (const f of Object.keys(k.clarify) as (keyof typeof k.clarify)[]) k.clarify[f] = big;
+    k.plan.milestones = Array.from({ length: 8 }, () => ({ title: "m", outcome: big, tasks: Array.from({ length: 20 }, () => ({ title: "t", description: big, priority: "low" as const })) }));
+    const code = checkpointCode(k);
+    expect(code.length).toBeLessThan(CHECKPOINT_LIMIT);
+    expect(restoreCheckpoint(code).plan.milestones).toHaveLength(8);
+  });
+});
