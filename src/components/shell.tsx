@@ -17,6 +17,7 @@ const primaryNav = [
 ];
 const secondaryNav = [
   { href: "/connections", label: "AI tools", icon: Plug },
+  { href: "/connect", label: "Connect assistant", icon: Plug },
   { href: "/approvals", label: "Approvals", icon: ShieldCheck },
   { href: "/activity", label: "Activity log", icon: History },
   { href: "/settings", label: "Settings", icon: Settings },
