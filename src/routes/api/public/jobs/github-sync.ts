@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { authenticateCronRequest } from "@/integrations/supabase/cron-auth";
 
-// Automatic read-only GitHub sync, called by the managed schedule every 10 minutes.
+// Automatic read-only GitHub sync, called by the managed schedule every hour.
 export const Route = createFileRoute("/api/public/jobs/github-sync")({
   server: {
     handlers: {

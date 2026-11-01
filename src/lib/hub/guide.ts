@@ -55,7 +55,7 @@ export const apiDocs = {
     decisions: "POST /api/public/hub/approvals/:id/decide {decision: approved|rejected} (browser owner only)",
     github: "POST /api/public/hub/github/sync (browser owner only, read-only upstream)",
   },
-  automation: "Your client must call Relay tools. Relay cannot silently read native chat history or detect distraction. Use its skill or configure local client hooks. GitHub-linked projects are refreshed read-only every 10 minutes after the first successful sync while the server is running; manual sync is also available.",
+  automation: "Your client must call Relay tools. Relay cannot silently read native chat history or detect distraction. Use its skill or configure local client hooks. GitHub-linked projects are refreshed read-only every hour after the first successful sync while the server is running; manual sync is also available.",
   privacy: "Single owner, claimed by the first account to sign in with a verified email. No public real workspace data. /api/public/hub/demo is synthetic read-only sample data.",
   statuses: "done is reported completion; verified is the owner's confirmation with evidence. A configured connection is only verified after a successful authenticated machine request. lastSeen is last contact, not live availability.",
 };

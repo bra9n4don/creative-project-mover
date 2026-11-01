@@ -80,8 +80,8 @@ describe("mindMapClusters", () => {
   it("makes each main branch a milestone titled by the cluster", () => {
     const ms = mindMapClusters(map);
     expect(ms.map(m => m.title)).toEqual(["Onboarding", "Billing"]);
-    expect(ms[0].tasks.map(t => t.title)).toEqual(["Sign up"]);
-    expect(ms[0].outcome).toContain("Risk: Spam signups");
+    expect(ms[0]!.tasks.map(t => t.title)).toEqual(["Sign up"]);
+    expect(ms[0]!.outcome).toContain("Risk: Spam signups");
   });
   it("caps at 8 milestones", () => {
     const nodes = [{ id: "r", label: "R", kind: "idea" as const, x: 0, y: 0 }, ...Array.from({ length: 10 }, (_, i) => ({ id: `c${i}`, label: `C${i}`, kind: "idea" as const, x: 0, y: 0 }))];

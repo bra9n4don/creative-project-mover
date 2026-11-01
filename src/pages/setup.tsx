@@ -71,7 +71,7 @@ export default function SetupPage() {
               {steps.tokens !== "blocked" && <Link href="/connections" className={btn.primary}>Issue tokens</Link>}
             </Step>
             <Step n={5} state={steps.github} title="Optional: GitHub sync">
-              <p>Press "Sync now" once in Settings to turn on automatic sync every 10 minutes.</p>
+              <p>Press "Sync now" once in Settings to turn on automatic hourly sync.</p>
               {steps.github === "todo" && <Link href="/settings" className={btn.ghost}>Open Settings</Link>}
             </Step>
           </ol>
