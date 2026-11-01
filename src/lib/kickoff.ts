@@ -70,6 +70,8 @@ export const savedKickoffSchema = z.object({
   data: kickoffSchema, projectId: z.string(), revision: z.number().int(),
   completed: z.boolean(), updatedAt: z.string(),
   taskIds: z.record(z.string(), z.string()), handoffIds: z.record(z.string(), z.string()),
+  /** Project version Kickoff last wrote; a higher project version means the owner edited it directly. */
+  projectVersion: z.number().int().optional(),
 });
 export type SavedKickoff = z.infer<typeof savedKickoffSchema>;
 export const saveKickoffSchema = z.object({

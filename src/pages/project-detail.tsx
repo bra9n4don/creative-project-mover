@@ -186,7 +186,7 @@ export default function ProjectDetail() {
           {project.description && <p className="mt-2 whitespace-pre-line text-sm text-muted-foreground">{project.description}</p>}
         </div>
         <div className="flex flex-wrap gap-2">
-          {unfinishedKickoff && <Button variant="outline" asChild><Link href="/kickoff"><ArrowLeft /> Resume Kickoff · Step {unfinishedKickoff.data.step + 1}</Link></Button>}
+          {unfinishedKickoff && <Button variant="outline" asChild><Link href={`/kickoff?resume=${unfinishedKickoff.data.id}`}><ArrowLeft /> Resume Kickoff · Step {unfinishedKickoff.data.step + 1}</Link></Button>}
           <Button variant="secondary" onClick={() => w("AI drafting needs your own workspace.", () => setUpdateOpen(true))}><Sparkles /> Project update</Button>
           <button className={btn.ghost} data-testid="button-edit-project" onClick={() => w("Editing needs your own workspace.", () => setEdit(true))}><Pencil className="h-4 w-4" /> Edit</button>
           <Confirm

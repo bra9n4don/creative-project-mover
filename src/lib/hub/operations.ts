@@ -146,6 +146,11 @@ export function removeTask(actor: Actor, id: string) {
     if (!t) throw new HubError(404, "Task not found");
     if (s.tasks.some(other => other.dependencies.includes(id))) throw new HubError(409, "Remove this task from other tasks' dependencies before deleting it.");
     s.tasks = s.tasks.filter(t => t.id !== id);
+    // Pending proposals for a deleted task can never be approved, so close them out.
+    for (const a of s.approvals) {
+      if (a.status !== "pending") continue;
+      try { if (JSON.parse(a.changes).taskId === id) a.status = "rejected"; } catch { /* malformed proposal: leave as is */ }
+    }
     audit(s, actor, `Deleted task: ${t.title}`, "", t.projectId, "delete"); return ok("Task deleted.");
   });
 }
@@ -265,17 +270,23 @@ export function saveKickoff(actor: Actor, input: unknown) {
       if (k.sourceIdeaId && (!idea || idea.status === "promoted")) throw new HubError(409, "Choose an available idea before saving.");
       const projectId = randomUUID();
       s.projects.unshift({ id: projectId, title: idea?.title ?? (k.brainstorm.trim().split("\n")[0]?.slice(0, 150) || "Untitled Kickoff"), description: k.brainstorm, goal: "", status: "planning", priority: "medium", repository: "", color: "teal", version: 1, createdAt: now, updatedAt: now });
-      record = { data: k, projectId, revision: 0, completed: false, updatedAt: now, taskIds: {}, handoffIds: {} };
+      record = { data: k, projectId, revision: 0, completed: false, updatedAt: now, taskIds: {}, handoffIds: {}, projectVersion: 1 };
       s.kickoffs.push(record);
       if (idea) idea.status = "promoted";
       audit(s, actor, "Started Kickoff project", k.id, projectId, "kickoff-start");
     }
     const p = project(s, record.projectId);
+    // Never overwrite project details the owner edited directly after Kickoff last wrote them.
+    const untouched = p.version === (record.projectVersion ?? p.version);
+    const writeProject = (patch: Partial<typeof p>) => {
+      Object.assign(p, patch);
+    };
     // Autosave never puts an unreviewed AI brief or plan into live project context.
-    if (k.step <= 1) { p.description = k.brainstorm; p.goal = k.clarify.goal; }
+    if (k.step <= 1 && untouched && (p.description !== k.brainstorm || p.goal !== k.clarify.goal)) writeProject({ description: k.brainstorm, goal: k.clarify.goal });
     if (reviewedStep === 2 || reviewedStep === 5) {
-      p.title = k.brief.title.trim(); p.goal = k.brief.goal;
-      p.description = reviewedStep === 5 ? kickoffMarkdown(k) : kickoffMarkdown({ ...k, plan: { milestones: [] }, risks: "", firstActions: ["", "", ""] });
+      if (!untouched) throw new HubError(409, "You edited this project directly. Kickoff won't overwrite your changes. Update the project from its page instead.");
+      writeProject({ title: k.brief.title.trim(), goal: k.brief.goal,
+        description: reviewedStep === 5 ? kickoffMarkdown(k) : kickoffMarkdown({ ...k, plan: { milestones: [] }, risks: "", firstActions: ["", "", ""] }) });
     }
     const upsertTasks = (group: string, items: { title: string; description: string; priority: "low" | "medium" | "high" }[]) => {
       for (const [i, item] of items.entries()) {
@@ -314,6 +325,7 @@ export function saveKickoff(actor: Actor, input: unknown) {
     record.completed = reviewedStep === 5;
     record.data = { ...k, exportedProjectId: record.completed ? p.id : null };
     p.version++; p.updatedAt = now;
+    if (untouched) record.projectVersion = p.version;
     if (reviewedStep !== undefined) audit(s, actor, `Saved Kickoff: ${kickoffSteps[reviewedStep]}`, k.id, p.id, "kickoff-step");
     return record;
   });

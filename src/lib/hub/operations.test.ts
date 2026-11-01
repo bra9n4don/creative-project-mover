@@ -200,4 +200,32 @@ describe("promoteCluster", () => {
     const { owner } = mk();
     await expect(async () => ops.promoteCluster({ ...owner, agent: true }, { title: "X", outcome: "", tasks: [] })).rejects.toThrow("owner");
   });
+
+  const setup = () => {
+    const db = fakeDb();
+    const owner: Actor = { ownerId: "o", source: "You", agent: false, db: db as unknown as HubDb };
+    return { db, owner, agent: { ...owner, source: "Claude Code", agent: true } as Actor };
+  };
+  it("deleting a task closes its pending assistant proposals", async () => {
+    const { db, owner, agent } = setup();
+    const p = await ops.addProject(owner, { title: "Site" }) as { id: string };
+    const projectId = p.id ?? db.state.projects[0]!.id;
+    await ops.addTask(owner, { projectId, title: "Write copy" });
+    const t = db.state.tasks[0]!;
+    await ops.editTask(agent, t.id, { title: "Write better copy", expectedVersion: t.version });
+    expect(db.state.approvals[0]?.status).toBe("pending");
+    await ops.removeTask(owner, t.id);
+    expect(db.state.approvals[0]?.status).toBe("rejected");
+  });
+
+  it("Kickoff never overwrites project details the owner edited directly", async () => {
+    const { db, owner } = setup();
+    const k = newKickoff(); k.brainstorm = "Recipe scaler";
+    const first = await ops.saveKickoff(owner, { kickoff: k, expectedRevision: 0 });
+    const proj = db.state.projects[0]!;
+    await ops.editProject(owner, proj.id, { description: "My own notes", expectedVersion: proj.version });
+    k.brainstorm = "Recipe scaler v2";
+    await ops.saveKickoff(owner, { kickoff: k, expectedRevision: first.revision });
+    expect(db.state.projects[0]?.description).toBe("My own notes");
+  });
 });
