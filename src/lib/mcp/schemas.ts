@@ -31,6 +31,6 @@ export const checkpointShape = {
   projectId: z.string().describe("Project ID from get_context."),
   title: z.string().min(1).max(150).describe("Checkpoint title."),
   summary: z.string().min(1).max(10000).describe("What actually happened."),
-  nextAction: z.string().min(1).max(1000).describe("One small next action."),
+  nextAction: z.string().min(1).max(10000).describe("One small next action."),
   target: z.string().max(100).optional().describe("Who picks this up next."),
 };
