@@ -15,6 +15,13 @@
       "when": 1793531721821,
       "tag": "0001_migration",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1793532249287,
+      "tag": "0002_hub_is_claimed",
+      "breakpoints": true
     }
   ]
 }

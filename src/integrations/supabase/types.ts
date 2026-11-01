@@ -122,6 +122,7 @@ export type Database = {
     }
     Functions: {
       claim_hub: { Args: never; Returns: boolean }
+      hub_is_claimed: { Args: never; Returns: boolean }
       is_hub_owner: { Args: { _uid: string }; Returns: boolean }
     }
     Enums: {
