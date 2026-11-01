@@ -40,7 +40,6 @@ export const Route = createFileRoute("/api/public/slack/events")({
         if (!ev || ev.bot_id || ev.subtype || !ev.channel || !["app_mention", "message"].includes(ev.type)) return new Response("ok");
         // Only Brandon's own Slack account may read or write the workspace.
         if (!isOwnerSlackEvent(parsed.team_id, ev.user)) return new Response("ok");
-        let ideaSaved = false;
         try {
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
           const { data: owner } = await supabaseAdmin.from("hub_owner").select("user_id").eq("id", "personal").maybeSingle();
@@ -56,7 +55,6 @@ export const Route = createFileRoute("/api/public/slack/events")({
               const tag = parsed.event_id ? `slack:${parsed.event_id}` : null;
               const already = tag && (await getState(actor)).ideas.some(i => i.tags.includes(tag));
               if (!already) await addIdea(actor, { title: action.idea.title, description: action.idea.description, tags: tag ? ["slack", tag] : ["slack"] });
-              ideaSaved = true;
             }
             reply = action.reply;
           }
@@ -69,8 +67,8 @@ export const Route = createFileRoute("/api/public/slack/events")({
           if (!res.ok || !JSON.parse(out).ok) throw new Error(`Slack reply failed [${res.status}]: ${out}`);
         } catch (e) {
           console.error("Slack handler error", e);
-          // Ask Slack to retry only if nothing was saved yet, so a retry can't duplicate an idea.
-          if (!ideaSaved) return new Response("retry", { status: 500 });
+          // Safe to retry: ideas are de-duplicated by Slack's event_id.
+          return new Response("retry", { status: 500 });
         }
         return new Response("ok");
       },
