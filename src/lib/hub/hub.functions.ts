@@ -55,6 +55,7 @@ export const saveReviewedUpdateFn = authed.inputValidator(dataOnly).handler(({ c
 export const exportKickoffFn = authed.inputValidator(dataOnly).handler(({ context, data }) => run(async () => ops.exportKickoff(await ownerActor(context), data.data)));
 export const saveKickoffFn = authed.inputValidator(dataOnly).handler(({ context, data }) => run(async () => ops.saveKickoff(await ownerActor(context), data.data)));
 export const saveMindMapFn = authed.inputValidator(dataOnly).handler(({ context, data }) => run(async () => ops.saveMindMap(await ownerActor(context), data.data)));
+export const promoteClusterFn = authed.inputValidator(dataOnly).handler(({ context, data }) => run(async () => ops.promoteCluster(await ownerActor(context), data.data)));
 export const getMindMapFn = authed.handler(({ context }) => run(async () => {
   const actor = await ownerActor(context);
   return (await readState(actor.db, actor.ownerId)).mindMap ?? null;
