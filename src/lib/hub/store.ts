@@ -3,8 +3,13 @@ import type { z } from "zod/v4";
 import type { Database } from "@/integrations/supabase/types";
 import { GetHubStateResponse } from "./api-zod";
 import { clients, policy } from "./clients";
+import { savedKickoffSchema, type SavedKickoff } from "../kickoff";
 
-export type HubState = z.infer<typeof GetHubStateResponse>;
+export type HubState = z.infer<typeof GetHubStateResponse> & { kickoffs: SavedKickoff[] };
+function parseState(data: unknown): HubState {
+  const raw = data as { kickoffs?: unknown[] };
+  return { ...GetHubStateResponse.parse(data), kickoffs: (raw.kickoffs ?? []).map(k => savedKickoffSchema.parse(k)) };
+}
 export type HubDb = SupabaseClient<Database>;
 /** db is RLS-scoped for the signed-in owner, or the admin client after a verified agent credential. */
 export type Actor = { ownerId: string; source: string; agent: boolean; db: HubDb };
@@ -15,7 +20,7 @@ export const randomUUID = () => crypto.randomUUID();
 
 export function emptyState(): HubState {
   return {
-    projects: [], tasks: [], ideas: [], handoffs: [], approvals: [], activity: [],
+    projects: [], tasks: [], ideas: [], handoffs: [], approvals: [], activity: [], kickoffs: [],
     connections: clients.map(c => ({ ...c, status: "not_configured" as const, lastSeen: null, expiresAt: null, tokenPrefix: null })),
     policy, summary: { activeProjects: 0, openTasks: 0, pendingApprovals: 0, capturedIdeas: 0, verifiedConnections: 0, completedTasks: 0 },
   };
@@ -37,7 +42,7 @@ export function audit(s: HubState, actor: Pick<Actor, "source">, title: string, 
 export async function readState(db: HubDb, ownerId: string) {
   const { data, error } = await db.from("hub_workspaces").select("data").eq("owner_id", ownerId).maybeSingle();
   if (error) throw new HubError(500, error.message);
-  return data ? GetHubStateResponse.parse(data.data) : emptyState();
+  return data ? parseState(data.data) : emptyState();
 }
 /**
  * The workspace is one aggregate: an edit and its audit events are written together.
@@ -48,7 +53,7 @@ export async function mutateState<T>(actor: Actor, fn: (s: HubState) => T): Prom
   for (let attempt = 0; attempt < 5; attempt++) {
     const { data: row, error } = await db.from("hub_workspaces").select("data, rev").eq("owner_id", ownerId).maybeSingle();
     if (error) throw new HubError(500, error.message);
-    const state = row ? GetHubStateResponse.parse(row.data) : emptyState();
+    const state = row ? parseState(row.data) : emptyState();
     const result = fn(state);
     const data = summarize(state) as unknown as Database["public"]["Tables"]["hub_workspaces"]["Insert"]["data"];
     if (!row) {

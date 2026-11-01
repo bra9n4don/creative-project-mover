@@ -1,4 +1,7 @@
 import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { getKickoffsFn } from "@/lib/hub/hub.functions";
 import { Link, useLocation, useParams } from "@/lib/router-compat";
 import { ArrowLeft, BadgeCheck, Bookmark, Github, GitPullRequest, Link2, Lock, Pencil, Plus, RefreshCw, Sparkles, Trash2 } from "lucide-react";
 import { ProjectUpdateDialog } from "@/components/project-update-dialog";
@@ -134,7 +137,10 @@ function GithubPanel({ project }: { project: Project }) {
 export default function ProjectDetail() {
   const { id } = useParams<{ id: string }>();
   const [, nav] = useLocation();
-  const { state, isLoading, error, refetch, guard } = useWorkspace();
+  const { state, isLoading, error, refetch, guard, isDemo } = useWorkspace();
+  const listKickoffs = useServerFn(getKickoffsFn);
+  const kickoffs = useQuery({ queryKey: ["kickoffs"], queryFn: () => listKickoffs(), enabled: !isDemo });
+  const unfinishedKickoff = kickoffs.data?.find(k => k.projectId === id && !k.completed);
   const project = state?.projects.find((p) => p.id === id);
   usePageTitle(project?.title ?? "Project");
   const [edit, setEdit] = useState(false);
@@ -180,6 +186,7 @@ export default function ProjectDetail() {
           {project.description && <p className="mt-2 whitespace-pre-line text-sm text-muted-foreground">{project.description}</p>}
         </div>
         <div className="flex flex-wrap gap-2">
+          {unfinishedKickoff && <Button variant="outline" asChild><Link href="/kickoff"><ArrowLeft /> Resume Kickoff · Step {unfinishedKickoff.data.step + 1}</Link></Button>}
           <Button variant="secondary" onClick={() => w("AI drafting needs your own workspace.", () => setUpdateOpen(true))}><Sparkles /> Project update</Button>
           <button className={btn.ghost} data-testid="button-edit-project" onClick={() => w("Editing needs your own workspace.", () => setEdit(true))}><Pencil className="h-4 w-4" /> Edit</button>
           <Confirm
