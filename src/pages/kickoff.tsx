@@ -4,7 +4,8 @@ import { useAuth } from "@/lib/auth";
 import { useWorkspace, errMessage } from "@/lib/workspace";
 import { supabase } from "@/integrations/supabase/client";
 import { useKickoffSaving } from "@/lib/use-kickoff-saving";
-import { briefSchema, planSchema, checkpointCode, clarifyFields, kickoffMarkdown, kickoffSchema, kickoffSteps, newKickoff, restoreCheckpoint, stepIssue, type Kickoff } from "@/lib/kickoff";
+import { briefSchema, planSchema, checkpointCode, clarifyFields, kickoffMarkdown, kickoffSchema, kickoffSteps, newKickoff, restoreCheckpoint, stepIssue, syncBrainstorm, type Kickoff } from "@/lib/kickoff";
+import { KickoffMindMap, emptyMindMap } from "@/components/kickoff-mind-map";
 import { AppShell } from "@/components/shell";
 import { Field, field, ErrorBlock, LoadingBlock } from "@/components/kit";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,7 @@ function KickoffBody() {
   const storage = useKickoffSaving(k);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [view, setView] = useState<"text" | "map">("text");
   const [busy, setBusy] = useState(false);
   const [saving, setSaving] = useState(false);
   const [pauseOpen, setPauseOpen] = useState(false);
@@ -125,7 +127,10 @@ function KickoffBody() {
       <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_240px]"><section className="min-w-0 space-y-5"><div><p className="mb-1 font-mono text-xs text-muted-foreground">STEP {k.step + 1} OF 6</p><h2 className="font-display text-2xl font-semibold">{kickoffSteps[k.step]}</h2></div>
         {k.step === 0 && <>
           <Field label="Start from an idea"><select aria-label="Start from an idea" className={field} disabled={locked} value={k.sourceIdeaId ?? ""} onChange={e => { const idea = state.ideas.find(i => i.id === e.target.value); edit({ sourceIdeaId: idea?.id ?? null, brainstorm: idea ? `${idea.title}\n\n${idea.description}` : k.brainstorm }); }}><option value="">Freeform brainstorm</option>{state.ideas.filter(i => i.status !== "promoted" && i.status !== "archived").map(i => <option key={i.id} value={i.id}>{i.title}</option>)}</select></Field>
-          {textInput("Your ideas", k.brainstorm, v => edit({ brainstorm: v }), 10000, 8)}
+          <div role="tablist" aria-label="Brainstorm view" className="inline-flex rounded-lg border p-0.5">{(["text", "map"] as const).map(v => <button key={v} role="tab" aria-selected={view === v} onClick={() => setView(v)} className={`rounded-md px-3 py-1 text-sm ${view === v ? "bg-secondary font-medium" : "text-muted-foreground"}`}>{v === "text" ? "Text" : "Mind map"}</button>)}</div>
+          {view === "map"
+            ? <KickoffMindMap disabled={locked} value={k.mindMap ?? emptyMindMap(k.brainstorm)} onChange={m => edit({ mindMap: m, brainstorm: syncBrainstorm(k.brainstorm, m).slice(0, 10000) })} />
+            : textInput("Your ideas", k.brainstorm, v => edit({ brainstorm: v }), 10000, 8)}
           <div className="flex flex-wrap gap-2">{["What problem do I want to solve?", "Who would benefit?", "What is the smallest useful version?"].map(prompt => <Button key={prompt} size="sm" variant="ghost" disabled={locked} onClick={() => edit({ brainstorm: `${k.brainstorm}\n\n${prompt}\n`.trimStart() })}><Plus />{prompt}</Button>)}</div>
         </>}
         {k.step === 1 && <div className="grid gap-4 sm:grid-cols-2">{clarifyFields.map(key => <div key={key}>{textInput(labels[key], k.clarify[key], v => edit({ clarify: { ...k.clarify, [key]: v } }), 10000, 3)}<Button size="sm" variant="ghost" disabled={locked} onClick={() => edit({ clarify: { ...k.clarify, [key]: "not sure yet" } })}>Not sure yet</Button></div>)}</div>}

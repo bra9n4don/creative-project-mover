@@ -20,7 +20,33 @@ export const kickoffSchema = z.object({
   firstActions: z.tuple([z.string().max(200), z.string().max(200), z.string().max(200)]),
   review: z.object({ goal: z.boolean(), scope: z.boolean(), plan: z.boolean(), risks: z.boolean(), ready: z.boolean() }),
   exportedProjectId: z.string().nullable(),
+  mindMap: z.object({
+    nodes: z.array(z.object({ id: z.string().max(64), label: z.string().max(200), kind: z.enum(["idea", "feature", "risk", "question"]), x: z.number(), y: z.number() }).strict()).max(150),
+    edges: z.array(z.object({ id: z.string().max(140), source: z.string().max(64), target: z.string().max(64) }).strict()).max(300),
+  }).strict().optional(),
 }).strict();
+export type MindMap = NonNullable<z.infer<typeof kickoffSchema>["mindMap"]>;
+const MAP_START = "## Mind map";
+/** Indented outline of the map (roots = nodes with no parent), tagged by kind. */
+export function mindMapOutline(m: MindMap): string {
+  const parent = new Map(m.edges.map(e => [e.target, e.source]));
+  const kids = (id: string | null) => m.nodes.filter(n => (parent.get(n.id) ?? null) === id && (id !== null || !parent.has(n.id)));
+  const tag = { idea: "", feature: "[Feature] ", risk: "[Risk] ", question: "[Question] " } as const;
+  const seen = new Set<string>();
+  const walk = (id: string | null, depth: number): string[] => kids(id).flatMap(n => {
+    if (seen.has(n.id) || !n.label.trim()) return [];
+    seen.add(n.id);
+    return [`${"  ".repeat(depth)}- ${tag[n.kind]}${n.label.trim()}`, ...walk(n.id, depth + 1)];
+  });
+  return walk(null, 0).join("\n");
+}
+/** Replace (or append) the mind map section of the brainstorm text, keeping typed notes. */
+export function syncBrainstorm(brainstorm: string, m: MindMap): string {
+  const i = brainstorm.indexOf(MAP_START);
+  const notes = (i >= 0 ? brainstorm.slice(0, i) : brainstorm).trimEnd();
+  const outline = mindMapOutline(m);
+  return outline ? `${notes ? notes + "\n\n" : ""}${MAP_START}\n${outline}` : notes;
+}
 export type Kickoff = z.infer<typeof kickoffSchema>;
 export const savedKickoffSchema = z.object({
   data: kickoffSchema, projectId: z.string(), revision: z.number().int(),

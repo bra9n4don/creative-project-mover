@@ -34,3 +34,18 @@ describe("Kickoff checkpoints and readiness", () => {
     expect(kickoffExportSchema.safeParse(newKickoff()).success).toBe(false);
   });
 });
+import { mindMapOutline, syncBrainstorm } from "./kickoff";
+describe("Kickoff mind map", () => {
+  const m = { nodes: [{ id: "r", label: "App", kind: "idea" as const, x: 0, y: 0 }, { id: "a", label: "Login", kind: "feature" as const, x: 1, y: 0 }, { id: "b", label: "Time", kind: "risk" as const, x: 2, y: 0 }], edges: [{ id: "r-a", source: "r", target: "a" }, { id: "a-b", source: "a", target: "b" }] };
+  it("writes the map as a nested outline", () => {
+    expect(mindMapOutline(m)).toBe("- App\n  - [Feature] Login\n    - [Risk] Time");
+  });
+  it("keeps typed notes and replaces only the map section", () => {
+    const once = syncBrainstorm("My notes", m);
+    expect(syncBrainstorm(once, { ...m, nodes: m.nodes.slice(0, 1), edges: [] })).toBe("My notes\n\n## Mind map\n- App");
+  });
+  it("checkpoints keep the mind map", () => {
+    const k = { ...newKickoff(), mindMap: m };
+    expect(restoreCheckpoint(checkpointCode(k))).toEqual(k);
+  });
+});
