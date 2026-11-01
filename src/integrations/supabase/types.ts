@@ -14,13 +14,103 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      hub_agent_keys: {
+        Row: {
+          client_id: string
+          expires_at: string
+          hash: string
+          last_seen: string | null
+          owner_id: string
+          prefix: string
+        }
+        Insert: {
+          client_id: string
+          expires_at: string
+          hash: string
+          last_seen?: string | null
+          owner_id: string
+          prefix: string
+        }
+        Update: {
+          client_id?: string
+          expires_at?: string
+          hash?: string
+          last_seen?: string | null
+          owner_id?: string
+          prefix?: string
+        }
+        Relationships: []
+      }
+      hub_owner: {
+        Row: {
+          created_at: string
+          github_sync_enabled: boolean
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          github_sync_enabled?: boolean
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          github_sync_enabled?: boolean
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      hub_workspaces: {
+        Row: {
+          data: Json
+          owner_id: string
+          rev: number
+          updated_at: string
+        }
+        Insert: {
+          data: Json
+          owner_id: string
+          rev?: number
+          updated_at?: string
+        }
+        Update: {
+          data?: Json
+          owner_id?: string
+          rev?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      legacy_user_map: {
+        Row: {
+          auth_user_id: string | null
+          email: string
+          legacy_user_id: string
+          linked_at: string | null
+        }
+        Insert: {
+          auth_user_id?: string | null
+          email: string
+          legacy_user_id: string
+          linked_at?: string | null
+        }
+        Update: {
+          auth_user_id?: string | null
+          email?: string
+          legacy_user_id?: string
+          linked_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      claim_hub: { Args: never; Returns: boolean }
+      is_hub_owner: { Args: { _uid: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
