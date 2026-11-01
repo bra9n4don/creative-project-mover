@@ -76,7 +76,7 @@ export function AuthPage({ mode }: { mode: "in" | "up" | "forgot" | "reset" }) {
     } finally { setBusy(false); }
   };
 
-  const social = async (provider: "google" | "lovable" | "microsoft") => {
+  const social = async (provider: "google" | "lovable" | "microsoft" | "apple") => {
     setMsg(null);
     const result = await lovable.auth.signInWithOAuth(provider, { redirect_uri: new URL(dest, window.location.origin).href });
     if (result.error) { setMsg({ kind: "err", text: result.error.message ?? "Sign-in failed." }); return; }
@@ -100,6 +100,7 @@ export function AuthPage({ mode }: { mode: "in" | "up" | "forgot" | "reset" }) {
           <div className="mt-6 grid gap-2">
             <button type="button" className={btn.ghost} onClick={() => social("google")} data-testid="button-google">Continue with Google</button>
             <button type="button" className={btn.ghost} onClick={() => social("microsoft")} data-testid="button-microsoft">Continue with Microsoft</button>
+            <button type="button" className={btn.ghost} onClick={() => social("apple")} data-testid="button-apple">Continue with Apple</button>
             <button type="button" className="lovable-auth-button" onClick={() => social("lovable")} data-testid="button-lovable">Continue with Lovable</button>
             <div className="my-2 flex items-center gap-3 text-xs text-muted-foreground"><span className="h-px flex-1 bg-border" />or<span className="h-px flex-1 bg-border" /></div>
           </div>
