@@ -51,7 +51,7 @@ export type Kickoff = z.infer<typeof kickoffSchema>;
 export const savedKickoffSchema = z.object({
   data: kickoffSchema, projectId: z.string(), revision: z.number().int(),
   completed: z.boolean(), updatedAt: z.string(),
-  taskIds: z.record(z.string()), handoffIds: z.record(z.string()),
+  taskIds: z.record(z.string(), z.string()), handoffIds: z.record(z.string(), z.string()),
 });
 export type SavedKickoff = z.infer<typeof savedKickoffSchema>;
 export const saveKickoffSchema = z.object({

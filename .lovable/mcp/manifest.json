@@ -26,15 +26,15 @@
           "openWorldHint": false
         },
         "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
           "type": "object",
           "properties": {
             "projectId": {
-              "type": "string",
-              "description": "Optional project ID; defaults to the most recent project."
+              "description": "Optional project ID; defaults to the most recent project.",
+              "type": "string"
             }
           },
-          "additionalProperties": false,
-          "$schema": "http://json-schema.org/draft-07/schema#"
+          "additionalProperties": false
         },
         "outputSchema": null
       },
@@ -47,6 +47,7 @@
           "openWorldHint": false
         },
         "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
           "type": "object",
           "properties": {
             "title": {
@@ -56,25 +57,24 @@
               "description": "Short idea title."
             },
             "description": {
+              "description": "Details.",
               "type": "string",
-              "maxLength": 10000,
-              "description": "Details."
+              "maxLength": 10000
             },
             "tags": {
+              "description": "Tags.",
+              "maxItems": 12,
               "type": "array",
               "items": {
                 "type": "string",
                 "maxLength": 50
-              },
-              "maxItems": 12,
-              "description": "Tags."
+              }
             }
           },
           "required": [
             "title"
           ],
-          "additionalProperties": false,
-          "$schema": "http://json-schema.org/draft-07/schema#"
+          "additionalProperties": false
         },
         "outputSchema": null
       },
@@ -87,6 +87,7 @@
           "openWorldHint": false
         },
         "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
           "type": "object",
           "properties": {
             "projectId": {
@@ -100,34 +101,33 @@
               "description": "Task title."
             },
             "description": {
+              "description": "Details.",
               "type": "string",
-              "maxLength": 10000,
-              "description": "Details."
+              "maxLength": 10000
             },
             "priority": {
+              "description": "Priority.",
               "type": "string",
               "enum": [
                 "low",
                 "medium",
                 "high"
-              ],
-              "description": "Priority."
+              ]
             },
             "dependencies": {
+              "description": "IDs of tasks that must finish first.",
+              "maxItems": 50,
               "type": "array",
               "items": {
                 "type": "string"
-              },
-              "maxItems": 50,
-              "description": "IDs of tasks that must finish first."
+              }
             }
           },
           "required": [
             "projectId",
             "title"
           ],
-          "additionalProperties": false,
-          "$schema": "http://json-schema.org/draft-07/schema#"
+          "additionalProperties": false
         },
         "outputSchema": null
       },
@@ -140,6 +140,7 @@
           "openWorldHint": false
         },
         "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
           "type": "object",
           "properties": {
             "id": {
@@ -150,50 +151,50 @@
             "expectedVersion": {
               "type": "integer",
               "minimum": 1,
+              "maximum": 9007199254740991,
               "description": "The task's current version from get_context."
             },
             "status": {
+              "description": "New status. Only the owner can verify.",
               "type": "string",
               "enum": [
                 "todo",
                 "in_progress",
                 "blocked",
                 "done"
-              ],
-              "description": "New status. Only the owner can verify."
+              ]
             },
             "evidence": {
+              "description": "Real evidence of the work done.",
               "type": "string",
-              "maxLength": 10000,
-              "description": "Real evidence of the work done."
+              "maxLength": 10000
             },
             "title": {
+              "description": "Proposed new title (needs owner approval).",
               "type": "string",
               "minLength": 1,
-              "maxLength": 150,
-              "description": "Proposed new title (needs owner approval)."
+              "maxLength": 150
             },
             "description": {
+              "description": "Proposed new description (needs owner approval).",
               "type": "string",
-              "maxLength": 10000,
-              "description": "Proposed new description (needs owner approval)."
+              "maxLength": 10000
             },
             "priority": {
+              "description": "Proposed new priority (needs owner approval).",
               "type": "string",
               "enum": [
                 "low",
                 "medium",
                 "high"
-              ],
-              "description": "Proposed new priority (needs owner approval)."
+              ]
             }
           },
           "required": [
             "id",
             "expectedVersion"
           ],
-          "additionalProperties": false,
-          "$schema": "http://json-schema.org/draft-07/schema#"
+          "additionalProperties": false
         },
         "outputSchema": null
       },
@@ -206,6 +207,7 @@
           "openWorldHint": false
         },
         "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
           "type": "object",
           "properties": {
             "projectId": {
@@ -231,9 +233,9 @@
               "description": "One small next action."
             },
             "target": {
+              "description": "Who picks this up next.",
               "type": "string",
-              "maxLength": 100,
-              "description": "Who picks this up next."
+              "maxLength": 100
             }
           },
           "required": [
@@ -242,8 +244,7 @@
             "summary",
             "nextAction"
           ],
-          "additionalProperties": false,
-          "$schema": "http://json-schema.org/draft-07/schema#"
+          "additionalProperties": false
         },
         "outputSchema": null
       }
