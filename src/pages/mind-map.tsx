@@ -69,10 +69,16 @@ function MindMapBody() {
       return true;
     } catch (e) { pending.current ??= next; saving.current = false; setSaveError(errMessage(e)); setStatus("Not saved"); return false; }
   };
+  // Keep saving until nothing is pending, so edits made during the leave-page save aren't dropped.
   const flushNow = async () => {
-    if (timer.current) clearTimeout(timer.current);
-    while (saving.current) await new Promise(r => setTimeout(r, 50));
-    return pending.current ? flush() : true;
+    for (let i = 0; i < 20; i++) {
+      if (timer.current) clearTimeout(timer.current);
+      while (saving.current) await new Promise(r => setTimeout(r, 50));
+      if (timer.current) clearTimeout(timer.current);
+      if (!pending.current) return true;
+      if (!(await flush())) return false;
+    }
+    return !pending.current;
   };
   useBlocker({
     shouldBlockFn: async () => !(await flushNow()),

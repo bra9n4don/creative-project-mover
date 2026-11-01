@@ -19,7 +19,7 @@ const bridgeSnippet = JSON.stringify(
   null,
   2,
 );
-const restSnippet = `curl -H "Authorization: Bearer YOUR_RELAY_TOKEN" ${origin}/api/hub/state`;
+const restSnippet = `curl -H "Authorization: Bearer YOUR_RELAY_TOKEN" ${origin}/api/public/hub/state`;
 
 function cautionFor(c: Connection): string | null {
   const n = `${c.id} ${c.name}`.toLowerCase();
