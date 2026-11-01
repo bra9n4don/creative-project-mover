@@ -1,5 +1,10 @@
 # Roadmap
 
+- [ ] Build six-step Kickoff with explicit file/code pause and resume.
+- [ ] Wire editable brief and milestone/task drafting to AI Gateway.
+- [ ] Add reviewed atomic Relay export and Markdown brief download.
+- [ ] Add sidebar/Projects/Overview entry points and verify the full signed-in flow.
+
 - [x] Add owner-only AI project update drafting for tasks and handoff notes; verified real generation, review, save and reload.
 - [x] Verify and enable Lovable Auth as needed; email/password was already enabled.
 
