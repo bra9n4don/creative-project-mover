@@ -1,4 +1,4 @@
-import { emptyState, summarize, type HubState } from "./hub-store";
+import { emptyState, summarize, type HubState } from "./store";
 
 export function demoState(): HubState {
   const s = emptyState();

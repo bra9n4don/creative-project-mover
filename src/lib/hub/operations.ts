@@ -1,9 +1,8 @@
-import { randomUUID } from "node:crypto";
 import {
   CreateProjectBody, UpdateProjectBody, CreateIdeaBody, UpdateIdeaBody,
   CreateTaskBody, UpdateTaskBody, CreateHandoffBody, DecideApprovalBody,
 } from "./api-zod";
-import { type Actor, type HubState, HubError, mutateState, audit, project, checkVersion, validateRepository, validateDependencies, requireOwner, ok } from "./hub-store";
+import { type Actor, type HubState, HubError, mutateState, audit, project, checkVersion, validateRepository, validateDependencies, requireOwner, ok } from "./store";
 
 export function addProject(actor: Actor, input: unknown) {
   const data = CreateProjectBody.parse(input); validateRepository(data.repository);

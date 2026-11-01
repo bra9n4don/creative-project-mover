@@ -1,15 +1,17 @@
-import { db, hubAgentKeys } from "@workspace/db";
-import { eq } from "drizzle-orm";
-import { readState, summarize, type Actor } from "./hub-store";
-import { clients } from "./hub-clients";
+import { readState, summarize, type Actor } from "./store";
+import { clients } from "./clients";
 
 export async function getState(actor: Actor) {
-  const state = await readState(actor.ownerId);
-  const keys = await db.select().from(hubAgentKeys).where(eq(hubAgentKeys.ownerId, actor.ownerId));
+  const state = await readState(actor.db, actor.ownerId);
+  const { data: keys } = await actor.db.from("hub_agent_keys").select("client_id, prefix, expires_at, last_seen").eq("owner_id", actor.ownerId);
   state.connections = clients.map(c => {
-    const key = keys.find(k => k.clientId === c.id);
-    const valid = key && key.expiresAt.getTime() > Date.now();
-    return { ...c, status: valid ? key.lastSeen ? "verified" as const : "configured" as const : "not_configured" as const, lastSeen: key?.lastSeen?.toISOString() ?? null, tokenPrefix: key?.prefix ?? null, expiresAt: key?.expiresAt.toISOString() ?? null };
+    const key = (keys ?? []).find(k => k.client_id === c.id);
+    const valid = key && new Date(key.expires_at).getTime() > Date.now();
+    return {
+      ...c,
+      status: valid ? (key.last_seen ? ("verified" as const) : ("configured" as const)) : ("not_configured" as const),
+      lastSeen: key?.last_seen ?? null, tokenPrefix: key?.prefix ?? null, expiresAt: key?.expires_at ?? null,
+    };
   });
   return summarize(state);
 }
