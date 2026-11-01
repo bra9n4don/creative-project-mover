@@ -16,3 +16,9 @@
 
 - [x] Enable Lovable Storage: private `hub-files` bucket (5MB) + owner-only RLS on storage.objects
 - [x] Database optimization review: measured usage, inspected queries/indexes/health — no DB fixes warranted; cron cadence flagged as the only candidate (user decision)
+
+- [x] Align Kickoff length limits (shared 10,000-char brief limit, live warning, no silent cutting; checkpoints always restorable)
+- [x] GitHub sync: failed runs report failure, unsaved results surface as errors, read up to 500 repos and 30 commits/PRs per repo with a note when capped
+- [x] Workspace refresh sends only the latest 200 activity entries (all history stays stored)
+- [x] AI drafts: shared instructions, empty answers dropped, tighter answer lengths; real brief draft re-verified
+- [ ] GitHub sync frequency (10 min vs hourly) — waiting on owner decision
