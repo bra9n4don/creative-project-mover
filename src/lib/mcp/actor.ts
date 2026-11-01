@@ -25,4 +25,4 @@ export async function runHub<T>(fn: () => Promise<T>): Promise<T> {
   }
 }
 
-export const text = (value: unknown) => ({ content: [{ type: "text" as const, text: typeof value === "string" ? value : JSON.stringify(value, null, 2) }] });
+export const text = (value: unknown) => ({ content: [{ type: "text" as const, text: typeof value === "string" ? value : JSON.stringify(value) }] });

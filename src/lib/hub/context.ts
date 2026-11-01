@@ -41,7 +41,7 @@ export function buildResumeContext(s: HubState, projectId?: string) {
       openTasks: open.map(t => ({ id: t.id, title: t.title, status: t.status, priority: t.priority, version: t.version, description: t.description ? clip(t.description, 300) : undefined, dependencies: t.dependencies.length ? t.dependencies : undefined })),
       finishedTaskTitles: tasks.filter(t => CLOSED.includes(t.status)).map(t => t.title),
       pendingChanges: s.approvals.filter(a => a.projectId === p.id && a.status === "pending").length,
-      recentActivity: s.activity.filter(a => a.projectId === p.id).slice(0, 5).map(a => clip(String((a as { message?: string }).message ?? ""), 200)),
+      recentActivity: s.activity.filter(a => a.projectId === p.id).slice(0, 5).map(a => ({ title: a.title, source: a.source, createdAt: a.createdAt })),
     };
   };
   return {
