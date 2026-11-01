@@ -11,7 +11,7 @@ import { listRepos, syncRepos } from "./github.server";
 /** Thrown errors keep the HTTP-like status so the UI can explain conflicts and denials. */
 function toError(e: unknown): never {
   if (e instanceof HubError) throw new Error(JSON.stringify({ status: e.status, message: e.message }));
-  if (e instanceof z.ZodError) throw new Error(JSON.stringify({ status: 400, message: e.issues.map(i => `${i.path.join(".")}: ${i.message}`).join("; ") }));
+  if (e instanceof Error && e.name === "ZodError" && "issues" in e) throw new Error(JSON.stringify({ status: 400, message: (e as unknown as { issues: { path: PropertyKey[]; message: string }[] }).issues.map(i => `${i.path.map(String).join(".")}: ${i.message}`).join("; ") }));
   throw e;
 }
 

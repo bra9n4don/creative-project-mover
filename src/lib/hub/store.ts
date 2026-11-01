@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { z } from "zod";
+import type { z } from "zod/v4";
 import type { Database } from "@/integrations/supabase/types";
 import { GetHubStateResponse } from "./api-zod";
 import { clients, policy } from "./clients";

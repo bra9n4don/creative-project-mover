@@ -5,7 +5,7 @@
  * Relay shared planning and guarded automation API
  * OpenAPI spec version: 0.1.0
  */
-import * as zod from 'zod';
+import * as zod from 'zod/v4';
 
 
 export const HealthCheckResponse = zod.object({
