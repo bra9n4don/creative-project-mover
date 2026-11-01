@@ -90,6 +90,20 @@ export function promote(actor: Actor, id: string) {
     return ok("Your idea is now a project.", projectId);
   });
 }
+const clusterSchema = z.object({ title: z.string().trim().min(1).max(200), outcome: z.string().max(2000), tasks: z.array(z.object({ title: z.string().max(200), description: z.string().max(2000), priority: z.enum(["low", "medium", "high"]) })).max(20) });
+/** Mind map cluster -> planning project with its branch tasks, saved in one write. Owner-only, explicit click. */
+export function promoteCluster(actor: Actor, input: unknown) {
+  requireOwner(actor);
+  const c = clusterSchema.parse(input);
+  return mutateState(actor, s => {
+    const now = new Date().toISOString(), projectId = randomUUID();
+    s.projects.unshift({ id: projectId, title: c.title, description: c.outcome, goal: "", status: "planning", priority: "medium", repository: "", color: "teal", version: 1, createdAt: now, updatedAt: now });
+    const tasks = c.tasks.filter(t => t.title.trim());
+    for (const t of tasks) s.tasks.push({ id: randomUUID(), projectId, title: t.title.trim(), description: t.description, priority: t.priority, status: "todo", agent: "", evidence: "", dependencies: [], version: 1, createdAt: now, updatedAt: now });
+    audit(s, actor, `Turned mind map cluster into project: ${c.title}`, `${tasks.length} tasks`, projectId, "project");
+    return ok(`"${c.title}" is now a project with ${tasks.length} tasks.`, projectId);
+  });
+}
 export function addTask(actor: Actor, input: unknown) {
   const data = CreateTaskBody.parse(input);
   return mutateState(actor, s => {

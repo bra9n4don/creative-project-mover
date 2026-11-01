@@ -23,4 +23,5 @@
 - [x] AI drafts: shared instructions, empty answers dropped, tighter answer lengths; real brief draft re-verified
 - [x] GitHub sync moved to hourly; Settings explains results can be up to an hour old
 - [x] Mind map AI Expand (drafts brief + plan for review), promote clusters to Step 4 milestones, standalone saved /mind-map page
+- [x] Mind map page: full canvas, save node to Ideas / make project, promote clusters to projects
 - [x] Forced postcss-selector-parser 6.1.5 for @tailwindcss/typography

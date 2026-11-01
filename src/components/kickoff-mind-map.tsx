@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, type ReactNode } from "react";
 import { ReactFlow, Background, Controls, Handle, Position, applyNodeChanges, type Connection, type Edge, type Node, type NodeChange, type EdgeChange, type NodeProps, applyEdgeChanges } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { Plus, Sparkles, Trash2 } from "lucide-react";
@@ -30,7 +30,7 @@ export function emptyMindMap(seed: string): MindMap {
   return { nodes: [{ id: "root", label: seed.split("\n")[0]?.slice(0, 200) || "My project", kind: "idea", x: 0, y: 0 }], edges: [] };
 }
 
-export function KickoffMindMap({ value, onChange, disabled, onExpand, hint }: { value: MindMap; onChange: (m: MindMap) => void; disabled?: boolean; onExpand?: () => void; hint?: string }) {
+export function KickoffMindMap({ value, onChange, disabled, onExpand, hint, canvasClass = "h-[420px]", nodeActions }: { value: MindMap; onChange: (m: MindMap) => void; disabled?: boolean; onExpand?: () => void; hint?: string; canvasClass?: string; nodeActions?: (node: MindMap["nodes"][number]) => ReactNode }) {
   const [selected, setSelected] = useState<string | null>(null);
   const nodes: Node<Data>[] = useMemo(() => value.nodes.map(n => ({ id: n.id, type: "idea", position: { x: n.x, y: n.y }, data: { label: n.label, kind: n.kind }, selected: n.id === selected })), [value.nodes, selected]);
   const edges: Edge[] = useMemo(() => value.edges.map(e => ({ ...e })), [value.edges]);
@@ -80,9 +80,10 @@ export function KickoffMindMap({ value, onChange, disabled, onExpand, hint }: { 
           <input aria-label="Node label" maxLength={200} disabled={disabled} className="min-w-[180px] flex-1 rounded-lg border border-input bg-card px-3 py-1.5 text-sm" value={sel.label} onChange={e => update({ label: e.target.value })} />
           <select aria-label="Node type" disabled={disabled} className="rounded-lg border border-input bg-card px-2 py-1.5 text-sm" value={sel.kind} onChange={e => update({ kind: e.target.value as Kind })}>{kinds.map(k => <option key={k.value} value={k.value}>{k.label}</option>)}</select>
           <Button size="sm" variant="ghost" disabled={disabled || value.nodes.length <= 1} onClick={remove}><Trash2 /> Remove</Button>
+          {nodeActions?.(sel)}
         </>}
       </div>
-      <div className="h-[420px] overflow-hidden rounded-xl border bg-background" data-testid="mind-map">
+      <div className={`${canvasClass} overflow-hidden rounded-xl border bg-background`} data-testid="mind-map">
         <ReactFlow nodes={nodes} edges={edges} nodeTypes={nodeTypes} onNodesChange={onNodesChange} onEdgesChange={onEdgesChange} onConnect={onConnect} onPaneClick={() => setSelected(null)} nodesDraggable={!disabled} nodesConnectable={!disabled} deleteKeyCode={null} fitView proOptions={{ hideAttribution: true }} colorMode="dark">
           <Background gap={20} />
           <Controls showInteractive={false} />

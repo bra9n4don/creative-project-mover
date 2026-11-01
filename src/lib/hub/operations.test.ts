@@ -185,3 +185,19 @@ describe("guarded automation rules", () => {
     await expect(ops.editProject(owner, p.id, { expectedVersion: 1, goal: "v3" })).rejects.toThrow(/changed/);
   });
 });
+
+describe("promoteCluster", () => {
+  const mk = () => { const db = fakeDb(); const owner: Actor = { ownerId: "o", source: "You", agent: false, db: db as unknown as HubDb }; return { db, owner }; };
+  it("creates one planning project titled by the cluster with its named tasks", async () => {
+    const { db, owner } = mk();
+    await ops.promoteCluster(owner, { title: "Onboarding", outcome: "Risk: spam", tasks: [{ title: "Sign up", description: "", priority: "high" }, { title: "", description: "", priority: "medium" }] });
+    expect(db.state.projects).toHaveLength(1);
+    expect(db.state.projects[0]!.title).toBe("Onboarding");
+    expect(db.state.projects[0]!.status).toBe("planning");
+    expect(db.state.tasks.map(t => t.title)).toEqual(["Sign up"]);
+  });
+  it("is owner-only", async () => {
+    const { owner } = mk();
+    await expect(async () => ops.promoteCluster({ ...owner, agent: true }, { title: "X", outcome: "", tasks: [] })).rejects.toThrow("owner");
+  });
+});
