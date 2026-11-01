@@ -1,5 +1,7 @@
 # Roadmap
 
+- [ ] Verify checkpoint download/copy window and exact-step file/code resume across all six steps.
+
 - [x] Autosave each Kickoff step into its database-backed project and resume saved answers.
 - [x] Save reviewed tasks and step handoffs without duplicates; complete launch in the same project.
 - [x] Test persistence, review guardrails and signed-in end-to-end flow.
