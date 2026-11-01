@@ -20,3 +20,4 @@
 - File storage uses the private `hub-files` bucket (5MB cap) with owner-only RLS on `storage.objects` via `is_hub_owner()` — matches the single-owner model, so no per-user path prefixing is needed.
 - AI project updates stream through an authenticated owner-only server route; drafts stay local until `saveReviewedUpdate` atomically saves reviewed tasks, handoff, and audit — prevents unreviewed writes and partial saves.
 - Kickoff drafts live in the workspace aggregate keyed by checkpoint id with per-draft optimistic revisions; serialized debounced owner saves persist answers while explicit step review upserts mapped task and handoff IDs — enables cross-visit resume without unreviewed AI records or duplicate exports. File/code checkpoints remain optional backups.
+- Assistant resume context (`buildResumeContext`) details one focus project and summarizes the rest, with capped text — keeps assistant token use flat as the workspace grows.
