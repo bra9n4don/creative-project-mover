@@ -7,6 +7,10 @@ export const briefSchema = z.object({ title: z.string(), goal: z.string(), audie
 export const planSchema = z.object({ milestones: z.array(z.object({ title: z.string(), outcome: z.string(), tasks: z.array(z.object({ title: z.string(), description: z.string(), priority: z.enum(["low", "medium", "high"]) }).strict()) }).strict()) }).strict();
 export type Brief = z.infer<typeof briefSchema>;
 export type KickoffPlan = z.infer<typeof planSchema>;
+export const mindMapSchema = z.object({
+  nodes: z.array(z.object({ id: z.string().max(64), label: z.string().max(200), kind: z.enum(["idea", "feature", "risk", "question"]), x: z.number(), y: z.number() }).strict()).max(150),
+  edges: z.array(z.object({ id: z.string().max(140), source: z.string().max(64), target: z.string().max(64) }).strict()).max(300),
+}).strict();
 export const kickoffSchema = z.object({
   version: z.literal(1),
   id: z.string().uuid(),
@@ -20,12 +24,26 @@ export const kickoffSchema = z.object({
   firstActions: z.tuple([z.string().max(200), z.string().max(200), z.string().max(200)]),
   review: z.object({ goal: z.boolean(), scope: z.boolean(), plan: z.boolean(), risks: z.boolean(), ready: z.boolean() }),
   exportedProjectId: z.string().nullable(),
-  mindMap: z.object({
-    nodes: z.array(z.object({ id: z.string().max(64), label: z.string().max(200), kind: z.enum(["idea", "feature", "risk", "question"]), x: z.number(), y: z.number() }).strict()).max(150),
-    edges: z.array(z.object({ id: z.string().max(140), source: z.string().max(64), target: z.string().max(64) }).strict()).max(300),
-  }).strict().optional(),
+  mindMap: mindMapSchema.optional(),
 }).strict();
-export type MindMap = NonNullable<z.infer<typeof kickoffSchema>["mindMap"]>;
+export type MindMap = z.infer<typeof mindMapSchema>;
+type Milestone = KickoffPlan["milestones"][number];
+/** Each first-level branch (child of a root) is a cluster: its label becomes the milestone title and its feature/idea descendants become tasks. Risks and questions stay out of the task list. */
+export function mindMapClusters(m: MindMap): Milestone[] {
+  const parent = new Map(m.edges.map(e => [e.target, e.source]));
+  const byId = new Map(m.nodes.map(n => [n.id, n]));
+  const children = (id: string) => m.nodes.filter(n => parent.get(n.id) === id);
+  const roots = m.nodes.filter(n => !parent.has(n.id) || !byId.has(parent.get(n.id)!));
+  const heads = roots.flatMap(r => children(r.id).length ? children(r.id) : []);
+  const clusters = heads.length ? heads : roots;
+  return clusters.filter(c => c.label.trim()).slice(0, 8).map(c => {
+    const seen = new Set<string>([c.id]); const tasks: Milestone["tasks"] = [];
+    const walk = (id: string) => { for (const n of children(id)) { if (seen.has(n.id)) continue; seen.add(n.id); if ((n.kind === "feature" || n.kind === "idea") && n.label.trim()) tasks.push({ title: n.label.trim().slice(0, 200), description: "", priority: n.kind === "feature" ? "high" : "medium" }); walk(n.id); } };
+    walk(c.id);
+    const notes = [...seen].map(id => byId.get(id)!).filter(n => n.kind === "risk" || n.kind === "question").map(n => `${n.kind === "risk" ? "Risk" : "Question"}: ${n.label.trim()}`);
+    return { title: c.label.trim().slice(0, 200), outcome: notes.join("\n"), tasks: (tasks.length ? tasks : [{ title: "", description: "", priority: "medium" as const }]).slice(0, 20) };
+  });
+}
 const MAP_START = "## Mind map";
 /** Indented outline of the map (roots = nodes with no parent), tagged by kind. */
 export function mindMapOutline(m: MindMap): string {
