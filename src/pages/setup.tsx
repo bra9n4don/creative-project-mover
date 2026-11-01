@@ -3,7 +3,7 @@ import { Check, Circle, CircleDot, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "@/lib/router-compat";
 import { AppShell } from "@/components/shell";
-import { LoadingBlock, PageHeader, Panel, ago, btn } from "@/components/kit";
+import { ErrorBlock, LoadingBlock, PageHeader, Panel, ago, btn } from "@/components/kit";
 import { usePageTitle } from "@/lib/workspace";
 import { useOnboarding } from "@/lib/use-onboarding";
 import { PUBLISHED_URL, type StepState } from "@/lib/hub/onboarding";
