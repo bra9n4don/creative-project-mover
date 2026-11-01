@@ -1,3 +1,4 @@
+import { UPDATE_INPUT_LIMIT } from "@/lib/hub/update-draft";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import { z } from "zod";
@@ -7,7 +8,7 @@ import { createResponsesCall } from "./responses.server";
 import { DRAFT_PREAMBLE, compact } from "./prompts";
 import { getLovableAiGatewayResponseHeaders } from "./run-id.ts";
 
-const inputSchema = z.object({ projectId: z.string().min(1), update: z.string().trim().min(1).max(20000) });
+const inputSchema = z.object({ projectId: z.string().min(1), update: z.string().trim().min(1).max(UPDATE_INPUT_LIMIT) });
 const jsonError = (status: number, message: string) => Response.json({ message }, { status });
 
 export async function handleProjectUpdate(request: Request): Promise<Response> {

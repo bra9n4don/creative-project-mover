@@ -11,4 +11,4 @@ export const reviewedUpdateSchema = z.object({
   tasks: z.array(z.object({ title: z.string().trim().min(1).max(200), description: z.string().max(10000), priority: z.enum(["low", "medium", "high"]) })).max(20),
   handoff: z.object({ title: z.string().trim().min(1).max(200), summary: z.string().trim().min(1).max(15000), nextAction: z.string().trim().min(1).max(10000), target: z.string().max(100) }).nullable(),
   reviewed: z.literal(true),
-}).refine(d => d.tasks.length > 0 || d.handoff !== null, "Select at least one task or handoff.");
+}).refine(d => d.tasks.length > 0 || d.handoff !== null, "Select at least one task or handoff.");export const UPDATE_INPUT_LIMIT = 8000;
