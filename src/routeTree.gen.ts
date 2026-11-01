@@ -26,6 +26,7 @@ import { Route as SignUpRouteImport } from './routes/sign-up'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as ProjectsIndexRouteImport } from './routes/projects.index'
 import { Route as ProjectsIdRouteImport } from './routes/projects.$id'
+import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as ApiPublicHealthzRouteImport } from './routes/api/public/healthz'
 import { Route as ApiPublicMcpRouteImport } from './routes/api/public/mcp'
 import { Route as ApiPublicHubSplatRouteImport } from './routes/api/public/hub/$'
@@ -120,6 +121,11 @@ const ProjectsIdRoute = ProjectsIdRouteImport.update({
   path: '/projects/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
+  id: '/.lovable/oauth/consent',
+  path: '/.lovable/oauth/consent',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicHealthzRoute = ApiPublicHealthzRouteImport.update({
   id: '/api/public/healthz',
   path: '/api/public/healthz',
@@ -174,6 +180,7 @@ export interface FileRoutesByFullPath {
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/projects/$id': typeof ProjectsIdRoute
   '/projects/': typeof ProjectsIndexRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/api/public/healthz': typeof ApiPublicHealthzRoute
   '/api/public/mcp': typeof ApiPublicMcpRoute
   '/api/public/hub/$': typeof ApiPublicHubSplatRoute
@@ -200,6 +207,7 @@ export interface FileRoutesByTo {
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/projects/$id': typeof ProjectsIdRoute
   '/projects': typeof ProjectsIndexRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/api/public/healthz': typeof ApiPublicHealthzRoute
   '/api/public/mcp': typeof ApiPublicMcpRoute
   '/api/public/hub/$': typeof ApiPublicHubSplatRoute
@@ -227,6 +235,7 @@ export interface FileRoutesById {
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/projects/$id': typeof ProjectsIdRoute
   '/projects/': typeof ProjectsIndexRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/api/public/healthz': typeof ApiPublicHealthzRoute
   '/api/public/mcp': typeof ApiPublicMcpRoute
   '/api/public/hub/$': typeof ApiPublicHubSplatRoute
@@ -255,6 +264,7 @@ export interface FileRouteTypes {
     | '/.well-known/oauth-protected-resource'
     | '/projects/$id'
     | '/projects/'
+    | '/.lovable/oauth/consent'
     | '/api/public/healthz'
     | '/api/public/mcp'
     | '/api/public/hub/$'
@@ -281,6 +291,7 @@ export interface FileRouteTypes {
     | '/.well-known/oauth-protected-resource'
     | '/projects/$id'
     | '/projects'
+    | '/.lovable/oauth/consent'
     | '/api/public/healthz'
     | '/api/public/mcp'
     | '/api/public/hub/$'
@@ -307,6 +318,7 @@ export interface FileRouteTypes {
     | '/.well-known/oauth-protected-resource'
     | '/projects/$id'
     | '/projects/'
+    | '/.lovable/oauth/consent'
     | '/api/public/healthz'
     | '/api/public/mcp'
     | '/api/public/hub/$'
@@ -334,6 +346,7 @@ export interface RootRouteChildren {
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   ProjectsIdRoute: typeof ProjectsIdRoute
   ProjectsIndexRoute: typeof ProjectsIndexRoute
+  DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   ApiPublicHealthzRoute: typeof ApiPublicHealthzRoute
   ApiPublicMcpRoute: typeof ApiPublicMcpRoute
   ApiPublicHubSplatRoute: typeof ApiPublicHubSplatRoute
@@ -464,6 +477,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProjectsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/.lovable/oauth/consent': {
+      id: '/.lovable/oauth/consent'
+      path: '/.lovable/oauth/consent'
+      fullPath: '/.lovable/oauth/consent'
+      preLoaderRoute: typeof DotlovableOauthConsentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/healthz': {
       id: '/api/public/healthz'
       path: '/api/public/healthz'
@@ -535,6 +555,7 @@ const rootRouteChildren: RootRouteChildren = {
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
   ProjectsIdRoute: ProjectsIdRoute,
   ProjectsIndexRoute: ProjectsIndexRoute,
+  DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   ApiPublicHealthzRoute: ApiPublicHealthzRoute,
   ApiPublicMcpRoute: ApiPublicMcpRoute,
   ApiPublicHubSplatRoute: ApiPublicHubSplatRoute,
