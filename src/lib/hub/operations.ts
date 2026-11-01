@@ -219,6 +219,18 @@ export function exportKickoff(actor: Actor, input: unknown) {
 }
 
 /** Draft answers persist immediately; AI-derived live records require an explicit step review. */
+const saveMindMapSchema = z.object({ map: mindMapSchema, title: z.string().max(200), expectedRevision: z.number().int().min(0) });
+/** Standalone brainstorm map: one per workspace, optimistic revision so two tabs can't overwrite each other. */
+export function saveMindMap(actor: Actor, input: unknown) {
+  requireOwner(actor);
+  const { map, title, expectedRevision } = saveMindMapSchema.parse(input);
+  return mutateState(actor, s => {
+    const current = s.mindMap?.revision ?? 0;
+    if (current !== expectedRevision) throw new HubError(409, "Your mind map changed in another tab. Reload to see the latest version.");
+    s.mindMap = { map, title, revision: current + 1, updatedAt: new Date().toISOString() };
+    return s.mindMap;
+  });
+}
 export function saveKickoff(actor: Actor, input: unknown) {
   requireOwner(actor);
   const { kickoff: k, expectedRevision, reviewedStep } = saveKickoffSchema.parse(input);
