@@ -10,33 +10,284 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ActivityRouteImport } from './routes/activity'
+import { Route as ApprovalsRouteImport } from './routes/approvals'
+import { Route as ConnectionsRouteImport } from './routes/connections'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
+import { Route as HandoffsRouteImport } from './routes/handoffs'
+import { Route as IdeasRouteImport } from './routes/ideas'
+import { Route as OverviewRouteImport } from './routes/overview'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as SignInRouteImport } from './routes/sign-in'
+import { Route as SignUpRouteImport } from './routes/sign-up'
+import { Route as ProjectsIndexRouteImport } from './routes/projects.index'
+import { Route as ProjectsIdRouteImport } from './routes/projects.$id'
+import { Route as ApiPublicHealthzRouteImport } from './routes/api/public/healthz'
+import { Route as ApiPublicMcpRouteImport } from './routes/api/public/mcp'
+import { Route as ApiPublicHubSplatRouteImport } from './routes/api/public/hub/$'
+import { Route as ApiPublicHubDemoRouteImport } from './routes/api/public/hub/demo'
+import { Route as ApiPublicHubDocsRouteImport } from './routes/api/public/hub/docs'
+import { Route as ApiPublicHubSkillRouteImport } from './routes/api/public/hub/skill'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ActivityRoute = ActivityRouteImport.update({
+  id: '/activity',
+  path: '/activity',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApprovalsRoute = ApprovalsRouteImport.update({
+  id: '/approvals',
+  path: '/approvals',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConnectionsRoute = ConnectionsRouteImport.update({
+  id: '/connections',
+  path: '/connections',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HandoffsRoute = HandoffsRouteImport.update({
+  id: '/handoffs',
+  path: '/handoffs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IdeasRoute = IdeasRouteImport.update({
+  id: '/ideas',
+  path: '/ideas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OverviewRoute = OverviewRouteImport.update({
+  id: '/overview',
+  path: '/overview',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignInRoute = SignInRouteImport.update({
+  id: '/sign-in',
+  path: '/sign-in',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignUpRoute = SignUpRouteImport.update({
+  id: '/sign-up',
+  path: '/sign-up',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProjectsIndexRoute = ProjectsIndexRouteImport.update({
+  id: '/projects/',
+  path: '/projects/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProjectsIdRoute = ProjectsIdRouteImport.update({
+  id: '/projects/$id',
+  path: '/projects/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicHealthzRoute = ApiPublicHealthzRouteImport.update({
+  id: '/api/public/healthz',
+  path: '/api/public/healthz',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicMcpRoute = ApiPublicMcpRouteImport.update({
+  id: '/api/public/mcp',
+  path: '/api/public/mcp',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicHubSplatRoute = ApiPublicHubSplatRouteImport.update({
+  id: '/api/public/hub/$',
+  path: '/api/public/hub/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicHubDemoRoute = ApiPublicHubDemoRouteImport.update({
+  id: '/api/public/hub/demo',
+  path: '/api/public/hub/demo',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicHubDocsRoute = ApiPublicHubDocsRouteImport.update({
+  id: '/api/public/hub/docs',
+  path: '/api/public/hub/docs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicHubSkillRoute = ApiPublicHubSkillRouteImport.update({
+  id: '/api/public/hub/skill',
+  path: '/api/public/hub/skill',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/activity': typeof ActivityRoute
+  '/approvals': typeof ApprovalsRoute
+  '/connections': typeof ConnectionsRoute
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/handoffs': typeof HandoffsRoute
+  '/ideas': typeof IdeasRoute
+  '/overview': typeof OverviewRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/settings': typeof SettingsRoute
+  '/sign-in': typeof SignInRoute
+  '/sign-up': typeof SignUpRoute
+  '/projects/$id': typeof ProjectsIdRoute
+  '/projects/': typeof ProjectsIndexRoute
+  '/api/public/healthz': typeof ApiPublicHealthzRoute
+  '/api/public/mcp': typeof ApiPublicMcpRoute
+  '/api/public/hub/$': typeof ApiPublicHubSplatRoute
+  '/api/public/hub/demo': typeof ApiPublicHubDemoRoute
+  '/api/public/hub/docs': typeof ApiPublicHubDocsRoute
+  '/api/public/hub/skill': typeof ApiPublicHubSkillRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/activity': typeof ActivityRoute
+  '/approvals': typeof ApprovalsRoute
+  '/connections': typeof ConnectionsRoute
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/handoffs': typeof HandoffsRoute
+  '/ideas': typeof IdeasRoute
+  '/overview': typeof OverviewRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/settings': typeof SettingsRoute
+  '/sign-in': typeof SignInRoute
+  '/sign-up': typeof SignUpRoute
+  '/projects/$id': typeof ProjectsIdRoute
+  '/projects': typeof ProjectsIndexRoute
+  '/api/public/healthz': typeof ApiPublicHealthzRoute
+  '/api/public/mcp': typeof ApiPublicMcpRoute
+  '/api/public/hub/$': typeof ApiPublicHubSplatRoute
+  '/api/public/hub/demo': typeof ApiPublicHubDemoRoute
+  '/api/public/hub/docs': typeof ApiPublicHubDocsRoute
+  '/api/public/hub/skill': typeof ApiPublicHubSkillRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/activity': typeof ActivityRoute
+  '/approvals': typeof ApprovalsRoute
+  '/connections': typeof ConnectionsRoute
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/handoffs': typeof HandoffsRoute
+  '/ideas': typeof IdeasRoute
+  '/overview': typeof OverviewRoute
+  '/reset-password': typeof ResetPasswordRoute
+  '/settings': typeof SettingsRoute
+  '/sign-in': typeof SignInRoute
+  '/sign-up': typeof SignUpRoute
+  '/projects/$id': typeof ProjectsIdRoute
+  '/projects/': typeof ProjectsIndexRoute
+  '/api/public/healthz': typeof ApiPublicHealthzRoute
+  '/api/public/mcp': typeof ApiPublicMcpRoute
+  '/api/public/hub/$': typeof ApiPublicHubSplatRoute
+  '/api/public/hub/demo': typeof ApiPublicHubDemoRoute
+  '/api/public/hub/docs': typeof ApiPublicHubDocsRoute
+  '/api/public/hub/skill': typeof ApiPublicHubSkillRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/activity'
+    | '/approvals'
+    | '/connections'
+    | '/forgot-password'
+    | '/handoffs'
+    | '/ideas'
+    | '/overview'
+    | '/reset-password'
+    | '/settings'
+    | '/sign-in'
+    | '/sign-up'
+    | '/projects/$id'
+    | '/projects/'
+    | '/api/public/healthz'
+    | '/api/public/mcp'
+    | '/api/public/hub/$'
+    | '/api/public/hub/demo'
+    | '/api/public/hub/docs'
+    | '/api/public/hub/skill'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/activity'
+    | '/approvals'
+    | '/connections'
+    | '/forgot-password'
+    | '/handoffs'
+    | '/ideas'
+    | '/overview'
+    | '/reset-password'
+    | '/settings'
+    | '/sign-in'
+    | '/sign-up'
+    | '/projects/$id'
+    | '/projects'
+    | '/api/public/healthz'
+    | '/api/public/mcp'
+    | '/api/public/hub/$'
+    | '/api/public/hub/demo'
+    | '/api/public/hub/docs'
+    | '/api/public/hub/skill'
+  id:
+    | '__root__'
+    | '/'
+    | '/activity'
+    | '/approvals'
+    | '/connections'
+    | '/forgot-password'
+    | '/handoffs'
+    | '/ideas'
+    | '/overview'
+    | '/reset-password'
+    | '/settings'
+    | '/sign-in'
+    | '/sign-up'
+    | '/projects/$id'
+    | '/projects/'
+    | '/api/public/healthz'
+    | '/api/public/mcp'
+    | '/api/public/hub/$'
+    | '/api/public/hub/demo'
+    | '/api/public/hub/docs'
+    | '/api/public/hub/skill'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ActivityRoute: typeof ActivityRoute
+  ApprovalsRoute: typeof ApprovalsRoute
+  ConnectionsRoute: typeof ConnectionsRoute
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
+  HandoffsRoute: typeof HandoffsRoute
+  IdeasRoute: typeof IdeasRoute
+  OverviewRoute: typeof OverviewRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
+  SettingsRoute: typeof SettingsRoute
+  SignInRoute: typeof SignInRoute
+  SignUpRoute: typeof SignUpRoute
+  ProjectsIdRoute: typeof ProjectsIdRoute
+  ProjectsIndexRoute: typeof ProjectsIndexRoute
+  ApiPublicHealthzRoute: typeof ApiPublicHealthzRoute
+  ApiPublicMcpRoute: typeof ApiPublicMcpRoute
+  ApiPublicHubSplatRoute: typeof ApiPublicHubSplatRoute
+  ApiPublicHubDemoRoute: typeof ApiPublicHubDemoRoute
+  ApiPublicHubDocsRoute: typeof ApiPublicHubDocsRoute
+  ApiPublicHubSkillRoute: typeof ApiPublicHubSkillRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +299,163 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/activity': {
+      id: '/activity'
+      path: '/activity'
+      fullPath: '/activity'
+      preLoaderRoute: typeof ActivityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/approvals': {
+      id: '/approvals'
+      path: '/approvals'
+      fullPath: '/approvals'
+      preLoaderRoute: typeof ApprovalsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/connections': {
+      id: '/connections'
+      path: '/connections'
+      fullPath: '/connections'
+      preLoaderRoute: typeof ConnectionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/handoffs': {
+      id: '/handoffs'
+      path: '/handoffs'
+      fullPath: '/handoffs'
+      preLoaderRoute: typeof HandoffsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ideas': {
+      id: '/ideas'
+      path: '/ideas'
+      fullPath: '/ideas'
+      preLoaderRoute: typeof IdeasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/overview': {
+      id: '/overview'
+      path: '/overview'
+      fullPath: '/overview'
+      preLoaderRoute: typeof OverviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sign-in': {
+      id: '/sign-in'
+      path: '/sign-in'
+      fullPath: '/sign-in'
+      preLoaderRoute: typeof SignInRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sign-up': {
+      id: '/sign-up'
+      path: '/sign-up'
+      fullPath: '/sign-up'
+      preLoaderRoute: typeof SignUpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/projects/': {
+      id: '/projects/'
+      path: '/projects'
+      fullPath: '/projects/'
+      preLoaderRoute: typeof ProjectsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/projects/$id': {
+      id: '/projects/$id'
+      path: '/projects/$id'
+      fullPath: '/projects/$id'
+      preLoaderRoute: typeof ProjectsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/healthz': {
+      id: '/api/public/healthz'
+      path: '/api/public/healthz'
+      fullPath: '/api/public/healthz'
+      preLoaderRoute: typeof ApiPublicHealthzRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/mcp': {
+      id: '/api/public/mcp'
+      path: '/api/public/mcp'
+      fullPath: '/api/public/mcp'
+      preLoaderRoute: typeof ApiPublicMcpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hub/$': {
+      id: '/api/public/hub/$'
+      path: '/api/public/hub/$'
+      fullPath: '/api/public/hub/$'
+      preLoaderRoute: typeof ApiPublicHubSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hub/demo': {
+      id: '/api/public/hub/demo'
+      path: '/api/public/hub/demo'
+      fullPath: '/api/public/hub/demo'
+      preLoaderRoute: typeof ApiPublicHubDemoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hub/docs': {
+      id: '/api/public/hub/docs'
+      path: '/api/public/hub/docs'
+      fullPath: '/api/public/hub/docs'
+      preLoaderRoute: typeof ApiPublicHubDocsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hub/skill': {
+      id: '/api/public/hub/skill'
+      path: '/api/public/hub/skill'
+      fullPath: '/api/public/hub/skill'
+      preLoaderRoute: typeof ApiPublicHubSkillRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ActivityRoute: ActivityRoute,
+  ApprovalsRoute: ApprovalsRoute,
+  ConnectionsRoute: ConnectionsRoute,
+  ForgotPasswordRoute: ForgotPasswordRoute,
+  HandoffsRoute: HandoffsRoute,
+  IdeasRoute: IdeasRoute,
+  OverviewRoute: OverviewRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
+  SettingsRoute: SettingsRoute,
+  SignInRoute: SignInRoute,
+  SignUpRoute: SignUpRoute,
+  ProjectsIdRoute: ProjectsIdRoute,
+  ProjectsIndexRoute: ProjectsIndexRoute,
+  ApiPublicHealthzRoute: ApiPublicHealthzRoute,
+  ApiPublicMcpRoute: ApiPublicMcpRoute,
+  ApiPublicHubSplatRoute: ApiPublicHubSplatRoute,
+  ApiPublicHubDemoRoute: ApiPublicHubDemoRoute,
+  ApiPublicHubDocsRoute: ApiPublicHubDocsRoute,
+  ApiPublicHubSkillRoute: ApiPublicHubSkillRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
