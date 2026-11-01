@@ -90,7 +90,7 @@ function GithubSyncPanel() {
         </div>
         <dl className="mt-4 grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-muted-foreground">
           <dt>GitHub account</dt><dd className="text-foreground">{s?.githubConnected ? "Connected securely" : "Not connected"}</dd>
-          <dt>Runs</dt><dd className="text-foreground">{s?.autoSyncEnabled ? `Every ${s.intervalMinutes} minutes` : "After your first sync"}</dd>
+          <dt>Runs</dt><dd className="text-foreground">{s?.autoSyncEnabled ? s.intervalMinutes === 60 ? "Every hour, on the hour · results can be up to an hour old" : `Every ${s.intervalMinutes} minutes` : "After your first sync"}</dd>
           <dt>Last sync</dt><dd className="text-foreground" data-testid="text-last-sync">{s?.lastSyncAt ? `${ago(s.lastSyncAt)} · ${s.lastSyncTrigger === "automatic" ? "automatic" : "by you"}` : "Never"}</dd>
           {s?.lastSyncMessage && <><dt>Result</dt><dd className={s.lastSyncOk === false ? "text-destructive" : "text-foreground"}>{s.lastSyncMessage}</dd></>}
         </dl>
