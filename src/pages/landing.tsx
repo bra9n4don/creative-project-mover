@@ -30,6 +30,9 @@ export default function Landing() {
             <Link href="/sign-in" className={btn.ghost} data-testid="link-hero-signin">
               I have an account
             </Link>
+            <Link href="/setup" className="self-center text-sm text-muted-foreground underline underline-offset-4" data-testid="link-owner-setup">
+              Owner setup
+            </Link>
           </div>
         </div>
       </section>

@@ -1,10 +1,11 @@
 import { useState, type ReactNode } from "react";
 import { Link, useLocation } from "@/lib/router-compat";
 import { useUser } from "@/lib/auth";
-import { Bookmark, FolderKanban, History, Lightbulb, Menu, Plug, Settings, ShieldCheck, Sunrise, X } from "lucide-react";
+import { ListChecks, Bookmark, FolderKanban, History, Lightbulb, Menu, Plug, Settings, ShieldCheck, Sunrise, X } from "lucide-react";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { useWorkspace } from "@/lib/workspace";
+import { useOnboarding } from "@/lib/use-onboarding";
 
 const primaryNav = [
   { href: "/overview", label: "Where I left off", icon: Sunrise },
@@ -17,6 +18,7 @@ const secondaryNav = [
   { href: "/approvals", label: "Approvals", icon: ShieldCheck },
   { href: "/activity", label: "Activity log", icon: History },
   { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/setup", label: "Setup", icon: ListChecks },
 ];
 
 function Logo() {
@@ -33,6 +35,7 @@ function NavList({ onNav }: { onNav?: () => void }) {
   const { state, isDemo } = useWorkspace();
   const { user } = useUser();
   const pending = state?.summary.pendingApprovals ?? 0;
+  const { progress } = useOnboarding();
   const item = (n: (typeof primaryNav)[number]) => {
     const active = loc === n.href || (n.href !== "/overview" && loc.startsWith(n.href)) || (n.href === "/overview" && loc === "/");
     return (
@@ -50,6 +53,9 @@ function NavList({ onNav }: { onNav?: () => void }) {
         <span className="flex-1">{n.label}</span>
         {n.href === "/approvals" && pending > 0 && (
           <span className="rounded-full bg-sidebar-primary px-1.5 font-mono text-[10px] text-sidebar-primary-foreground">{pending}</span>
+        )}
+        {n.href === "/setup" && !progress.complete && (
+          <span className="rounded-full border border-sidebar-primary px-1.5 font-mono text-[10px] text-sidebar-primary">{progress.done}/{progress.total}</span>
         )}
       </Link>
     );
