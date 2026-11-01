@@ -88,3 +88,11 @@ describe("mindMapClusters", () => {
     expect(mindMapClusters({ nodes, edges: nodes.slice(1).map(n => ({ id: n.id, source: "r", target: n.id })) })).toHaveLength(8);
   });
 });
+import { branchOutline } from "./kickoff";
+describe("branchOutline", () => {
+  it("includes the node and only its descendants", () => {
+    const m = { nodes: [{ id: "r", label: "Root", kind: "idea" as const, x: 0, y: 0 }, { id: "a", label: "A", kind: "idea" as const, x: 0, y: 0 }, { id: "b", label: "B", kind: "feature" as const, x: 0, y: 0 }, { id: "c", label: "C", kind: "idea" as const, x: 0, y: 0 }],
+      edges: [{ id: "1", source: "r", target: "a" }, { id: "2", source: "a", target: "b" }, { id: "3", source: "r", target: "c" }] };
+    expect(branchOutline(m, "a")).toBe("- A\n  - [Feature] B");
+  });
+});
