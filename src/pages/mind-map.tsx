@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
+import { useBlocker } from "@tanstack/react-router";
 import { ArrowUpRight, FolderPlus, Lightbulb, Network } from "lucide-react";
 import { Link } from "@/lib/router-compat";
 import { useAuth } from "@/lib/auth";
@@ -63,9 +64,20 @@ function MindMapBody() {
     try {
       const saved = await save({ data: { data: { map: next, title: next.nodes[0]?.label ?? "My brainstorm", expectedRevision: revision.current } } });
       revision.current = saved.revision; setSaveError(""); setStatus("All changes saved");
-    } catch (e) { pending.current ??= next; setSaveError(errMessage(e)); setStatus("Not saved"); }
-    finally { saving.current = false; if (pending.current && !saveError) timer.current = setTimeout(() => void flush(), 800); }
+      saving.current = false;
+      if (pending.current) timer.current = setTimeout(() => void flush(), 800);
+      return true;
+    } catch (e) { pending.current ??= next; saving.current = false; setSaveError(errMessage(e)); setStatus("Not saved"); return false; }
   };
+  const flushNow = async () => {
+    if (timer.current) clearTimeout(timer.current);
+    while (saving.current) await new Promise(r => setTimeout(r, 50));
+    return pending.current ? flush() : true;
+  };
+  useBlocker({
+    shouldBlockFn: async () => !(await flushNow()),
+    enableBeforeUnload: () => !!pending.current || saving.current,
+  });
   const change = (m: MindMap) => {
     setMap(m); pending.current = m; setStatus("Unsaved changes");
     if (timer.current) clearTimeout(timer.current);

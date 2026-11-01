@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { onboardingProgress, onboardingSteps, type OnboardingInput } from "./onboarding";
 
-const base: OnboardingInput = { signedIn: true, emailConfirmed: true, claimed: true, isOwner: true, host: "creative-project-mover.lovable.app", tokens: [], githubSynced: false };
+const base: OnboardingInput = { signedIn: true, emailConfirmed: true, claimed: true, isOwner: true, host: "carterlab.app", tokens: [], githubSynced: false };
 
 describe("onboarding checklist", () => {
   it("someone else owning the workspace blocks every later step", () => {
@@ -23,5 +23,13 @@ describe("onboarding checklist", () => {
   it("GitHub is optional for completion", () => {
     const s = onboardingSteps({ ...base, tokens: [{ status: "verified", lastSeen: "x" }] });
     expect(onboardingProgress(s)).toEqual({ done: 4, total: 4, complete: true });
+  });
+});
+
+import { isPublishedHost } from "./onboarding";
+describe("live address", () => {
+  it("recognises carterlab.app as the live site", () => {
+    expect(isPublishedHost("carterlab.app")).toBe(true);
+    expect(isPublishedHost("carterhomelab.dev")).toBe(false);
   });
 });
