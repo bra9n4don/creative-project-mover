@@ -26,14 +26,14 @@ function Step({ n, state, title, children }: { n: number; state: StepState; titl
 
 export default function SetupPage() {
   usePageTitle("Setup");
-  const { steps, progress, isLoading, host, claimNow, connections } = useOnboarding();
+  const { steps, progress, isLoading, host, claimNow, connections, claimError, retryClaim } = useOnboarding();
   const [claiming, setClaiming] = useState(false);
   const onPublished = steps.published === "done";
 
   return (
     <AppShell>
       <PageHeader eyebrow={`Owner setup · ${progress.done}/${progress.total}`} title="Set up Relay" lede="Get your published workspace ready: your account, ownership, and fresh tokens for your AI tools." />
-      {isLoading ? <LoadingBlock rows={3} /> : (
+      {claimError ? <ErrorBlock error={claimError} onRetry={retryClaim} /> : isLoading ? <LoadingBlock rows={3} /> : (
         <Panel>
           <ol>
             <Step n={1} state={steps.account} title="Create your account">

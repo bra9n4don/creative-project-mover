@@ -61,7 +61,7 @@ export const Route = createFileRoute("/api/public/slack/events")({
             body: JSON.stringify({ channel: ev.channel, text: reply, thread_ts: ev.thread_ts ?? (ev.type === "app_mention" ? ev.ts : undefined) }),
           });
           const out = await res.text();
-          if (!res.ok || !JSON.parse(out).ok) console.error(`Slack reply failed [${res.status}]: ${out}`);
+          if (!res.ok || !JSON.parse(out).ok) throw new Error(`Slack reply failed [${res.status}]: ${out}`);
         } catch (e) {
           console.error("Slack handler error", e);
           // Ask Slack to retry only if nothing was saved yet, so a retry can't duplicate an idea.
