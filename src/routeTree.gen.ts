@@ -38,6 +38,7 @@ import { Route as ApiPublicHubDemoRouteImport } from './routes/api/public/hub/de
 import { Route as ApiPublicHubDocsRouteImport } from './routes/api/public/hub/docs'
 import { Route as ApiPublicHubSkillRouteImport } from './routes/api/public/hub/skill'
 import { Route as ApiPublicJobsGithubSyncRouteImport } from './routes/api/public/jobs/github-sync'
+import { Route as ApiPublicSlackEventsRouteImport } from './routes/api/public/slack/events'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -185,6 +186,11 @@ const ApiPublicJobsGithubSyncRoute = ApiPublicJobsGithubSyncRouteImport.update({
   path: '/api/public/jobs/github-sync',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicSlackEventsRoute = ApiPublicSlackEventsRouteImport.update({
+  id: '/api/public/slack/events',
+  path: '/api/public/slack/events',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -216,6 +222,7 @@ export interface FileRoutesByFullPath {
   '/api/public/hub/docs': typeof ApiPublicHubDocsRoute
   '/api/public/hub/skill': typeof ApiPublicHubSkillRoute
   '/api/public/jobs/github-sync': typeof ApiPublicJobsGithubSyncRoute
+  '/api/public/slack/events': typeof ApiPublicSlackEventsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -247,6 +254,7 @@ export interface FileRoutesByTo {
   '/api/public/hub/docs': typeof ApiPublicHubDocsRoute
   '/api/public/hub/skill': typeof ApiPublicHubSkillRoute
   '/api/public/jobs/github-sync': typeof ApiPublicJobsGithubSyncRoute
+  '/api/public/slack/events': typeof ApiPublicSlackEventsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -279,6 +287,7 @@ export interface FileRoutesById {
   '/api/public/hub/docs': typeof ApiPublicHubDocsRoute
   '/api/public/hub/skill': typeof ApiPublicHubSkillRoute
   '/api/public/jobs/github-sync': typeof ApiPublicJobsGithubSyncRoute
+  '/api/public/slack/events': typeof ApiPublicSlackEventsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -312,6 +321,7 @@ export interface FileRouteTypes {
     | '/api/public/hub/docs'
     | '/api/public/hub/skill'
     | '/api/public/jobs/github-sync'
+    | '/api/public/slack/events'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -343,6 +353,7 @@ export interface FileRouteTypes {
     | '/api/public/hub/docs'
     | '/api/public/hub/skill'
     | '/api/public/jobs/github-sync'
+    | '/api/public/slack/events'
   id:
     | '__root__'
     | '/'
@@ -374,6 +385,7 @@ export interface FileRouteTypes {
     | '/api/public/hub/docs'
     | '/api/public/hub/skill'
     | '/api/public/jobs/github-sync'
+    | '/api/public/slack/events'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -406,6 +418,7 @@ export interface RootRouteChildren {
   ApiPublicHubDocsRoute: typeof ApiPublicHubDocsRoute
   ApiPublicHubSkillRoute: typeof ApiPublicHubSkillRoute
   ApiPublicJobsGithubSyncRoute: typeof ApiPublicJobsGithubSyncRoute
+  ApiPublicSlackEventsRoute: typeof ApiPublicSlackEventsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -613,6 +626,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicJobsGithubSyncRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/slack/events': {
+      id: '/api/public/slack/events'
+      path: '/api/public/slack/events'
+      fullPath: '/api/public/slack/events'
+      preLoaderRoute: typeof ApiPublicSlackEventsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -647,6 +667,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicHubDocsRoute: ApiPublicHubDocsRoute,
   ApiPublicHubSkillRoute: ApiPublicHubSkillRoute,
   ApiPublicJobsGithubSyncRoute: ApiPublicJobsGithubSyncRoute,
+  ApiPublicSlackEventsRoute: ApiPublicSlackEventsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
