@@ -17,7 +17,9 @@ const briefLabels = { title: "Project title", goal: "Project goal", audience: "W
 const reviewLabels = { goal: "The goal and audience are clear", scope: "The scope fits my budget and available time", plan: "The milestones and tasks are actionable", risks: "I have noted the risks and my first three actions", ready: "I have reviewed this plan and am ready to start" };
 function download(name: string, content: string, type: string) {
   const url = URL.createObjectURL(new Blob([content], { type }));
-  const a = document.createElement("a"); a.href = url; a.download = name; a.click(); URL.revokeObjectURL(url);
+  const a = document.createElement("a"); a.href = url; a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 30000);
 }
 
 function KickoffBody() {
@@ -34,12 +36,19 @@ function KickoffBody() {
   const [resume, setResume] = useState("");
   const [resumeOpen, setResumeOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [checkpointError, setCheckpointError] = useState("");
   const controller = useRef<AbortController | null>(null);
   const upload = useRef<HTMLInputElement | null>(null);
   useEffect(() => () => controller.current?.abort(), []);
   const edit = (patch: Partial<Kickoff>) => { setK(prev => ({ ...prev, ...patch, review: patch.review ?? { goal: false, scope: false, plan: false, risks: false, ready: false } })); setError(""); setNotice(""); };
   const restore = (value: string) => {
-    try { const restored = restoreCheckpoint(value); const existing = storage.saved.find(r => r.data.id === restored.id); storage.activate(existing); setK(existing?.data ?? restored); setPaused(false); setResumeOpen(false); setError(""); setNotice(existing ? "Resumed the latest saved project." : "Checkpoint restored."); }
+    try {
+      const restored = restoreCheckpoint(value);
+      const existing = storage.saved.find(r => r.data.id === restored.id);
+      if (existing?.completed) throw new Error("This Kickoff is complete. Open its project instead of restoring an earlier checkpoint.");
+      storage.activate(existing); setK(restored); setPaused(false); setResumeOpen(false); setError("");
+      setNotice(`Checkpoint restored at step ${restored.step + 1}: ${kickoffSteps[restored.step]}.`);
+    }
     catch (e) { setError(errMessage(e)); }
   };
   const generate = async (mode: "brief" | "plan") => {
@@ -92,10 +101,11 @@ function KickoffBody() {
     finally { setSaving(false); }
   };
   const pause = async () => {
-    setSaving(true); setError("");
-    try { await storage.flush(); setSecured(true); setCopied(false); setPauseOpen(true); }
-    catch (e) { setError(errMessage(e)); }
+    setSaving(true); setError(""); setCheckpointError(""); setCopied(false); setSecured(false);
+    try { const saved = await storage.flush(); setSecured(!!saved || !!storage.projectId); }
+    catch { setCheckpointError("Your project could not be saved. Download the checkpoint or copy its code before pausing."); }
     finally { setSaving(false); }
+    setPauseOpen(true);
   };
   if (isLoading) return <LoadingBlock />;
   if (workspaceError || !state) return <ErrorBlock error={workspaceError} onRetry={refetch} />;
@@ -140,7 +150,7 @@ function KickoffBody() {
       <footer className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t pt-5"><Button variant="ghost" disabled={k.step === 0 || locked} onClick={() => { setK(prev => ({ ...prev, step: prev.step - 1 })); setError(""); }}><ArrowLeft /> Back</Button><div className="flex flex-wrap gap-2"><Button variant="outline" disabled={busy || saving} onClick={pause}><Pause /> Save checkpoint & pause</Button>{k.step < 5 && <Button disabled={locked} onClick={continueStep}><ArrowRight />{k.step === 2 ? "Save reviewed brief & continue" : k.step === 3 ? "Save reviewed tasks & continue" : "Continue"}</Button>}</div></footer>
     </>}
     <input type="file" accept=".json,application/json" ref={upload} className="hidden" aria-label="Upload checkpoint" onChange={async e => { const file = e.target.files?.[0]; if (!file) return; if (file.size > 1000000) setError("Checkpoint is too large."); else restore(await file.text()); e.target.value = ""; }} />
-    <Dialog open={pauseOpen} onOpenChange={setPauseOpen}><DialogContent className="max-w-lg"><DialogHeader><DialogTitle>Save checkpoint & pause</DialogTitle><DialogDescription>Your project is saved at step {k.step + 1}. Optionally keep a private file or code backup.</DialogDescription></DialogHeader><div className="flex flex-wrap gap-2"><Button onClick={() => { download("relay-kickoff-checkpoint.json", JSON.stringify(k, null, 2), "application/json"); setSecured(true); }}><Download /> Download checkpoint</Button><Button variant="outline" onClick={async () => { try { await navigator.clipboard.writeText(checkpointCode(k)); setCopied(true); setSecured(true); } catch { setError("Could not copy. Select the code below or download the file."); } }}>{copied ? <Check /> : <Copy />} Copy code</Button></div><textarea aria-label="Checkpoint code" readOnly className={`${field} font-mono text-xs`} rows={3} value={checkpointCode(k)} /><Button disabled={!secured} onClick={() => { setPauseOpen(false); setPaused(true); }}><Pause /> Pause now</Button></DialogContent></Dialog>
+    <Dialog open={pauseOpen} onOpenChange={setPauseOpen}><DialogContent className="max-w-lg"><DialogHeader><DialogTitle>Save checkpoint & pause</DialogTitle><DialogDescription>Step {k.step + 1} of 6 · {kickoffSteps[k.step]}. Your file or resume code contains your answers and drafts; keep it privately.</DialogDescription></DialogHeader><div className="flex flex-wrap gap-2"><Button onClick={() => { download(`relay-kickoff-step-${k.step + 1}.json`, JSON.stringify(kickoffSchema.parse(k), null, 2), "application/json;charset=utf-8"); setSecured(true); }}><Download /> Download checkpoint</Button><Button variant="outline" onClick={async () => { try { await navigator.clipboard.writeText(checkpointCode(k)); setCopied(true); setSecured(true); setCheckpointError(""); } catch { setCheckpointError("Could not copy. Select the resume code below and copy it, or download the file."); } }}>{copied ? <Check /> : <Copy />} {copied ? "Code copied" : "Copy resume code"}</Button></div><Field label="Resume code"><textarea aria-label="Checkpoint code" readOnly className={`${field} font-mono text-xs`} rows={4} value={checkpointCode(k)} onFocus={e => e.currentTarget.select()} /></Field>{checkpointError && <p role="alert" className="text-sm text-destructive">{checkpointError}</p>}{copied && <p role="status" className="text-sm text-accent">Resume code copied.</p>}<Button disabled={!secured} onClick={() => { setPauseOpen(false); setPaused(true); }}><Pause /> Pause now</Button></DialogContent></Dialog>
     <Dialog open={resumeOpen} onOpenChange={setResumeOpen}><DialogContent className="max-w-lg"><DialogHeader><DialogTitle>Resume Kickoff</DialogTitle><DialogDescription>Upload a checkpoint or paste its code. This replaces the current session’s answers.</DialogDescription></DialogHeader><Button variant="outline" onClick={() => upload.current?.click()}><Upload /> Upload checkpoint</Button><textarea aria-label="Resume code" className={field} rows={5} value={resume} onChange={e => setResume(e.target.value)} placeholder="RELAY1.…" /><Button disabled={!resume.trim()} onClick={() => restore(resume)}><ArrowRight /> Restore code</Button>{error && <p role="alert" className="text-sm text-destructive">{error}</p>}</DialogContent></Dialog>
   </>;
 }
