@@ -5,7 +5,7 @@ description: How Relay's AI drafts work (Kickoff brief/plan, project updates, mi
 
 # Relay AI prompts
 
-- All AI calls go through `createResponsesCall` in `src/lib/ai/responses.server.ts` (Lovable AI Gateway, streamed NDJSON, structured output via zod schema).
+- All AI calls go through `createResponsesCall` in `src/lib/ai/responses.server.ts` (Lovable AI Gateway, Claude Sonnet via Messages API `DRAFT_MODEL`, streamed NDJSON, structured output via zod schema).
 - Shared safety/preamble text lives in `DRAFT_PREAMBLE` in `src/lib/ai/prompts.ts`; never copy it into a new file. Wrap input payloads in `compact()` to drop empty fields.
 - Send only fields the model uses (title/goal, open tasks, finished titles), never the whole workspace.
 - Reasoning: `low` for briefs and project updates, `medium` only for plans.
