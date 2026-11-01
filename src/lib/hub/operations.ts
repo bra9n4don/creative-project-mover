@@ -195,6 +195,7 @@ export function exportKickoff(actor: Actor, input: unknown) {
   requireOwner(actor);
   const k = kickoffExportSchema.parse(input);
   return mutateState(actor, s => {
+    if (s.kickoffs.some(r => r.data.id === k.id)) throw new HubError(409, "This Kickoff already has a project. Complete it in the Kickoff wizard instead.");
     // Stable checkpoint id makes retry/resume safe without a second project.
     const existing = s.activity.find(a => a.kind === "kickoff" && a.description === k.id);
     if (existing) {
@@ -247,7 +248,7 @@ export function saveKickoff(actor: Actor, input: unknown) {
     if (k.step <= 1) { p.description = k.brainstorm; p.goal = k.clarify.goal; }
     if (reviewedStep === 2 || reviewedStep === 5) {
       p.title = k.brief.title.trim(); p.goal = k.brief.goal;
-      p.description = kickoffMarkdown({ ...k, plan: { milestones: [] } });
+      p.description = reviewedStep === 5 ? kickoffMarkdown(k) : kickoffMarkdown({ ...k, plan: { milestones: [] }, risks: "", firstActions: ["", "", ""] });
     }
     const upsertTasks = (group: string, items: { title: string; description: string; priority: "low" | "medium" | "high" }[]) => {
       for (const [i, item] of items.entries()) {
