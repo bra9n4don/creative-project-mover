@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link } from "@/lib/router-compat";
-import { FolderPlus, Github, Search } from "lucide-react";
+import { FolderPlus, Github, Rocket, Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { AppShell } from "@/components/shell";
 import { Bar, Dot, Empty, ErrorBlock, LoadingBlock, PageHeader, Pill, ago, btn, field } from "@/components/kit";
 import { ProjectDialog } from "@/components/forms";
@@ -27,6 +28,7 @@ export default function ProjectsPage() {
   return (
     <AppShell>
       <PageHeader eyebrow="Projects" title="Everything you're building" lede="One plan per project. Open one to see its tasks, its last checkpoint, and the next step.">
+        <Button asChild variant="outline"><Link href="/kickoff"><Rocket /> Start Kickoff</Link></Button>
         <button className={btn.primary} data-testid="button-create-project" onClick={() => guard("Creating projects needs your own workspace.", () => setOpen(true))}>
           <FolderPlus className="h-4 w-4" /> New project
         </button>

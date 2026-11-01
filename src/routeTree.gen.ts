@@ -24,6 +24,7 @@ import { Route as SetupRouteImport } from './routes/setup'
 import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as SignUpRouteImport } from './routes/sign-up'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
+import { Route as ApiKickoffDraftRouteImport } from './routes/api/kickoff-draft'
 import { Route as ApiProjectUpdateRouteImport } from './routes/api/project-update'
 import { Route as ProjectsIndexRouteImport } from './routes/projects.index'
 import { Route as ProjectsIdRouteImport } from './routes/projects.$id'
@@ -112,6 +113,11 @@ const Char91DotwellKnownChar93OauthProtectedResourceRoute =
     path: '/.well-known/oauth-protected-resource',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiKickoffDraftRoute = ApiKickoffDraftRouteImport.update({
+  id: '/api/kickoff-draft',
+  path: '/api/kickoff-draft',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiProjectUpdateRoute = ApiProjectUpdateRouteImport.update({
   id: '/api/project-update',
   path: '/api/project-update',
@@ -184,6 +190,7 @@ export interface FileRoutesByFullPath {
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  '/api/kickoff-draft': typeof ApiKickoffDraftRoute
   '/api/project-update': typeof ApiProjectUpdateRoute
   '/projects/$id': typeof ProjectsIdRoute
   '/projects/': typeof ProjectsIndexRoute
@@ -212,6 +219,7 @@ export interface FileRoutesByTo {
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  '/api/kickoff-draft': typeof ApiKickoffDraftRoute
   '/api/project-update': typeof ApiProjectUpdateRoute
   '/projects/$id': typeof ProjectsIdRoute
   '/projects': typeof ProjectsIndexRoute
@@ -241,6 +249,7 @@ export interface FileRoutesById {
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  '/api/kickoff-draft': typeof ApiKickoffDraftRoute
   '/api/project-update': typeof ApiProjectUpdateRoute
   '/projects/$id': typeof ProjectsIdRoute
   '/projects/': typeof ProjectsIndexRoute
@@ -271,6 +280,7 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/sign-up'
     | '/.well-known/oauth-protected-resource'
+    | '/api/kickoff-draft'
     | '/api/project-update'
     | '/projects/$id'
     | '/projects/'
@@ -299,6 +309,7 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/sign-up'
     | '/.well-known/oauth-protected-resource'
+    | '/api/kickoff-draft'
     | '/api/project-update'
     | '/projects/$id'
     | '/projects'
@@ -327,6 +338,7 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/sign-up'
     | '/.well-known/oauth-protected-resource'
+    | '/api/kickoff-draft'
     | '/api/project-update'
     | '/projects/$id'
     | '/projects/'
@@ -356,6 +368,7 @@ export interface RootRouteChildren {
   SignInRoute: typeof SignInRoute
   SignUpRoute: typeof SignUpRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  ApiKickoffDraftRoute: typeof ApiKickoffDraftRoute
   ApiProjectUpdateRoute: typeof ApiProjectUpdateRoute
   ProjectsIdRoute: typeof ProjectsIdRoute
   ProjectsIndexRoute: typeof ProjectsIndexRoute
@@ -476,6 +489,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/kickoff-draft': {
+      id: '/api/kickoff-draft'
+      path: '/api/kickoff-draft'
+      fullPath: '/api/kickoff-draft'
+      preLoaderRoute: typeof ApiKickoffDraftRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/project-update': {
       id: '/api/project-update'
       path: '/api/project-update'
@@ -573,6 +593,7 @@ const rootRouteChildren: RootRouteChildren = {
   SignUpRoute: SignUpRoute,
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
+  ApiKickoffDraftRoute: ApiKickoffDraftRoute,
   ApiProjectUpdateRoute: ApiProjectUpdateRoute,
   ProjectsIdRoute: ProjectsIdRoute,
   ProjectsIndexRoute: ProjectsIndexRoute,

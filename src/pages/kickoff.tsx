@@ -1,0 +1,140 @@
+import { useEffect, useRef, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { useQueryClient } from "@tanstack/react-query";
+import { Link } from "@/lib/router-compat";
+import { useAuth } from "@/lib/auth";
+import { useWorkspace, errMessage } from "@/lib/workspace";
+import { supabase } from "@/integrations/supabase/client";
+import { exportKickoffFn } from "@/lib/hub/hub.functions";
+import { briefSchema, planSchema, checkpointCode, clarifyFields, kickoffMarkdown, kickoffSchema, kickoffSteps, newKickoff, restoreCheckpoint, stepIssue, type Kickoff } from "@/lib/kickoff";
+import { AppShell } from "@/components/shell";
+import { Field, field, ErrorBlock, LoadingBlock } from "@/components/kit";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { KickoffGuidance } from "@/components/kickoff-guidance";
+import { ArrowLeft, ArrowRight, Check, Copy, Download, Loader2, Pause, Plus, Rocket, Sparkles, Square, Trash2, Upload } from "lucide-react";
+
+const labels = { goal: "Goal", audience: "Audience", scope: "Scope", budget: "Budget", timeline: "Timeline", timeAvailable: "Time available", risks: "Risks", unknowns: "Unknowns" };
+const briefLabels = { title: "Project title", goal: "Project goal", audience: "Who it is for", scope: "In scope", outOfScope: "Out of scope", success: "Success criteria", constraints: "Constraints", unknowns: "Open questions" };
+const reviewLabels = { goal: "The goal and audience are clear", scope: "The scope fits my budget and available time", plan: "The milestones and tasks are actionable", risks: "I have noted the risks and my first three actions", ready: "I have reviewed this plan and am ready to start" };
+function download(name: string, content: string, type: string) {
+  const url = URL.createObjectURL(new Blob([content], { type }));
+  const a = document.createElement("a"); a.href = url; a.download = name; a.click(); URL.revokeObjectURL(url);
+}
+
+function KickoffBody() {
+  const { state, isLoading, error: workspaceError, refetch } = useWorkspace();
+  const [k, setK] = useState<Kickoff>(newKickoff);
+  const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [pauseOpen, setPauseOpen] = useState(false);
+  const [paused, setPaused] = useState(false);
+  const [secured, setSecured] = useState(false);
+  const [resume, setResume] = useState("");
+  const [resumeOpen, setResumeOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const controller = useRef<AbortController | null>(null);
+  const upload = useRef<HTMLInputElement | null>(null);
+  const exporting = useServerFn(exportKickoffFn);
+  const qc = useQueryClient();
+  useEffect(() => () => controller.current?.abort(), []);
+  useEffect(() => {
+    const warn = (e: BeforeUnloadEvent) => { if (k.brainstorm && !paused && !k.exportedProjectId) { e.preventDefault(); } };
+    window.addEventListener("beforeunload", warn); return () => window.removeEventListener("beforeunload", warn);
+  }, [k.brainstorm, k.exportedProjectId, paused]);
+  const edit = (patch: Partial<Kickoff>) => { setK(prev => ({ ...prev, ...patch, review: patch.review ?? { goal: false, scope: false, plan: false, risks: false, ready: false } })); setError(""); setNotice(""); };
+  const restore = (value: string) => {
+    try { setK(restoreCheckpoint(value)); setPaused(false); setResumeOpen(false); setError(""); setNotice("Checkpoint restored."); }
+    catch (e) { setError(errMessage(e)); }
+  };
+  const generate = async (mode: "brief" | "plan") => {
+    if (busy) return;
+    setBusy(true); setError(""); setNotice("");
+    const abort = new AbortController(); controller.current = abort;
+    try {
+      const { data } = await supabase.auth.getSession();
+      if (!data.session) throw new Error("Sign in again to draft your Kickoff.");
+      const res = await fetch("/api/kickoff-draft", { method: "POST", signal: abort.signal, headers: { "Content-Type": "application/json", Authorization: `Bearer ${data.session.access_token}` }, body: JSON.stringify({ mode, kickoff: k }) });
+      if (!res.ok) { const e = await res.json(); throw new Error(e.message); }
+      const reader = res.body?.getReader(); if (!reader) throw new Error("The AI response was empty.");
+      const decoder = new TextDecoder(); let buffer = ""; let received = false;
+      while (true) {
+        const chunk = await reader.read(); buffer += decoder.decode(chunk.value, { stream: !chunk.done });
+        const lines = buffer.split("\n"); buffer = lines.pop() ?? "";
+        for (const line of lines) if (line.trim()) {
+          const event = JSON.parse(line);
+          if (event.type === "error") throw new Error(event.message);
+          if (event.type === "draft") {
+            const draft = mode === "brief" ? briefSchema.parse(event.draft) : planSchema.parse(event.draft);
+            const next = kickoffSchema.parse({ ...k, [mode]: draft });
+            edit(next); received = true; setNotice("Draft ready for your review.");
+          }
+        }
+        if (chunk.done) break;
+      }
+      if (!received && !abort.signal.aborted) throw new Error("No draft was returned. Your answers have been kept.");
+    } catch (e) { if (!abort.signal.aborted) setError(errMessage(e)); else setNotice("Drafting stopped. Your previous draft is unchanged."); }
+    finally { setBusy(false); controller.current = null; }
+  };
+  const exportToRelay = async () => {
+    if (saving) return;
+    setSaving(true); setError("");
+    try {
+      const result = await exporting({ data: { data: k } });
+      setK(prev => ({ ...prev, exportedProjectId: result.projectId }));
+      await qc.invalidateQueries({ queryKey: ["hub", "state"] });
+      setNotice("Your project, tasks and starting checkpoint are in Relay.");
+    } catch (e) { setError(errMessage(e)); }
+    finally { setSaving(false); }
+  };
+  if (isLoading) return <LoadingBlock />;
+  if (workspaceError || !state) return <ErrorBlock error={workspaceError} onRetry={refetch} />;
+  const locked = busy || saving || !!k.exportedProjectId;
+  const textInput = (label: string, value: string, change: (v: string) => void, max = 10000, rows = 3) => <Field label={label}><textarea aria-label={label} className={field} maxLength={max} rows={rows} value={value} disabled={locked} onChange={e => change(e.target.value)} /></Field>;
+  const aiButton = (mode: "brief" | "plan") => <div className="flex flex-wrap items-center gap-3">{busy ? <Button variant="outline" onClick={() => controller.current?.abort()}><Square /> Stop drafting</Button> : <Button variant="secondary" disabled={locked || !k.brainstorm.trim()} onClick={() => generate(mode)}><Sparkles />{mode === "brief" ? "Draft brief with AI" : "Draft plan with AI"}</Button>}<span className="text-xs text-muted-foreground">Uses workspace AI credits · replaces the current {mode} draft</span></div>;
+  return <>
+    <header className="mb-6 flex flex-wrap items-start justify-between gap-4"><div><div className="mb-2 flex items-center gap-2 text-sm text-primary"><Rocket className="h-4 w-4" /> New project</div><h1 className="font-display text-3xl font-semibold">Kickoff</h1><p className="mt-2 text-sm text-muted-foreground">From a rough idea to a plan you’re ready to start.</p></div><Button variant="outline" disabled={busy || saving} onClick={() => { setResumeOpen(true); setError(""); }}><Upload /> Resume checkpoint</Button></header>
+    <nav aria-label="Kickoff steps" className="mb-8 grid grid-cols-2 gap-2 border-y py-4 md:grid-cols-3 xl:grid-cols-6">{kickoffSteps.map((name, i) => <div key={name} aria-current={k.step === i ? "step" : undefined} className={`flex items-start gap-2 text-sm ${k.step === i ? "font-semibold text-primary" : "text-muted-foreground"}`}><span className="mt-0.5 font-mono text-xs">{i < k.step ? <Check className="h-4 w-4" /> : `0${i + 1}`}</span><span>{name}</span></div>)}</nav>
+    {error && <p role="alert" className="mb-4 break-words text-sm text-destructive">{error}</p>}
+    {notice && <p role="status" className="mb-4 text-sm text-accent">{notice}</p>}
+    {busy && <p role="status" className="mb-4 flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin motion-reduce:animate-none" /> Drafting {k.step === 2 ? "brief" : "plan"}…</p>}
+    {paused ? <section className="py-12"><h2 className="font-display text-2xl">Kickoff paused</h2><p className="my-4 text-muted-foreground">Keep your downloaded checkpoint or copied code. Nothing saves automatically between visits.</p><Button onClick={() => setPaused(false)}><ArrowRight /> Continue this session</Button></section> : <>
+      <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_240px]"><section className="min-w-0 space-y-5"><div><p className="mb-1 font-mono text-xs text-muted-foreground">STEP {k.step + 1} OF 6</p><h2 className="font-display text-2xl font-semibold">{kickoffSteps[k.step]}</h2></div>
+        {k.step === 0 && <>
+          <Field label="Start from an idea"><select aria-label="Start from an idea" className={field} disabled={locked} value={k.sourceIdeaId ?? ""} onChange={e => { const idea = state.ideas.find(i => i.id === e.target.value); edit({ sourceIdeaId: idea?.id ?? null, brainstorm: idea ? `${idea.title}\n\n${idea.description}` : k.brainstorm }); }}><option value="">Freeform brainstorm</option>{state.ideas.filter(i => i.status !== "promoted" && i.status !== "archived").map(i => <option key={i.id} value={i.id}>{i.title}</option>)}</select></Field>
+          {textInput("Your ideas", k.brainstorm, v => edit({ brainstorm: v }), 10000, 8)}
+          <div className="flex flex-wrap gap-2">{["What problem do I want to solve?", "Who would benefit?", "What is the smallest useful version?"].map(prompt => <Button key={prompt} size="sm" variant="ghost" disabled={locked} onClick={() => edit({ brainstorm: `${k.brainstorm}\n\n${prompt}\n`.trimStart() })}><Plus />{prompt}</Button>)}</div>
+        </>}
+        {k.step === 1 && <div className="grid gap-4 sm:grid-cols-2">{clarifyFields.map(key => <div key={key}>{textInput(labels[key], k.clarify[key], v => edit({ clarify: { ...k.clarify, [key]: v } }), 10000, 3)}<Button size="sm" variant="ghost" disabled={locked} onClick={() => edit({ clarify: { ...k.clarify, [key]: "not sure yet" } })}>Not sure yet</Button></div>)}</div>}
+        {k.step === 2 && <>{aiButton("brief")}{(Object.keys(briefLabels) as (keyof typeof briefLabels)[]).map(key => <div key={key}>{textInput(briefLabels[key], k.brief[key], v => edit({ brief: { ...k.brief, [key]: v } }), key === "title" ? 150 : 10000, key === "title" ? 1 : 3)}</div>)}</>}
+        {k.step === 3 && <>{aiButton("plan")}{k.plan.milestones.map((m, i) => <div key={i} className="space-y-3 border-b pb-6"><div className="flex items-center justify-between"><h3 className="font-medium">Milestone {i + 1}</h3><Button variant="ghost" size="icon" title="Remove milestone" aria-label={`Remove milestone ${i + 1}`} disabled={locked} onClick={() => edit({ plan: { milestones: k.plan.milestones.filter((_, j) => i !== j) } })}><Trash2 /></Button></div>
+          {textInput(`Milestone ${i + 1} title`, m.title, v => edit({ plan: { milestones: k.plan.milestones.map((x, j) => i === j ? { ...x, title: v } : x) } }), 200, 1)}
+          {textInput(`Milestone ${i + 1} outcome`, m.outcome, v => edit({ plan: { milestones: k.plan.milestones.map((x, j) => i === j ? { ...x, outcome: v } : x) } }), 10000, 2)}
+          {m.tasks.map((t, n) => <div key={n} className="space-y-2 border-l-2 pl-4"><div className="flex items-center gap-2"><input aria-label={`Milestone ${i + 1} task ${n + 1} title`} className={field} maxLength={200} disabled={locked} value={t.title} onChange={e => edit({ plan: { milestones: k.plan.milestones.map((x, j) => i === j ? { ...x, tasks: x.tasks.map((a, b) => b === n ? { ...a, title: e.target.value } : a) } : x) } })} /><Button size="icon" variant="ghost" title="Remove task" aria-label={`Remove milestone ${i + 1} task ${n + 1}`} disabled={locked} onClick={() => edit({ plan: { milestones: k.plan.milestones.map((x, j) => i === j ? { ...x, tasks: x.tasks.filter((_, b) => b !== n) } : x) } })}><Trash2 /></Button></div>
+            {textInput(`Milestone ${i + 1} task ${n + 1} notes`, t.description, v => edit({ plan: { milestones: k.plan.milestones.map((x, j) => i === j ? { ...x, tasks: x.tasks.map((a, b) => b === n ? { ...a, description: v } : a) } : x) } }), 10000, 2)}
+            <select aria-label={`Milestone ${i + 1} task ${n + 1} priority`} className={field} value={t.priority} disabled={locked} onChange={e => edit({ plan: { milestones: k.plan.milestones.map((x, j) => i === j ? { ...x, tasks: x.tasks.map((a, b) => b === n ? { ...a, priority: e.target.value as typeof t.priority } : a) } : x) } })}><option value="low">Low priority</option><option value="medium">Medium priority</option><option value="high">High priority</option></select>
+          </div>)}
+          <Button size="sm" variant="outline" disabled={locked || m.tasks.length >= 20} onClick={() => edit({ plan: { milestones: k.plan.milestones.map((x, j) => i === j ? { ...x, tasks: [...x.tasks, { title: "", description: "", priority: "medium" }] } : x) } })}><Plus /> Add task</Button>
+        </div>)}<Button variant="outline" disabled={locked || k.plan.milestones.length >= 8} onClick={() => edit({ plan: { milestones: [...k.plan.milestones, { title: "", outcome: "", tasks: [{ title: "", description: "", priority: "medium" }] }] } })}><Plus /> Add milestone</Button></>}
+        {k.step === 4 && <>{textInput("Top risks and how to reduce them", k.risks, v => edit({ risks: v }), 10000, 5)}{k.firstActions.map((a, i) => <div key={i}>{textInput(`First action ${i + 1} this week`, a, v => { const actions: Kickoff["firstActions"] = [...k.firstActions]; actions[i] = v; edit({ firstActions: actions }); }, 200, 2)}</div>)}</>}
+        {k.step === 5 && <>
+          <div className="border-y py-4"><h3 className="font-display text-xl">{k.brief.title}</h3><p className="mt-2 whitespace-pre-wrap text-sm">{k.brief.goal}</p><p className="mt-3 text-sm text-muted-foreground">{k.plan.milestones.length} milestones · {k.plan.milestones.reduce((n, m) => n + m.tasks.length, 0)} planned tasks · 3 first actions</p></div>
+          <details><summary className="cursor-pointer text-sm font-medium text-primary">Review full brief and plan</summary><pre className="mt-4 whitespace-pre-wrap break-words font-sans text-sm leading-relaxed">{kickoffMarkdown(k)}</pre></details>
+          <div className="space-y-3">{(Object.keys(reviewLabels) as (keyof typeof reviewLabels)[]).map(key => <label key={key} className="flex items-start gap-3 text-sm"><input type="checkbox" aria-label={reviewLabels[key]} className="mt-1" checked={k.review[key]} disabled={locked} onChange={e => setK(prev => ({ ...prev, review: { ...prev.review, [key]: e.target.checked } }))} />{reviewLabels[key]}</label>)}</div>
+          <div className="flex flex-wrap gap-3"><Button variant="outline" onClick={() => download("relay-project-brief.md", kickoffMarkdown(k), "text/markdown")}><Download /> Download brief</Button>{k.exportedProjectId ? <Button asChild><Link href={`/projects/${k.exportedProjectId}`}><ArrowRight /> Open project</Link></Button> : <Button disabled={saving || !Object.values(k.review).every(Boolean)} onClick={exportToRelay}>{saving ? <Loader2 className="animate-spin" /> : <Rocket />} Export to Relay</Button>}</div>
+        </>}
+      </section><KickoffGuidance step={k.step} /></div>
+      <footer className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t pt-5"><Button variant="ghost" disabled={k.step === 0 || locked} onClick={() => { setK(prev => ({ ...prev, step: prev.step - 1 })); setError(""); }}><ArrowLeft /> Back</Button><div className="flex flex-wrap gap-2"><Button variant="outline" disabled={busy || saving} onClick={() => { setSecured(false); setCopied(false); setPauseOpen(true); }}><Pause /> Save checkpoint & pause</Button>{k.step < 5 && <Button disabled={locked} onClick={() => { const issue = stepIssue(k); if (issue) { setError(issue); return; } setK(prev => ({ ...prev, step: prev.step + 1 })); setError(""); setNotice(""); }}><ArrowRight /> Continue</Button>}</div></footer>
+      <p className="mt-3 text-xs text-muted-foreground">No automatic saving. Download a checkpoint or copy its code before leaving.</p>
+    </>}
+    <input type="file" accept=".json,application/json" ref={upload} className="hidden" aria-label="Upload checkpoint" onChange={async e => { const file = e.target.files?.[0]; if (!file) return; if (file.size > 1000000) setError("Checkpoint is too large."); else restore(await file.text()); e.target.value = ""; }} />
+    <Dialog open={pauseOpen} onOpenChange={setPauseOpen}><DialogContent className="max-w-lg"><DialogHeader><DialogTitle>Save checkpoint & pause</DialogTitle><DialogDescription>Keep the file or code to return to step {k.step + 1}. It contains your project answers; store it privately.</DialogDescription></DialogHeader><div className="flex flex-wrap gap-2"><Button onClick={() => { download("relay-kickoff-checkpoint.json", JSON.stringify(k, null, 2), "application/json"); setSecured(true); }}><Download /> Download checkpoint</Button><Button variant="outline" onClick={async () => { try { await navigator.clipboard.writeText(checkpointCode(k)); setCopied(true); setSecured(true); } catch { setError("Could not copy. Select the code below or download the file."); } }}>{copied ? <Check /> : <Copy />} Copy code</Button></div><textarea aria-label="Checkpoint code" readOnly className={`${field} font-mono text-xs`} rows={3} value={checkpointCode(k)} /><Button disabled={!secured} onClick={() => { setPauseOpen(false); setPaused(true); }}><Pause /> Pause now</Button></DialogContent></Dialog>
+    <Dialog open={resumeOpen} onOpenChange={setResumeOpen}><DialogContent className="max-w-lg"><DialogHeader><DialogTitle>Resume Kickoff</DialogTitle><DialogDescription>Upload a checkpoint or paste its code. This replaces the current session’s answers.</DialogDescription></DialogHeader><Button variant="outline" onClick={() => upload.current?.click()}><Upload /> Upload checkpoint</Button><textarea aria-label="Resume code" className={field} rows={5} value={resume} onChange={e => setResume(e.target.value)} placeholder="RELAY1.…" /><Button disabled={!resume.trim()} onClick={() => restore(resume)}><ArrowRight /> Restore code</Button>{error && <p role="alert" className="text-sm text-destructive">{error}</p>}</DialogContent></Dialog>
+  </>;
+}
+export default function KickoffPage() {
+  const { isLoaded, isSignedIn } = useAuth();
+  return <AppShell>{!isLoaded ? <LoadingBlock /> : isSignedIn ? <KickoffBody /> : <section className="py-16"><Rocket className="mb-4 h-8 w-8 text-primary" /><h1 className="font-display text-3xl">Kickoff</h1><p className="my-4 text-muted-foreground">Sign in to start or resume your project kickoff.</p><Button asChild><Link href="/sign-in?next=%2Fkickoff">Sign in</Link></Button></section>}</AppShell>;
+}
