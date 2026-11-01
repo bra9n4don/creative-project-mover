@@ -37,6 +37,26 @@ describe("guarded automation rules", () => {
     return { db, owner, agent };
   };
 
+  it("pasted update suggestions cannot save before owner review", async () => {
+    const { db, owner } = setup();
+    const p = await ops.addProject(owner, { title: "Site" });
+    expect(() => ops.saveReviewedUpdate(owner, { projectId: p.id, reviewed: false, tasks: [{ title: "Test login", description: "Check success", priority: "high" }], handoff: null })).toThrow();
+    expect(db.state.tasks).toHaveLength(0);
+  });
+
+  it("reviewed tasks and handoff save together as unverified todo tasks", async () => {
+    const { db, owner } = setup();
+    const p = await ops.addProject(owner, { title: "Site" });
+    await ops.saveReviewedUpdate(owner, { projectId: p.id, reviewed: true, tasks: [{ title: "Test login", description: "Check success", priority: "high" }], handoff: { title: "Login update", summary: "Login built", nextAction: "Test login", target: "Next session" } });
+    expect(db.state.tasks[0]).toMatchObject({ title: "Test login", status: "todo", evidence: "", projectId: p.id });
+    expect(db.state.handoffs[0]).toMatchObject({ summary: "Login built", nextAction: "Test login", projectId: p.id });
+  });
+
+  it("agents cannot save owner-reviewed AI drafts", () => {
+    const { agent } = setup();
+    expect(() => ops.saveReviewedUpdate(agent, {})).toThrow(/owner.s approval/);
+  });
+
   it("agents cannot mark a task verified", async () => {
     const { owner, agent } = setup();
     const p = await ops.addProject(owner, { title: "Site" });

@@ -24,6 +24,7 @@ import { Route as SetupRouteImport } from './routes/setup'
 import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as SignUpRouteImport } from './routes/sign-up'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
+import { Route as ApiProjectUpdateRouteImport } from './routes/api/project-update'
 import { Route as ProjectsIndexRouteImport } from './routes/projects.index'
 import { Route as ProjectsIdRouteImport } from './routes/projects.$id'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
@@ -111,6 +112,11 @@ const Char91DotwellKnownChar93OauthProtectedResourceRoute =
     path: '/.well-known/oauth-protected-resource',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiProjectUpdateRoute = ApiProjectUpdateRouteImport.update({
+  id: '/api/project-update',
+  path: '/api/project-update',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProjectsIndexRoute = ProjectsIndexRouteImport.update({
   id: '/projects/',
   path: '/projects/',
@@ -178,6 +184,7 @@ export interface FileRoutesByFullPath {
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  '/api/project-update': typeof ApiProjectUpdateRoute
   '/projects/$id': typeof ProjectsIdRoute
   '/projects/': typeof ProjectsIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
@@ -205,6 +212,7 @@ export interface FileRoutesByTo {
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  '/api/project-update': typeof ApiProjectUpdateRoute
   '/projects/$id': typeof ProjectsIdRoute
   '/projects': typeof ProjectsIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
@@ -233,6 +241,7 @@ export interface FileRoutesById {
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  '/api/project-update': typeof ApiProjectUpdateRoute
   '/projects/$id': typeof ProjectsIdRoute
   '/projects/': typeof ProjectsIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
@@ -262,6 +271,7 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/sign-up'
     | '/.well-known/oauth-protected-resource'
+    | '/api/project-update'
     | '/projects/$id'
     | '/projects/'
     | '/.lovable/oauth/consent'
@@ -289,6 +299,7 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/sign-up'
     | '/.well-known/oauth-protected-resource'
+    | '/api/project-update'
     | '/projects/$id'
     | '/projects'
     | '/.lovable/oauth/consent'
@@ -316,6 +327,7 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/sign-up'
     | '/.well-known/oauth-protected-resource'
+    | '/api/project-update'
     | '/projects/$id'
     | '/projects/'
     | '/.lovable/oauth/consent'
@@ -344,6 +356,7 @@ export interface RootRouteChildren {
   SignInRoute: typeof SignInRoute
   SignUpRoute: typeof SignUpRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  ApiProjectUpdateRoute: typeof ApiProjectUpdateRoute
   ProjectsIdRoute: typeof ProjectsIdRoute
   ProjectsIndexRoute: typeof ProjectsIndexRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
@@ -463,6 +476,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/project-update': {
+      id: '/api/project-update'
+      path: '/api/project-update'
+      fullPath: '/api/project-update'
+      preLoaderRoute: typeof ApiProjectUpdateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/projects/': {
       id: '/projects/'
       path: '/projects'
@@ -553,6 +573,7 @@ const rootRouteChildren: RootRouteChildren = {
   SignUpRoute: SignUpRoute,
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
+  ApiProjectUpdateRoute: ApiProjectUpdateRoute,
   ProjectsIdRoute: ProjectsIdRoute,
   ProjectsIndexRoute: ProjectsIndexRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,

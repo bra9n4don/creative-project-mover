@@ -46,6 +46,7 @@ export const createTaskFn = authed.inputValidator(dataOnly).handler(({ context, 
 export const updateTaskFn = authed.inputValidator(idData).handler(({ context, data }) => run(async () => ops.editTask(await ownerActor(context), data.id, data.data)));
 export const deleteTaskFn = authed.inputValidator(idOnly).handler(({ context, data }) => run(async () => ops.removeTask(await ownerActor(context), data.id)));
 export const createHandoffFn = authed.inputValidator(dataOnly).handler(({ context, data }) => run(async () => ops.addHandoff(await ownerActor(context), data.data)));
+export const saveReviewedUpdateFn = authed.inputValidator(dataOnly).handler(({ context, data }) => run(async () => ops.saveReviewedUpdate(await ownerActor(context), data.data)));
 export const decideApprovalFn = authed.inputValidator(idData).handler(({ context, data }) => run(async () => ops.decide(await ownerActor(context), data.id, data.data)));
 export const issueAgentTokenFn = authed.inputValidator(idOnly).handler(({ context, data }) => run(async () => issueToken(await ownerActor(context), data.id)));
 export const revokeAgentTokenFn = authed.inputValidator(idOnly).handler(({ context, data }) => run(async () => revokeToken(await ownerActor(context), data.id)));
