@@ -1,5 +1,9 @@
 # Roadmap
 
+- [ ] Autosave each Kickoff step into its database-backed project and resume saved answers.
+- [ ] Save reviewed tasks and step handoffs without duplicates; complete launch in the same project.
+- [ ] Test persistence, review guardrails and signed-in end-to-end flow.
+
 - [x] Build six-step Kickoff with explicit file/code pause and resume.
 - [x] Wire editable brief and milestone/task drafting to AI Gateway; both real calls verified.
 - [x] Add reviewed atomic Relay export and Markdown brief download.
