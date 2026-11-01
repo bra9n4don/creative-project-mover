@@ -1,4 +1,5 @@
 import { randomUUID } from "./store";
+import { reviewedUpdateSchema } from "./update-draft";
 import {
   CreateProjectBody, UpdateProjectBody, CreateIdeaBody, UpdateIdeaBody,
   CreateTaskBody, UpdateTaskBody, CreateHandoffBody, DecideApprovalBody,
@@ -139,6 +140,22 @@ export function addHandoff(actor: Actor, input: unknown) {
     s.handoffs.unshift(h); audit(s, actor, `Saved checkpoint: ${h.title}`, h.nextAction, h.projectId, "checkpoint");
     const p = project(s, h.projectId); p.updatedAt = h.createdAt;
     return h;
+  });
+}
+/** Explicit owner review commits the entire draft and audit event together. */
+export function saveReviewedUpdate(actor: Actor, input: unknown) {
+  requireOwner(actor);
+  const data = reviewedUpdateSchema.parse(input);
+  return mutateState(actor, s => {
+    const p = project(s, data.projectId);
+    const now = new Date().toISOString();
+    const tasks = data.tasks.map(t => ({ ...t, id: randomUUID(), projectId: p.id, status: "todo" as const, agent: "", evidence: "", dependencies: [], version: 1, createdAt: now, updatedAt: now }));
+    s.tasks.push(...tasks);
+    const handoff = data.handoff ? { ...data.handoff, projectId: p.id, id: randomUUID(), source: "You · AI-assisted", createdAt: now } : null;
+    if (handoff) s.handoffs.unshift(handoff);
+    p.updatedAt = now;
+    audit(s, actor, "Saved reviewed project update", `${tasks.length} tasks${handoff ? " and a handoff" : ""}`, p.id, "checkpoint");
+    return { tasks, handoff };
   });
 }
 export function decide(actor: Actor, id: string, input: unknown) {
