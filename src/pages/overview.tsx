@@ -47,7 +47,8 @@ export function OverviewBody() {
       </>
     );
 
-  const [lead, ...rest] = ordered.length ? ordered : state.projects;
+  const [first, ...rest] = ordered.length ? ordered : state.projects;
+  const lead = first!;
   const leadCp = latestCheckpoint(state.handoffs, lead.id);
   const leadNext = nextStep(state, lead);
   const leadProg = progressOf(state.tasks, lead.id);
