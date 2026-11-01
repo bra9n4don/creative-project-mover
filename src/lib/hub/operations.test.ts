@@ -63,6 +63,66 @@ describe("guarded automation rules", () => {
     expect(db.state.projects).toHaveLength(0);
   });
 
+  it("autosaves unfinished answers and the exact step into one real project and handoff", async () => {
+    const { db, owner } = setup();
+    const k = newKickoff(); k.brainstorm = "Recipe scaler";
+    const first = await ops.saveKickoff(owner, { kickoff: k, expectedRevision: 0 });
+    k.step = 1; k.clarify.goal = "Scale portions";
+    const second = await ops.saveKickoff(owner, { kickoff: k, expectedRevision: first.revision });
+    expect(db.state.projects).toHaveLength(1);
+    expect(db.state.projects[0]).toMatchObject({ id: second.projectId, goal: "Scale portions" });
+    expect(db.state.kickoffs[0]?.data).toMatchObject({ step: 1, clarify: { goal: "Scale portions" } });
+    expect(db.state.handoffs.some(h => h.projectId === second.projectId && h.summary.includes("Scale portions"))).toBe(true);
+    await ops.saveKickoff(owner, { kickoff: k, expectedRevision: second.revision });
+    expect(db.state.handoffs).toHaveLength(2);
+  });
+
+  it("autosaved AI drafts do not become live tasks or handoff notes before review", async () => {
+    const { db, owner } = setup();
+    const k = newKickoff(); k.brainstorm = "Recipe scaler"; k.step = 3;
+    k.plan.milestones = [{ title: "Form", outcome: "Working form", tasks: [{ title: "Test calculations", description: "Double portions", priority: "high" }] }];
+    const saved = await ops.saveKickoff(owner, { kickoff: k, expectedRevision: 0 });
+    expect(db.state.tasks).toHaveLength(0); expect(db.state.handoffs).toHaveLength(0);
+    expect(db.state.kickoffs[0]?.data.plan.milestones[0]?.tasks[0]?.title).toBe("Test calculations");
+    const reviewed = await ops.saveKickoff(owner, { kickoff: { ...k, step: 4 }, expectedRevision: saved.revision, reviewedStep: 3 });
+    expect(db.state.tasks[0]).toMatchObject({ title: "Test calculations", projectId: saved.projectId, status: "todo" });
+    expect(db.state.handoffs).toHaveLength(1);
+    await ops.saveKickoff(owner, { kickoff: k, expectedRevision: reviewed.revision, reviewedStep: 3 });
+    expect(db.state.tasks).toHaveLength(1); expect(db.state.handoffs).toHaveLength(1);
+  });
+
+  it("finishes launch review in the autosaved project without duplicate tasks", async () => {
+    const { db, owner } = setup();
+    const k = newKickoff(); k.brainstorm = "Recipe scaler"; k.brief.title = "Recipe scaler"; k.brief.goal = "Scale portions"; k.step = 3;
+    k.plan.milestones = [{ title: "Form", outcome: "Working", tasks: [{ title: "Test calculations", description: "Double", priority: "medium" }] }];
+    const a = await ops.saveKickoff(owner, { kickoff: k, expectedRevision: 0, reviewedStep: 3 });
+    k.step = 5; k.risks = "Limited time"; k.firstActions = ["Ask cooks", "Sketch form", "Test calculations"];
+    k.review = { goal: true, scope: true, plan: true, risks: true, ready: true };
+    const done = await ops.saveKickoff(owner, { kickoff: k, expectedRevision: a.revision, reviewedStep: 5 });
+    expect(done.projectId).toBe(a.projectId); expect(done.completed).toBe(true);
+    expect(db.state.projects).toHaveLength(1); expect(db.state.tasks).toHaveLength(3);
+    expect(db.state.handoffs.find(h => h.title.includes("Launch"))?.nextAction).toBe("Ask cooks");
+  });
+
+  it("rejects stale autosaves without overwriting the latest answers", async () => {
+    const { db, owner } = setup(); const k = newKickoff(); k.brainstorm = "Original";
+    await ops.saveKickoff(owner, { kickoff: k, expectedRevision: 0 });
+    await expect(ops.saveKickoff(owner, { kickoff: { ...k, brainstorm: "Stale" }, expectedRevision: 0 })).rejects.toThrow(/another tab/);
+    expect(db.state.kickoffs[0]?.data.brainstorm).toBe("Original");
+  });
+
+  it("agents cannot autosave Kickoff drafts", () => {
+    const { agent } = setup();
+    expect(() => ops.saveKickoff(agent, { kickoff: newKickoff(), expectedRevision: 0 })).toThrow(/owner.s approval/);
+  });
+
+  it("an incomplete launch review cannot complete a saved project", async () => {
+    const { db, owner } = setup(); const k = newKickoff(); k.brainstorm = "Draft";
+    const saved = await ops.saveKickoff(owner, { kickoff: k, expectedRevision: 0 });
+    expect(() => ops.saveKickoff(owner, { kickoff: { ...k, step: 5 }, expectedRevision: saved.revision, reviewedStep: 5 })).toThrow();
+    expect(db.state.kickoffs[0]?.completed).toBe(false); expect(db.state.tasks).toHaveLength(0);
+  });
+
   it("agents cannot export Kickoff projects", () => {
     const { agent } = setup();
     expect(() => ops.exportKickoff(agent, newKickoff())).toThrow(/owner.s approval/);
