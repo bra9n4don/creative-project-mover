@@ -53,7 +53,7 @@ export async function readState(db: HubDb, ownerId: string) {
  */
 /** Every successful save also refreshes the private GitHub backup; a backup failure never blocks the save. */
 async function backup(ownerId: string, state: HubState) {
-  if (!process.env.LOVABLE_API_KEY || !process.env.GITHUB_API_KEY) return;
+  if (process.env.VITEST || !process.env.LOVABLE_API_KEY || !process.env.GITHUB_API_KEY) return;
   try { await (await import("./backup.server")).pushBackup(ownerId, state); }
   catch (e) { console.error("GitHub backup failed", e); }
 }
