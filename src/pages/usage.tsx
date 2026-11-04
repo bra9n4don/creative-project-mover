@@ -14,7 +14,7 @@ export default function UsagePage() {
     <AppShell>
       <PageHeader eyebrow="Behind the scenes" title="Assistant usage" lede="See which connected assistants are actually saving checkpoints, tasks and ideas. Your own saves aren't counted." />
       {isLoading ? <LoadingBlock /> : error || !state ? <ErrorBlock error={error} onRetry={refetch} /> : !rows.length ? (
-        <Empty icon={BarChart3} title="No assistant saves yet" body="Connect ChatGPT or Claude from the Connect assistant page and ask it to save a checkpoint." />
+        <Empty icon={<BarChart3 className="h-5 w-5" />} title="No assistant saves yet" body="Connect ChatGPT or Claude from the Connect assistant page and ask it to save a checkpoint." />
       ) : (
         <div className="overflow-x-auto rounded-xl border bg-card">
           <table className="w-full text-sm" data-testid="table-usage">
