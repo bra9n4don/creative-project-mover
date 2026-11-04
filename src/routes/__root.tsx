@@ -11,7 +11,16 @@ import {
 import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
-import { AuthProvider } from "../lib/auth";
+import { AuthProvider, useUser } from "../lib/auth";
+import { ThemeProvider } from "../components/theme-provider";
+
+function AccountTheme({ children }: { children: ReactNode }) {
+  const { user } = useUser();
+  return <ThemeProvider signedIn={!!user}>{children}</ThemeProvider>;
+}
+
+// Applies the last-used theme before first paint to avoid a flash.
+const THEME_BOOT = `try{var t=JSON.parse(localStorage.getItem("relay-theme")||"null")||{};var m=t.mode||"dark";var d=m==="dark"||(m==="system"&&matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.classList.toggle("dark",d);if(t.palette)document.documentElement.dataset.palette=t.palette}catch(e){}`;
 import { WorkspaceProvider } from "../lib/workspace";
 import { TooltipProvider } from "../components/ui/tooltip";
 import { Toaster } from "../components/ui/toaster";
@@ -114,9 +123,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" className="dark" suppressHydrationWarning>
       <head>
         <HeadContent />
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOT }} />
       </head>
       <body>
         {children}
@@ -134,9 +144,11 @@ function RootComponent() {
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <AuthProvider>
         <TooltipProvider>
-          <WorkspaceProvider>
-            <Outlet />
-          </WorkspaceProvider>
+          <AccountTheme>
+            <WorkspaceProvider>
+              <Outlet />
+            </WorkspaceProvider>
+          </AccountTheme>
           <Toaster />
         </TooltipProvider>
       </AuthProvider>

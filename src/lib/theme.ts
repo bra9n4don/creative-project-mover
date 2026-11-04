@@ -14,7 +14,7 @@ export const themePrefsSchema = z.object({
   palette: z.enum(PALETTES.map(p => p.id) as [string, ...string[]]),
 });
 export type ThemePrefs = z.infer<typeof themePrefsSchema>;
-export const DEFAULT_THEME: ThemePrefs = { mode: "system", palette: "ember" };
+export const DEFAULT_THEME: ThemePrefs = { mode: "dark", palette: "ember" };
 
 /** Accepts anything stored; falls back to defaults for unknown or broken values. */
 export function parseTheme(v: unknown): ThemePrefs {
