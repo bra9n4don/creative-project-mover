@@ -123,6 +123,7 @@ export type Database = {
     Functions: {
       claim_hub: { Args: never; Returns: boolean }
       hub_is_claimed: { Args: never; Returns: boolean }
+      hub_oauth_client_name: { Args: { _client_id: string }; Returns: string }
       is_hub_owner: { Args: { _uid: string }; Returns: boolean }
     }
     Enums: {
