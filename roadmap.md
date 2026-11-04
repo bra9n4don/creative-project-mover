@@ -27,3 +27,4 @@
 - [x] Forced postcss-selector-parser 6.1.5 for @tailwindcss/typography
 - [x] Add assistant connection instructions page (/connect)
 - [x] Private GitHub backup (relay-workspace) of projects, tasks, ideas and checkpoints after every save, with status + Back up now in Settings
+- [x] First-time guided tour with Skip, saved per account; replay from Settings

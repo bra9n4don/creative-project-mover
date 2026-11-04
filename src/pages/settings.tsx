@@ -1,5 +1,6 @@
 import { Link } from "@/lib/router-compat";
 import { LogOut, ShieldCheck, RefreshCw, Github } from "lucide-react";
+import { startTour } from "@/components/guided-tour";
 import { useBackupNow, useGithubSyncStatus, useSyncGithub } from "@/lib/hub-api";
 import { useHubResult } from "@/lib/workspace";
 import { ago } from "@/components/kit";
@@ -64,6 +65,12 @@ export default function SettingsPage() {
           </Panel>
           {!isDemo && <GithubSyncPanel />}
           {!isDemo && <GithubBackupPanel />}
+          {!isDemo && <Panel title="Tutorial">
+            <div className="p-5 text-sm">
+              <p className="text-muted-foreground">Take the quick guided tour of Relay again.</p>
+              <button className={`${btn.ghost} mt-4`} data-testid="button-replay-tour" onClick={startTour}>Take the tour again</button>
+            </div>
+          </Panel>}
           <Panel title="Install on iPhone">
             <div className="p-5">
               <p className="mb-4 text-sm text-muted-foreground">Relay opens full screen from your Home Screen, like an app. No App Store needed.</p>

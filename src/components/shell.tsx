@@ -8,6 +8,7 @@ import { useWorkspace } from "@/lib/workspace";
 import { useOnboarding } from "@/lib/use-onboarding";
 import { IosInstallBanner } from "@/components/ios-install";
 import { QuickCapture } from "@/components/quick-capture";
+import { GuidedTour } from "@/components/guided-tour";
 
 const primaryNav = [
   { href: "/overview", label: "Where I left off", icon: Sunrise },
@@ -140,6 +141,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </header>
       <TabBar onMore={() => setOpen(true)} />
       {!isDemo && authLoaded && <QuickCapture />}
+      {!isDemo && authLoaded && <GuidedTour />}
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent side="left" className="w-72 border-0 bg-sidebar p-4 text-sidebar-foreground [&>button]:hidden">
           <SheetTitle className="sr-only">Navigation</SheetTitle>

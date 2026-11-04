@@ -50,6 +50,13 @@
       "when": 1793827147214,
       "tag": "0006_migration",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1793827684600,
+      "tag": "0007_tour_completed",
+      "breakpoints": true
     }
   ]
 }
