@@ -2,6 +2,7 @@ import { createAnthropic } from "@ai-sdk/anthropic";
 import { streamText, Output, type ModelMessage } from "ai";
 import { updateDraftSchema } from "@/lib/hub/update-draft";
 import type { z } from "zod";
+import { UPDATE_MODEL } from "./model";
 
 import {
   createLovableAiGatewayRunIdFetch,
@@ -9,7 +10,7 @@ import {
   withLovableAiGatewayRunIdHeader,
 } from "./run-id.ts";
 
-/** Claude model used for every Relay draft (Kickoff brief/plan, project updates). Single source: ./model.ts */
+/** Kickoff model; project updates select UPDATE_MODEL from ./model.ts. */
 export { DRAFT_MODEL } from "./model.ts";
 
 export function createResponsesCall<T = z.infer<typeof updateDraftSchema>>(
@@ -39,13 +40,16 @@ export function createResponsesCall<T = z.infer<typeof updateDraftSchema>>(
     ...(instructions ? { system: instructions } : {}),
     messages,
     maxRetries: 0,
-    maxOutputTokens: config.maxOutputTokens ?? 8000,
+    maxOutputTokens: config.maxOutputTokens ?? 2000,
     output: Output.object({ schema: schema ?? updateDraftSchema as unknown as z.ZodType<T> }),
     abortSignal: request.signal,
     providerOptions: {
       anthropic: {
-        thinking: { type: "adaptive" },
-        effort: config.reasoningEffort ?? "medium",
+        // Haiku 4.5 has no adaptive thinking/effort control: disable extended
+        // thinking for low-cost updates rather than sending unsupported fields.
+        ...(config.model === UPDATE_MODEL
+          ? { thinking: { type: "disabled" } }
+          : { thinking: { type: "adaptive" }, effort: config.reasoningEffort ?? "medium" }),
         structuredOutputMode: "outputFormat",
       },
     },
@@ -55,6 +59,6 @@ export function createResponsesCall<T = z.infer<typeof updateDraftSchema>>(
     runIdFetch,
     getFailure: () => upstreamFailure,
     response: () =>
-      withLovableAiGatewayRunIdHeader(result.toUIMessageStreamResponse({ sendReasoning: true }), runIdFetch),
+      withLovableAiGatewayRunIdHeader(result.toUIMessageStreamResponse({ sendReasoning: false }), runIdFetch),
   };
 }
