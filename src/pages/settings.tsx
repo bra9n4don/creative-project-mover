@@ -1,6 +1,7 @@
 import { Link } from "@/lib/router-compat";
 import { LogOut, ShieldCheck, RefreshCw, Github } from "lucide-react";
 import { startTour } from "@/components/guided-tour";
+import { ThemeSettings } from "@/components/theme-controls";
 import { useBackupNow, useGithubSyncStatus, useSyncGithub } from "@/lib/hub-api";
 import { useHubResult } from "@/lib/workspace";
 import { ago } from "@/components/kit";
@@ -65,6 +66,7 @@ export default function SettingsPage() {
           </Panel>
           {!isDemo && <GithubSyncPanel />}
           {!isDemo && <GithubBackupPanel />}
+          <Panel title="Appearance"><ThemeSettings /></Panel>
           {!isDemo && <Panel title="Tutorial">
             <div className="p-5 text-sm">
               <p className="text-muted-foreground">Take the quick guided tour of Relay again.</p>

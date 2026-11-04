@@ -8,6 +8,7 @@ import { HubError, readState, type Actor, type HubDb } from "./store";
 import { issueToken, revokeToken } from "./agent-auth.server";
 import { listRepos, syncAndRecord } from "./github.server";
 import { pushBackup } from "./backup.server";
+import { parseTheme, themePrefsSchema } from "@/lib/theme";
 
 /** Thrown errors keep the HTTP-like status so the UI can explain conflicts and denials. */
 function toError(e: unknown): never {
@@ -97,6 +98,18 @@ export const getTourStatusFn = authed.handler(({ context }) => run(async () => {
   const actor = await ownerActor(context);
   const { data } = await actor.db.from("hub_owner").select("tour_completed_at").eq("user_id", actor.ownerId).maybeSingle();
   return { completed: !!data?.tour_completed_at };
+}));
+export const getThemeFn = authed.handler(({ context }) => run(async () => {
+  const actor = await ownerActor(context);
+  const { data } = await actor.db.from("hub_owner").select("theme_prefs").eq("user_id", actor.ownerId).maybeSingle();
+  return parseTheme(data?.theme_prefs);
+}));
+export const saveThemeFn = authed.inputValidator((d: unknown) => themePrefsSchema.parse(d)).handler(({ context, data }) => run(async () => {
+  const actor = await ownerActor(context);
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { error } = await supabaseAdmin.from("hub_owner").update({ theme_prefs: data }).eq("user_id", actor.ownerId);
+  if (error) throw new HubError(500, error.message);
+  return data;
 }));
 export const completeTourFn = authed.handler(({ context }) => run(async () => {
   const actor = await ownerActor(context);

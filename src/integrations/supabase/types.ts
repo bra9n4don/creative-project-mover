@@ -55,6 +55,7 @@ export type Database = {
           last_sync_message: string | null
           last_sync_ok: boolean | null
           last_sync_trigger: string | null
+          theme_prefs: Json | null
           tour_completed_at: string | null
           user_id: string
         }
@@ -71,6 +72,7 @@ export type Database = {
           last_sync_message?: string | null
           last_sync_ok?: boolean | null
           last_sync_trigger?: string | null
+          theme_prefs?: Json | null
           tour_completed_at?: string | null
           user_id: string
         }
@@ -87,6 +89,7 @@ export type Database = {
           last_sync_message?: string | null
           last_sync_ok?: boolean | null
           last_sync_trigger?: string | null
+          theme_prefs?: Json | null
           tour_completed_at?: string | null
           user_id?: string
         }

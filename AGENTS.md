@@ -26,3 +26,4 @@
 - iPhone install is manifest + icons only (no service worker) — keeps the preview and published site from serving stale cached screens.
 - Every successful `mutateState` save pushes projects/tasks/ideas/checkpoints to a private GitHub repo (`backup.server.ts`), skipping unchanged files by git blob SHA and refusing public repos; failures are recorded on `hub_owner` (last_backup_*) and never block the save — keeps an always-current off-site copy without extra commits on routine saves.
 - The first-run guided tour (`guided-tour.tsx`) highlights existing `data-testid` targets (first visible wins, so desktop sidebar and phone tabs share steps) and stores completion as `hub_owner.tour_completed_at` — shows once per account across devices, with no tour library.
+- Theme (mode + accent palette) is stored per account in `hub_owner.theme_prefs`, mirrored to localStorage and applied by a pre-paint head script — follows the owner across devices without a flash on load.

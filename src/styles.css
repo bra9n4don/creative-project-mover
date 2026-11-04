@@ -440,3 +440,13 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:100;o
 .rise{animation:rise .45s cubic-bezier(.2,.7,.2,1) both}
 .cl-formFieldInput::placeholder{color:hsl(var(--muted-foreground));opacity:1}
 .cl-formButtonPrimary:hover{filter:brightness(1.06)}
+
+/* Accent palettes (Ember is the default in :root/.dark) */
+[data-palette="ocean"] { --primary: 204 80% 46%; --ring: 204 80% 46%; --chart-1: 204 80% 46%; --sidebar-primary: 204 80% 56%; --sidebar-ring: 204 80% 56%; }
+[data-palette="forest"] { --primary: 152 55% 36%; --ring: 152 55% 36%; --chart-1: 152 55% 36%; --sidebar-primary: 152 50% 48%; --sidebar-ring: 152 50% 48%; }
+[data-palette="violet"] { --primary: 266 60% 56%; --ring: 266 60% 56%; --chart-1: 266 60% 56%; --sidebar-primary: 266 65% 66%; --sidebar-ring: 266 65% 66%; }
+[data-palette="amber"] { --primary: 38 92% 46%; --ring: 38 92% 46%; --chart-1: 38 92% 46%; --sidebar-primary: 38 92% 54%; --sidebar-ring: 38 92% 54%; }
+.dark[data-palette="ocean"], [data-palette="ocean"] .dark { --primary: 204 85% 60%; --sidebar-primary: 204 85% 60%; --sidebar-ring: 204 85% 60%; --ring: 204 85% 60%; --chart-1: 204 85% 60%; }
+.dark[data-palette="forest"], [data-palette="forest"] .dark { --primary: 152 50% 50%; --sidebar-primary: 152 50% 50%; --sidebar-ring: 152 50% 50%; --ring: 152 50% 50%; --chart-1: 152 50% 50%; }
+.dark[data-palette="violet"], [data-palette="violet"] .dark { --primary: 266 70% 70%; --sidebar-primary: 266 70% 70%; --sidebar-ring: 266 70% 70%; --ring: 266 70% 70%; --chart-1: 266 70% 70%; }
+.dark[data-palette="amber"], [data-palette="amber"] .dark { --primary: 38 92% 58%; --sidebar-primary: 38 92% 58%; --sidebar-ring: 38 92% 58%; --ring: 38 92% 58%; --chart-1: 38 92% 58%; }

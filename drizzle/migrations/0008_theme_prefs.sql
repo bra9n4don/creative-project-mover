@@ -1,0 +1,1 @@
+ALTER TABLE public.hub_owner ADD COLUMN IF NOT EXISTS theme_prefs jsonb;

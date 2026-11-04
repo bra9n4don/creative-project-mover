@@ -9,6 +9,7 @@ import { useOnboarding } from "@/lib/use-onboarding";
 import { IosInstallBanner } from "@/components/ios-install";
 import { QuickCapture } from "@/components/quick-capture";
 import { GuidedTour } from "@/components/guided-tour";
+import { ThemeToggle } from "@/components/theme-controls";
 
 const primaryNav = [
   { href: "/overview", label: "Where I left off", icon: Sunrise },
@@ -128,16 +129,20 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-[100dvh] bg-background">
       <aside className="dark fixed inset-y-0 left-0 z-30 hidden w-64 flex-col bg-sidebar px-4 py-5 text-sidebar-foreground md:flex">
-        <div className="mb-8 px-1 [&_span]:text-sidebar-foreground">
+        <div className="mb-8 flex items-center justify-between px-1 [&_span]:text-sidebar-foreground">
           <Logo />
+          <ThemeToggle className="rounded-lg p-2 text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground" />
         </div>
         <NavList />
       </aside>
       <header className="sticky top-0 z-30 flex items-center justify-between border-b bg-background/90 px-4 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top))] backdrop-blur md:hidden">
         <Logo />
-        <button data-testid="button-menu" onClick={() => setOpen(true)} className="rounded-lg border p-2" aria-label="Open menu">
-          <Menu className="h-5 w-5" />
-        </button>
+        <div className="flex items-center gap-2">
+          <ThemeToggle className="rounded-lg border p-2.5" />
+          <button data-testid="button-menu" onClick={() => setOpen(true)} className="rounded-lg border p-2" aria-label="Open menu">
+            <Menu className="h-5 w-5" />
+          </button>
+        </div>
       </header>
       <TabBar onMore={() => setOpen(true)} />
       {!isDemo && authLoaded && <QuickCapture />}
