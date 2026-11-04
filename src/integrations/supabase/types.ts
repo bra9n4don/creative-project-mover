@@ -43,9 +43,14 @@ export type Database = {
       }
       hub_owner: {
         Row: {
+          backup_repo: string | null
+          backup_shas: Json
           created_at: string
           github_sync_enabled: boolean
           id: string
+          last_backup_at: string | null
+          last_backup_message: string | null
+          last_backup_ok: boolean | null
           last_sync_at: string | null
           last_sync_message: string | null
           last_sync_ok: boolean | null
@@ -53,9 +58,14 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          backup_repo?: string | null
+          backup_shas?: Json
           created_at?: string
           github_sync_enabled?: boolean
           id?: string
+          last_backup_at?: string | null
+          last_backup_message?: string | null
+          last_backup_ok?: boolean | null
           last_sync_at?: string | null
           last_sync_message?: string | null
           last_sync_ok?: boolean | null
@@ -63,9 +73,14 @@ export type Database = {
           user_id: string
         }
         Update: {
+          backup_repo?: string | null
+          backup_shas?: Json
           created_at?: string
           github_sync_enabled?: boolean
           id?: string
+          last_backup_at?: string | null
+          last_backup_message?: string | null
+          last_backup_ok?: boolean | null
           last_sync_at?: string | null
           last_sync_message?: string | null
           last_sync_ok?: boolean | null
