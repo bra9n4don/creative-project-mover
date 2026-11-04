@@ -88,7 +88,7 @@ export const getSyncStatusFn = authed.handler(({ context }) => run(async () => {
 export const backupNowFn = authed.handler(({ context }) => run(async () => {
   const actor = await ownerActor(context);
   if (actor.agent) throw new HubError(403, "Only the owner can run a backup.");
-  const r = await pushBackup(actor.ownerId, await readState(actor), { force: true });
+  const r = await pushBackup(actor.ownerId, await readState(actor.db, actor.ownerId), { force: true });
   if (!r.ok) throw new HubError(502, r.message);
   return { ok: true, message: r.message };
 }));
