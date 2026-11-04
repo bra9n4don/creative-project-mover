@@ -12,7 +12,14 @@ export async function assistantActor(ctx: ToolContext): Promise<Actor> {
   const db = supabaseForUser(ctx) as unknown as HubDb;
   const { data: isOwner } = await db.rpc("is_hub_owner", { _uid: userId });
   if (!isOwner) throw new ToolError("This account doesn't own the Relay workspace. Claim it on the Setup page first.");
-  return { ownerId: userId, agent: true, source: "Connected assistant", db };
+  // Name the assistant (e.g. "Claude", "ChatGPT") from its OAuth client so usage can be told apart.
+  let source = "Connected assistant";
+  const clientId = ctx.getClientId();
+  if (clientId) {
+    const { data: name } = await db.rpc("hub_oauth_client_name", { _client_id: clientId });
+    if (typeof name === "string" && name.trim()) source = name.trim().slice(0, 60);
+  }
+  return { ownerId: userId, agent: true, source, db };
 }
 
 export async function runHub<T>(fn: () => Promise<T>): Promise<T> {
