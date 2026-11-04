@@ -57,6 +57,13 @@
       "when": 1793827684600,
       "tag": "0007_tour_completed",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1793828154877,
+      "tag": "0008_theme_prefs",
+      "breakpoints": true
     }
   ]
 }
