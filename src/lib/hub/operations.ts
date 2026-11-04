@@ -265,7 +265,7 @@ export function saveKickoff(actor: Actor, input: unknown) {
       const idea = k.sourceIdeaId ? s.ideas.find(i => i.id === k.sourceIdeaId) : undefined;
       if (k.sourceIdeaId && (!idea || idea.status === "promoted")) throw new HubError(409, "Choose an available idea before saving.");
       const projectId = randomUUID();
-      s.projects.unshift({ id: projectId, title: idea?.title ?? (k.brainstorm.trim().split("\n")[0]?.slice(0, 150) || "Untitled Kickoff"), description: k.brainstorm, goal: "", status: "planning", priority: "medium", repository: "", color: "teal", version: 1, createdAt: now, updatedAt: now });
+      s.projects.unshift({ id: projectId, title: idea?.title ?? (k.brainstorm.split("\n").map(l => l.replace(/^[\s#>*-]+|\[(Feature|Risk|Question)\]\s*/g, "").trim()).find(l => l && l !== "Mind map")?.slice(0, 150) || "Untitled Kickoff"), description: k.brainstorm, goal: "", status: "planning", priority: "medium", repository: "", color: "teal", version: 1, createdAt: now, updatedAt: now });
       record = { data: k, projectId, revision: 0, completed: false, updatedAt: now, taskIds: {}, handoffIds: {}, projectVersion: 1 };
       s.kickoffs.push(record);
       if (idea) idea.status = "promoted";
