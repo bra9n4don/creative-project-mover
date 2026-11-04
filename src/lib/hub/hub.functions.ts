@@ -92,3 +92,16 @@ export const backupNowFn = authed.handler(({ context }) => run(async () => {
   if (!r.ok) throw new HubError(502, r.message);
   return { ok: true, message: r.message };
 }));
+
+export const getTourStatusFn = authed.handler(({ context }) => run(async () => {
+  const actor = await ownerActor(context);
+  const { data } = await actor.db.from("hub_owner").select("tour_completed_at").eq("user_id", actor.ownerId).maybeSingle();
+  return { completed: !!data?.tour_completed_at };
+}));
+export const completeTourFn = authed.handler(({ context }) => run(async () => {
+  const actor = await ownerActor(context);
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { error } = await supabaseAdmin.from("hub_owner").update({ tour_completed_at: new Date().toISOString() }).eq("user_id", actor.ownerId);
+  if (error) throw new HubError(500, error.message);
+  return { ok: true };
+}));
