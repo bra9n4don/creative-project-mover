@@ -26,3 +26,4 @@
 - [x] Mind map page: full canvas, save node to Ideas / make project, promote clusters to projects
 - [x] Forced postcss-selector-parser 6.1.5 for @tailwindcss/typography
 - [x] Add assistant connection instructions page (/connect)
+- [x] Private GitHub backup (relay-workspace) of projects, tasks, ideas and checkpoints after every save, with status + Back up now in Settings

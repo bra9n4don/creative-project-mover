@@ -24,3 +24,4 @@
 - The standalone mind map is one map stored as `mindMap` in the workspace aggregate with its own optimistic revision — reuses the single-owner store, no new table.
 - Assistant saves are attributed by OAuth client name (via `hub_oauth_client_name()` in `mcp/actor.ts`) and counted by `src/lib/hub/usage.ts` — lets the owner compare assistants without a new table.
 - iPhone install is manifest + icons only (no service worker) — keeps the preview and published site from serving stale cached screens.
+- Every successful `mutateState` save pushes projects/tasks/ideas/checkpoints to a private GitHub repo (`backup.server.ts`), skipping unchanged files by git blob SHA and refusing public repos; failures are recorded on `hub_owner` (last_backup_*) and never block the save — keeps an always-current off-site copy without extra commits on routine saves.

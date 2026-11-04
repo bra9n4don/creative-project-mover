@@ -1,6 +1,6 @@
 import { Link } from "@/lib/router-compat";
 import { LogOut, ShieldCheck, RefreshCw, Github } from "lucide-react";
-import { useGithubSyncStatus, useSyncGithub } from "@/lib/hub-api";
+import { useBackupNow, useGithubSyncStatus, useSyncGithub } from "@/lib/hub-api";
 import { useHubResult } from "@/lib/workspace";
 import { ago } from "@/components/kit";
 import { useClerk, useUser } from "@/lib/auth";
@@ -63,6 +63,7 @@ export default function SettingsPage() {
             </div>
           </Panel>
           {!isDemo && <GithubSyncPanel />}
+          {!isDemo && <GithubBackupPanel />}
           <Panel title="Install on iPhone">
             <div className="p-5">
               <p className="mb-4 text-sm text-muted-foreground">Relay opens full screen from your Home Screen, like an app. No App Store needed.</p>
@@ -72,6 +73,34 @@ export default function SettingsPage() {
         </div>
       )}
     </AppShell>
+  );
+}
+
+function GithubBackupPanel() {
+  const status = useGithubSyncStatus({ query: { refetchInterval: 300000 } });
+  const backup = useBackupNow();
+  const result = useHubResult();
+  const s = status.data;
+  const headline = !s ? "Checking…" : !s.githubConnected ? "GitHub isn't connected" : s.lastBackupOk === false ? "Last backup failed" : s.lastBackupAt ? "Backing up after every save" : "No backup yet";
+  return (
+    <Panel title="GitHub backup · private repo">
+      <div className="p-5 text-sm" data-testid="panel-github-backup">
+        <div className="flex items-center gap-3">
+          <span className={`h-2.5 w-2.5 rounded-full ${s?.lastBackupOk ? "bg-accent" : s?.lastBackupOk === false ? "bg-destructive" : "bg-muted-foreground/40"}`} />
+          <div className="font-medium" data-testid="text-backup-headline">{headline}</div>
+        </div>
+        <dl className="mt-4 grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-muted-foreground">
+          <dt>Repository</dt><dd className="min-w-0 text-foreground">{s?.backupRepo ? <a className="underline" href={`https://github.com/${s.backupRepo}`} target="_blank" rel="noreferrer">{s.backupRepo}</a> : "Created on first backup"}</dd>
+          <dt>Last backup</dt><dd className="text-foreground" data-testid="text-last-backup">{s?.lastBackupAt ? ago(s.lastBackupAt) : "Never"}</dd>
+          {s?.lastBackupMessage && <><dt>Result</dt><dd className={s.lastBackupOk === false ? "text-destructive" : "text-foreground"}>{s.lastBackupMessage}</dd></>}
+        </dl>
+        <button className={`${btn.ghost} mt-5`} disabled={backup.isPending || !s?.githubConnected} data-testid="button-backup-now"
+          onClick={() => backup.mutate(undefined, result("Backed up to GitHub", () => void status.refetch()))}>
+          <RefreshCw className={`h-4 w-4 ${backup.isPending ? "animate-spin" : ""}`} /> Back up now
+        </button>
+        <p className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground"><Github className="h-3.5 w-3.5" />Projects, tasks, ideas and checkpoints go to a private repo only you can see. Share it by inviting people on GitHub.</p>
+      </div>
+    </Panel>
   );
 }
 
