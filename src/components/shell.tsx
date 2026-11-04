@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from "react";
 import { Link, useLocation } from "@/lib/router-compat";
 import { useUser } from "@/lib/auth";
-import { ListChecks, Bookmark, FolderKanban, History, Lightbulb, Menu, Network, Plug, Rocket, Settings, ShieldCheck, Sunrise, X } from "lucide-react";
+import { BarChart3, ListChecks, Bookmark, FolderKanban, History, Lightbulb, Menu, Network, Plug, Rocket, Settings, ShieldCheck, Sunrise, X } from "lucide-react";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { useWorkspace } from "@/lib/workspace";
@@ -18,6 +18,7 @@ const primaryNav = [
 const secondaryNav = [
   { href: "/connections", label: "AI tools", icon: Plug },
   { href: "/connect", label: "Connect assistant", icon: Plug },
+  { href: "/usage", label: "Assistant usage", icon: BarChart3 },
   { href: "/approvals", label: "Approvals", icon: ShieldCheck },
   { href: "/activity", label: "Activity log", icon: History },
   { href: "/settings", label: "Settings", icon: Settings },
