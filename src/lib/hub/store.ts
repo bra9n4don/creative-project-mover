@@ -51,6 +51,11 @@ export async function readState(db: HubDb, ownerId: string) {
  * The workspace is one aggregate: an edit and its audit events are written together.
  * Concurrent writers are serialized with an optimistic revision check and retried.
  */
+/** Every successful save also refreshes the private GitHub backup; a backup failure never blocks the save. */
+async function backup(ownerId: string, state: HubState) {
+  try { await (await import("./backup.server")).pushBackup(ownerId, state); }
+  catch (e) { console.error("GitHub backup failed", e); }
+}
 export async function mutateState<T>(actor: Actor, fn: (s: HubState) => T): Promise<T> {
   const { db, ownerId } = actor;
   for (let attempt = 0; attempt < 5; attempt++) {
@@ -61,7 +66,7 @@ export async function mutateState<T>(actor: Actor, fn: (s: HubState) => T): Prom
     const data = summarize(state) as unknown as Database["public"]["Tables"]["hub_workspaces"]["Insert"]["data"];
     if (!row) {
       const { error: insErr } = await db.from("hub_workspaces").insert({ owner_id: ownerId, data, rev: 1 });
-      if (!insErr) return result;
+      if (!insErr) { await backup(ownerId, state); return result; }
       if (insErr.code !== "23505") throw new HubError(500, insErr.message);
       continue;
     }
@@ -69,7 +74,7 @@ export async function mutateState<T>(actor: Actor, fn: (s: HubState) => T): Prom
       .update({ data, rev: row.rev + 1, updated_at: new Date().toISOString() })
       .eq("owner_id", ownerId).eq("rev", row.rev).select("owner_id");
     if (upErr) throw new HubError(500, upErr.message);
-    if (updated && updated.length) return result;
+    if (updated && updated.length) { await backup(ownerId, state); return result; }
   }
   throw new HubError(409, "This record changed. Refresh the current plan before editing it.");
 }
