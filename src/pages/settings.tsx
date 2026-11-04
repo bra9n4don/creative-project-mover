@@ -5,6 +5,7 @@ import { useHubResult } from "@/lib/workspace";
 import { ago } from "@/components/kit";
 import { useClerk, useUser } from "@/lib/auth";
 import { AppShell } from "@/components/shell";
+import { InstallSteps } from "@/components/ios-install";
 import { ErrorBlock, LoadingBlock, PageHeader, Panel, btn } from "@/components/kit";
 import { usePageTitle, useWorkspace } from "@/lib/workspace";
 
@@ -62,6 +63,12 @@ export default function SettingsPage() {
             </div>
           </Panel>
           {!isDemo && <GithubSyncPanel />}
+          <Panel title="Install on iPhone">
+            <div className="p-5">
+              <p className="mb-4 text-sm text-muted-foreground">Relay opens full screen from your Home Screen, like an app. No App Store needed.</p>
+              <InstallSteps />
+            </div>
+          </Panel>
         </div>
       )}
     </AppShell>

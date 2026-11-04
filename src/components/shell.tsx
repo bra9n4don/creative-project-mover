@@ -1,11 +1,13 @@
 import { useState, type ReactNode } from "react";
 import { Link, useLocation } from "@/lib/router-compat";
 import { useUser } from "@/lib/auth";
-import { BarChart3, ListChecks, Bookmark, FolderKanban, History, Lightbulb, Menu, Network, Plug, Rocket, Settings, ShieldCheck, Sunrise, X } from "lucide-react";
+import { BarChart3, ListChecks, Bookmark, FolderKanban, History, Lightbulb, Menu, MoreHorizontal, Network, Plug, Rocket, Settings, ShieldCheck, Sunrise, X } from "lucide-react";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { useWorkspace } from "@/lib/workspace";
 import { useOnboarding } from "@/lib/use-onboarding";
+import { IosInstallBanner } from "@/components/ios-install";
+import { QuickCapture } from "@/components/quick-capture";
 
 const primaryNav = [
   { href: "/overview", label: "Where I left off", icon: Sunrise },
@@ -94,6 +96,31 @@ function NavList({ onNav }: { onNav?: () => void }) {
   );
 }
 
+const tabs = [
+  { href: "/overview", label: "Left off", icon: Sunrise },
+  { href: "/projects", label: "Projects", icon: FolderKanban },
+  { href: "/ideas", label: "Ideas", icon: Lightbulb },
+  { href: "/kickoff", label: "Kickoff", icon: Rocket },
+];
+
+function TabBar({ onMore }: { onMore: () => void }) {
+  const [loc] = useLocation();
+  const cls = (active: boolean) => cn("flex flex-1 flex-col items-center gap-0.5 py-2 text-[10px]", active ? "text-primary" : "text-muted-foreground");
+  return (
+    <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-30 flex border-t bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
+      {tabs.map(t => {
+        const active = loc.startsWith(t.href) || (t.href === "/overview" && loc === "/");
+        return (
+          <Link key={t.href} href={t.href} data-testid={`tab-${t.href.slice(1)}`} aria-current={active ? "page" : undefined} className={cls(active)}>
+            <t.icon className="h-5 w-5" />{t.label}
+          </Link>
+        );
+      })}
+      <button onClick={onMore} data-testid="tab-more" className={cls(false)}><MoreHorizontal className="h-5 w-5" />More</button>
+    </nav>
+  );
+}
+
 export function AppShell({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const { isDemo, authLoaded } = useWorkspace();
@@ -105,12 +132,14 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
         <NavList />
       </aside>
-      <header className="sticky top-0 z-30 flex items-center justify-between border-b bg-background/90 px-4 py-3 backdrop-blur md:hidden">
+      <header className="sticky top-0 z-30 flex items-center justify-between border-b bg-background/90 px-4 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top))] backdrop-blur md:hidden">
         <Logo />
         <button data-testid="button-menu" onClick={() => setOpen(true)} className="rounded-lg border p-2" aria-label="Open menu">
           <Menu className="h-5 w-5" />
         </button>
       </header>
+      <TabBar onMore={() => setOpen(true)} />
+      {!isDemo && authLoaded && <QuickCapture />}
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent side="left" className="w-72 border-0 bg-sidebar p-4 text-sidebar-foreground [&>button]:hidden">
           <SheetTitle className="sr-only">Navigation</SheetTitle>
@@ -133,7 +162,8 @@ export function AppShell({ children }: { children: ReactNode }) {
             </Link>
           </div>
         )}
-        <main className="mx-auto max-w-6xl px-4 py-6 md:px-10 md:py-10">{children}</main>
+        <IosInstallBanner />
+        <main className="mx-auto max-w-6xl px-4 pt-6 pb-[calc(6rem+env(safe-area-inset-bottom))] md:px-10 md:py-10">{children}</main>
       </div>
     </div>
   );
