@@ -23,3 +23,4 @@
 - Assistant resume context (`buildResumeContext`) details one focus project and summarizes the rest, with capped text — keeps assistant token use flat as the workspace grows.
 - The standalone mind map is one map stored as `mindMap` in the workspace aggregate with its own optimistic revision — reuses the single-owner store, no new table.
 - Assistant saves are attributed by OAuth client name (via `hub_oauth_client_name()` in `mcp/actor.ts`) and counted by `src/lib/hub/usage.ts` — lets the owner compare assistants without a new table.
+- iPhone install is manifest + icons only (no service worker) — keeps the preview and published site from serving stale cached screens.
