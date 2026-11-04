@@ -1,5 +1,7 @@
 # Roadmap
 
+- [ ] Reduce draft costs with separate update model, explicit output limits and hidden reasoning; run tests/typecheck and one real update plus one brief without saving or publishing; update workspace skill.
+
 - [x] Verify checkpoint download/copy window and exact-step file/code resume across all six steps.
 
 - [x] Autosave each Kickoff step into its database-backed project and resume saved answers.
