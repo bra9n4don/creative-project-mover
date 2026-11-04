@@ -62,8 +62,8 @@ export default function SettingsPage() {
               )}
             </div>
           </Panel>
-          {!isDemo && <GithubSyncPanel />
-      <GithubBackupPanel />}
+          {!isDemo && <GithubSyncPanel />}
+          {!isDemo && <GithubBackupPanel />}
           <Panel title="Install on iPhone">
             <div className="p-5">
               <p className="mb-4 text-sm text-muted-foreground">Relay opens full screen from your Home Screen, like an app. No App Store needed.</p>
