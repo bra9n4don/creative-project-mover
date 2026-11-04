@@ -22,3 +22,4 @@
 - Kickoff drafts live in the workspace aggregate keyed by checkpoint id with per-draft optimistic revisions; serialized debounced owner saves persist answers (AI-drafted brief/plan are held back from autosave until reviewed with Continue) while explicit step review upserts mapped task and handoff IDs — enables cross-visit resume without unreviewed AI records or duplicate exports. File/code checkpoints remain optional backups.
 - Assistant resume context (`buildResumeContext`) details one focus project and summarizes the rest, with capped text — keeps assistant token use flat as the workspace grows.
 - The standalone mind map is one map stored as `mindMap` in the workspace aggregate with its own optimistic revision — reuses the single-owner store, no new table.
+- Assistant saves are attributed by OAuth client name (via `hub_oauth_client_name()` in `mcp/actor.ts`) and counted by `src/lib/hub/usage.ts` — lets the owner compare assistants without a new table.
