@@ -152,7 +152,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <NavList onNav={() => setOpen(false)} />
         </SheetContent>
       </Sheet>
-      <div className="md:pl-64">
+      <div className="min-w-0 overflow-x-clip break-words [overflow-wrap:anywhere] md:pl-64">
         {authLoaded && isDemo && (
           <div data-testid="banner-preview" className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-primary/20 bg-primary/[0.07] px-4 py-2 text-[13px] md:px-10">
             <span className="rounded bg-primary px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-primary-foreground">Preview workspace</span>
