@@ -1,6 +1,6 @@
 # Roadmap
 
-- [ ] Reduce draft costs with separate update model, explicit output limits and hidden reasoning; run tests/typecheck and one real update plus one brief without saving or publishing; update workspace skill.
+- [x] Reduce draft costs with separate update model, explicit output limits and hidden reasoning; 72 tests and typecheck passed, one real update plus one brief returned valid output without saving or publishing; workspace skill updated.
 
 - [x] Verify checkpoint download/copy window and exact-step file/code resume across all six steps.
 
