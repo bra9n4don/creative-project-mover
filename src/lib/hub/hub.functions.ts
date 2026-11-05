@@ -22,7 +22,10 @@ async function ownerActor(ctx: { supabase: unknown; userId: string }): Promise<A
   const { data: isOwner, error } = await db.rpc("claim_hub");
   if (error) throw new HubError(500, error.message);
   if (!isOwner) throw new HubError(403, "This is a single-user personal workspace. Only its owner can access it. If you just signed up, confirm your email first.");
-  return { ownerId: ctx.userId, agent: false, source: "You", db };
+  // Linked sign-ins resolve to the original owner's workspace.
+  const { data: ownerId, error: ownerErr } = await db.rpc("hub_owner_uid");
+  if (ownerErr || !ownerId) throw new HubError(403, "This sign-in isn't linked to the workspace.");
+  return { ownerId: ownerId as string, agent: false, source: "You", db };
 }
 
 const authed = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]);

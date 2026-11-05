@@ -41,6 +41,54 @@ export type Database = {
         }
         Relationships: []
       }
+      hub_link_codes: {
+        Row: {
+          code_hash: string
+          created_at: string
+          expires_at: string
+          owner_id: string
+          used_at: string | null
+        }
+        Insert: {
+          code_hash: string
+          created_at?: string
+          expires_at: string
+          owner_id: string
+          used_at?: string | null
+        }
+        Update: {
+          code_hash?: string
+          created_at?: string
+          expires_at?: string
+          owner_id?: string
+          used_at?: string | null
+        }
+        Relationships: []
+      }
+      hub_linked_logins: {
+        Row: {
+          email: string | null
+          linked_at: string
+          owner_id: string
+          provider: string | null
+          user_id: string
+        }
+        Insert: {
+          email?: string | null
+          linked_at?: string
+          owner_id: string
+          provider?: string | null
+          user_id: string
+        }
+        Update: {
+          email?: string | null
+          linked_at?: string
+          owner_id?: string
+          provider?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       hub_owner: {
         Row: {
           backup_repo: string | null
@@ -143,9 +191,24 @@ export type Database = {
     }
     Functions: {
       claim_hub: { Args: never; Returns: boolean }
+      create_link_code: { Args: never; Returns: string }
       hub_is_claimed: { Args: never; Returns: boolean }
       hub_oauth_client_name: { Args: { _client_id: string }; Returns: string }
+      hub_owner_uid: { Args: never; Returns: string }
       is_hub_owner: { Args: { _uid: string }; Returns: boolean }
+      list_hub_logins: {
+        Args: never
+        Returns: {
+          email: string
+          is_current: boolean
+          is_primary: boolean
+          linked_at: string
+          provider: string
+          user_id: string
+        }[]
+      }
+      redeem_link_code: { Args: { _code: string }; Returns: boolean }
+      unlink_login: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never

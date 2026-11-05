@@ -8,6 +8,7 @@ import { usePageTitle } from "@/lib/workspace";
 import { useOnboarding } from "@/lib/use-onboarding";
 import { PUBLISHED_URL, type StepState } from "@/lib/hub/onboarding";
 import { cn } from "@/lib/utils";
+import { RedeemLinkCode } from "@/components/linked-logins";
 
 function Step({ n, state, title, children }: { n: number; state: StepState; title: string; children: ReactNode }) {
   const Icon = state === "done" ? Check : state === "partial" ? CircleDot : state === "blocked" ? Lock : Circle;
@@ -43,7 +44,7 @@ export default function SetupPage() {
             </Step>
             <Step n={2} state={steps.claim} title="Claim the workspace">
               {steps.claim === "done" ? <p>This workspace is yours. Nobody else can sign in to it.</p>
-                : steps.claim === "blocked" && steps.account === "done" ? <p className="text-destructive">This workspace already belongs to another account. Sign in with the owner's account instead.</p>
+                : steps.claim === "blocked" && steps.account === "done" ? <><p className="text-destructive">This workspace already belongs to another account. Sign in with the owner's account, or enter a link code from Settings → Linked sign-ins.</p><RedeemLinkCode onLinked={retryClaim} /></>
                 : steps.claim === "blocked" ? <p>Finish step 1 first. The first confirmed account to claim becomes the only owner.</p>
                 : (<>
                     <p>The first confirmed account to claim becomes the only owner. This can't be handed over later.</p>
