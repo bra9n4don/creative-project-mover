@@ -21,4 +21,6 @@ export interface Task {
   version: number;
   createdAt: string;
   updatedAt: string;
+  startedAt?: string;
+  completedAt?: string;
 }
