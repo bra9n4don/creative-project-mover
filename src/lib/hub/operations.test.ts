@@ -307,3 +307,38 @@ describe("promoteCluster", () => {
     expect(db.state.projects[0]?.description).toBe("My own notes");
   });
 });
+
+describe("roadmap milestones", () => {
+  const setup = () => {
+    const db = fakeDb();
+    const owner: Actor = { ownerId: "o", source: "You", agent: false, db: db as unknown as HubDb };
+    return { db, owner };
+  };
+  it("deleting a milestone keeps its tasks, now unassigned", async () => {
+    const { db, owner } = setup();
+    const p = await ops.addProject(owner, { title: "App" });
+    const m = await ops.addMilestone(owner, { projectId: p.id, title: "Beta" });
+    const t = await ops.addTask(owner, { projectId: p.id, title: "Ship", milestoneId: m.id });
+    expect(db.state.tasks[0]?.milestoneId).toBe(m.id);
+    await ops.removeMilestone(owner, m.id);
+    expect(db.state.milestones).toHaveLength(0);
+    expect(db.state.tasks.find(x => x.id === t.id)?.milestoneId).toBeNull();
+  });
+  it("rejects a milestone from another project", async () => {
+    const { owner } = setup();
+    const a = await ops.addProject(owner, { title: "A" }), b = await ops.addProject(owner, { title: "B" });
+    const m = await ops.addMilestone(owner, { projectId: a.id, title: "Beta" });
+    await expect(ops.addTask(owner, { projectId: b.id, title: "X", milestoneId: m.id })).rejects.toThrow("Milestone not found");
+  });
+  it("Kickoff plan review creates one milestone per plan milestone, without duplicates on re-review", async () => {
+    const { db, owner } = setup();
+    const k = newKickoff(); k.brainstorm = "Recipe scaler"; k.step = 3;
+    k.plan.milestones = [{ title: "Form", outcome: "Working form", tasks: [{ title: "Test calculations", description: "Double", priority: "high" }] }, { title: "Share", outcome: "Send", tasks: [] }];
+    const saved = await ops.saveKickoff(owner, { kickoff: k, expectedRevision: 0 });
+    const r = await ops.saveKickoff(owner, { kickoff: { ...k, step: 4 }, expectedRevision: saved.revision, reviewedStep: 3 });
+    expect(db.state.milestones?.map(m => m.title)).toEqual(["Form", "Share"]);
+    expect(db.state.tasks[0]?.milestoneId).toBe(db.state.milestones?.[0]?.id);
+    await ops.saveKickoff(owner, { kickoff: k, expectedRevision: r.revision, reviewedStep: 3 });
+    expect(db.state.milestones).toHaveLength(2);
+  });
+});
