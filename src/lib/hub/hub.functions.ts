@@ -55,6 +55,10 @@ export const promoteIdeaFn = authed.inputValidator(idOnly).handler(({ context, d
 export const createTaskFn = authed.inputValidator(dataOnly).handler(({ context, data }) => run(async () => ops.addTask(await ownerActor(context), data.data)));
 export const updateTaskFn = authed.inputValidator(idData).handler(({ context, data }) => run(async () => ops.editTask(await ownerActor(context), data.id, data.data)));
 export const deleteTaskFn = authed.inputValidator(idOnly).handler(({ context, data }) => run(async () => ops.removeTask(await ownerActor(context), data.id)));
+export const createMilestoneFn = authed.inputValidator(dataOnly).handler(({ context, data }) => run(async () => ops.addMilestone(await ownerActor(context), data.data)));
+export const updateMilestoneFn = authed.inputValidator(idData).handler(({ context, data }) => run(async () => ops.editMilestone(await ownerActor(context), data.id, data.data)));
+export const deleteMilestoneFn = authed.inputValidator(idOnly).handler(({ context, data }) => run(async () => ops.removeMilestone(await ownerActor(context), data.id)));
+export const reorderMilestonesFn = authed.inputValidator(dataOnly).handler(({ context, data }) => run(async () => ops.reorderMilestones(await ownerActor(context), data.data)));
 export const createHandoffFn = authed.inputValidator(dataOnly).handler(({ context, data }) => run(async () => ops.addHandoff(await ownerActor(context), data.data)));
 export const saveReviewedUpdateFn = authed.inputValidator(dataOnly).handler(({ context, data }) => run(async () => ops.saveReviewedUpdate(await ownerActor(context), data.data)));
 export const exportKickoffFn = authed.inputValidator(dataOnly).handler(({ context, data }) => run(async () => ops.exportKickoff(await ownerActor(context), data.data)));
