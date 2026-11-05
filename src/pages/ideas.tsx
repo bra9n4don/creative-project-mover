@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Archive, ArrowUpRight, Lightbulb, Pencil, Trash2 } from "lucide-react";
+import { Archive, ArrowUpRight, Lightbulb, Pencil, Sparkles, Trash2 } from "lucide-react";
 import { useCreateIdea, useUpdateIdea, useDeleteIdea, usePromoteIdea, type Idea } from "@/lib/hub-api";
 import { AppShell } from "@/components/shell";
 import { Confirm, Empty, ErrorBlock, Field, LoadingBlock, PageHeader, Pill, ago, btn, field } from "@/components/kit";
@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useHubResult, usePageTitle, useWorkspace } from "@/lib/workspace";
 import { cn } from "@/lib/utils";
 import { ChatSourceLink, useChatSources } from "@/components/chat/chat-source-link";
+import { IdeaFleshDialog } from "@/components/idea-flesh-dialog";
 
 const tabs = ["inbox", "exploring", "promoted", "archived"] as const;
 const parseTags = (s: string) => s.split(",").map((t) => t.trim()).filter(Boolean).slice(0, 12);
@@ -48,6 +49,7 @@ export default function IdeasPage() {
   const [tab, setTab] = useState<(typeof tabs)[number]>("inbox");
   const [cap, setCap] = useState({ title: "", description: "", tags: "" });
   const [editing, setEditing] = useState<Idea | null>(null);
+  const [fleshing, setFleshing] = useState<Idea | null>(null);
   const create = useCreateIdea();
   const update = useUpdateIdea();
   const del = useDeleteIdea();
@@ -112,7 +114,8 @@ export default function IdeasPage() {
                       ) : (
                         <button className="rounded-md p-1.5 text-muted-foreground hover:bg-secondary" aria-label="Archive" data-testid={`button-archive-${i.id}`} onClick={() => w(() => update.mutate({ id: i.id, data: { status: "archived" } }, result("Archived")))}><Archive className="h-3.5 w-3.5" /></button>
                       )}
-                      <button className="ml-auto rounded-md p-1.5 text-muted-foreground hover:bg-secondary" aria-label="Edit" data-testid={`button-edit-idea-${i.id}`} onClick={() => w(() => setEditing(i))}><Pencil className="h-3.5 w-3.5" /></button>
+                      <button className="ml-auto inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs hover:bg-secondary" data-testid={`button-flesh-${i.id}`} onClick={() => w(() => setFleshing(i))}><Sparkles className="h-3.5 w-3.5" />Flesh out</button>
+                      <button className="rounded-md p-1.5 text-muted-foreground hover:bg-secondary" aria-label="Edit" data-testid={`button-edit-idea-${i.id}`} onClick={() => w(() => setEditing(i))}><Pencil className="h-3.5 w-3.5" /></button>
                       <Confirm
                         trigger={<button className="rounded-md p-1.5 text-muted-foreground hover:text-destructive" aria-label="Delete" data-testid={`button-delete-idea-${i.id}`}><Trash2 className="h-3.5 w-3.5" /></button>}
                         title="Delete this idea?" body="Archive keeps it out of sight; delete removes it for good." confirmLabel="Delete idea"
@@ -127,6 +130,7 @@ export default function IdeasPage() {
         </>
       )}
       <EditIdea idea={editing} onClose={() => setEditing(null)} />
+      <IdeaFleshDialog idea={fleshing} onClose={() => setFleshing(null)} />
     </AppShell>
   );
 }
