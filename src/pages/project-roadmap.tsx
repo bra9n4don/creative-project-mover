@@ -9,6 +9,7 @@ import { askDock } from "@/components/chat/chat-window";
 import { useHubResult, useWorkspace } from "@/lib/workspace";
 import { useCreateMilestone, useDeleteMilestone, useReorderMilestones, useUpdateMilestone, type Task } from "@/lib/hub-api";
 import { milestoneProgress, type Milestone } from "@/lib/hub/milestones";
+import { MilestoneBar } from "@/components/milestone-bar";
 
 const fmt = (d: string) => new Date(`${d}T12:00:00`).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 
@@ -99,10 +100,7 @@ function MilestoneCard({ m, tasks, all, first, last, onMove }: { m: Milestone; t
       <Button variant="ghost" size="icon" aria-label={`Delete ${m.title}`} onClick={() => window.confirm(`Delete "${m.title}"? Its tasks are kept.`) && guard("Editing the roadmap needs your own workspace.", () => remove.mutate({ id: m.id }, result("Milestone deleted")))}><Trash2 /></Button>
     </div>
     {m.outcome && <p className="mt-1 text-sm text-muted-foreground">{m.outcome}</p>}
-    <div className="mt-3 flex items-center gap-3">
-      <div role="progressbar" aria-label={`Progress of ${m.title}`} aria-valuenow={pr.percent} aria-valuemin={0} aria-valuemax={100} className="h-2 min-w-0 flex-1 overflow-hidden rounded-sm bg-muted"><div className={pr.overdue ? "h-full bg-destructive" : "h-full bg-accent"} style={{ width: `${pr.percent}%` }} /></div>
-      <span className="font-mono text-xs text-muted-foreground">{pr.done}/{pr.total} · {pr.percent}%</span>
-    </div>
+    <MilestoneBar m={m} pr={pr} className="mt-3" />
     <p className="mt-1 text-xs text-muted-foreground">{m.targetDate ? `Target ${fmt(m.targetDate)}` : "No target date"}</p>
     {mine.length > 0 && <ul className="mt-3 divide-y rounded-lg border">{mine.map(t => <TaskRow key={t.id} t={t} milestones={all} />)}</ul>}
   </li>;

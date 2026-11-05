@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { groupTasksByMilestone } from "./milestones";
 import { buildTaskChatTouches, type InboxItem } from "@/lib/ai/inbox";
-import { removeProject } from "./operations";
 
 const ms = [{ id: "m1", targetDate: "2026-12-01" }, { id: "m2", targetDate: null }];
 describe("task list milestone groups", () => {
