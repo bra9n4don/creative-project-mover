@@ -5,10 +5,10 @@ export const Route = createFileRoute("/projects/$id")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Project · Relay" },
-      { name: "description", content: "Plan, tasks, checkpoints, and GitHub activity for one project." },
-      { property: "og:title", content: "Project · Relay" },
-      { property: "og:description", content: "Plan, tasks, checkpoints, and GitHub activity for one project." },
+      { title: "Project timeline · CarterHub" },
+      { name: "description", content: "Project tasks, actual start and end dates, progress, checkpoints, and GitHub activity in CarterHub." },
+      { property: "og:title", content: "Project timeline · CarterHub" },
+      { property: "og:description", content: "Project tasks, actual start and end dates, progress, checkpoints, and GitHub activity in CarterHub." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],

@@ -5,6 +5,7 @@ import { getKickoffsFn } from "@/lib/hub/hub.functions";
 import { Link, useLocation, useParams } from "@/lib/router-compat";
 import { ArrowLeft, BadgeCheck, Bookmark, Github, GitPullRequest, Link2, Lock, Pencil, Plus, RefreshCw, Sparkles, Trash2 } from "lucide-react";
 import { ProjectUpdateDialog } from "@/components/project-update-dialog";
+import { ProjectTimeline } from "@/components/project-timeline";
 import { Button } from "@/components/ui/button";
 import {
   useDeleteProject,
@@ -299,6 +300,8 @@ export default function ProjectDetail() {
           <GithubPanel project={project} />
         </aside>
       </div>
+
+      <ProjectTimeline tasks={tasks} />
 
       <ProjectDialog open={edit} onOpenChange={setEdit} project={project} />
       <TaskDialog open={!!taskDlg} onOpenChange={(o) => !o && setTaskDlg(null)} projectId={project.id} task={taskDlg?.task} siblings={tasks} />

@@ -117,6 +117,20 @@ export function addTask(actor: Actor, input: unknown) {
     return t;
   });
 }
+/** Track real transitions only; never infer historical dates from creation or edits. */
+function applyTaskPatch(t: HubState["tasks"][number], patch: Partial<HubState["tasks"][number]>) {
+  const now = new Date().toISOString();
+  if (patch.status && patch.status !== t.status) {
+    if (patch.status === "in_progress" && !t.startedAt) t.startedAt = now;
+    if (["done", "verified"].includes(patch.status)) {
+      if (!["done", "verified"].includes(t.status)) t.completedAt = now;
+    } else {
+      delete t.completedAt;
+    }
+  }
+  Object.assign(t, patch, { version: t.version + 1, updatedAt: now });
+}
+
 export function editTask(actor: Actor, id: string, input: unknown) {
   const data = UpdateTaskBody.parse(input);
   return mutateState(actor, s => {
@@ -134,7 +148,7 @@ export function editTask(actor: Actor, id: string, input: unknown) {
     }
     if (data.status === "verified" && !(data.evidence ?? t.evidence).trim()) throw new HubError(400, "Add supporting evidence before verifying a task.");
     const { expectedVersion: _, ...patch } = data;
-    Object.assign(t, patch, { version: t.version + 1, updatedAt: new Date().toISOString() });
+    applyTaskPatch(t, patch);
     audit(s, actor, `${t.status === "verified" ? "Verified" : "Updated"} task: ${t.title}`, data.evidence ?? data.status ?? "", t.projectId, "task");
     return ok("Progress saved.", id);
   });
@@ -198,7 +212,7 @@ export function decide(actor: Actor, id: string, input: unknown) {
         if (update.status === "verified" && !(update.evidence ?? t.evidence).trim()) throw new HubError(400, "Verification requires evidence.");
         if (["in_progress", "done", "verified"].includes(update.status ?? "") && (update.dependencies ?? t.dependencies).some(d => !s.tasks.some(dep => dep.id === d && ["done", "verified"].includes(dep.status)))) throw new HubError(409, "Prerequisites are not complete.");
         const { expectedVersion: _, ...patch } = update;
-        Object.assign(t, patch, { version: t.version + 1, updatedAt: new Date().toISOString() });
+        applyTaskPatch(t, patch);
       }
     }
     a.status = data.decision;

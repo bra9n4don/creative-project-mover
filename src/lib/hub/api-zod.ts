@@ -39,7 +39,9 @@ export const GetDemoStateResponse = zod.object({
   "dependencies": zod.array(zod.string()),
   "version": zod.number().int(),
   "createdAt": zod.string(),
-  "updatedAt": zod.string()
+  "updatedAt": zod.string(),
+  "startedAt": zod.iso.datetime().optional(),
+  "completedAt": zod.iso.datetime().optional()
 })),
   "ideas": zod.array(zod.object({
   "id": zod.string(),
@@ -130,7 +132,9 @@ export const GetHubStateResponse = zod.object({
   "dependencies": zod.array(zod.string()),
   "version": zod.number().int(),
   "createdAt": zod.string(),
-  "updatedAt": zod.string()
+  "updatedAt": zod.string(),
+  "startedAt": zod.iso.datetime().optional(),
+  "completedAt": zod.iso.datetime().optional()
 })),
   "ideas": zod.array(zod.object({
   "id": zod.string(),
@@ -387,7 +391,9 @@ export const CreateTaskResponse = zod.object({
   "dependencies": zod.array(zod.string()),
   "version": zod.number().int(),
   "createdAt": zod.string(),
-  "updatedAt": zod.string()
+  "updatedAt": zod.string(),
+  "startedAt": zod.iso.datetime().optional(),
+  "completedAt": zod.iso.datetime().optional()
 })
 
 
