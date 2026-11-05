@@ -1,6 +1,12 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { createChatThreadFn, deleteChatThreadFn, getChatMessagesFn, listChatThreadsFn, renameChatThreadFn } from "@/lib/ai/chat.functions";
+import { createChatThreadFn, deleteChatThreadFn, getChatMessagesFn, listChatThreadsFn, listInboxFn, renameChatThreadFn } from "@/lib/ai/chat.functions";
+
+/** AI inbox suggestions; shares the ["chat"] key so decisions anywhere refresh it. */
+export function useInbox() {
+  const list = useServerFn(listInboxFn);
+  return useQuery({ queryKey: ["chat", "inbox"], queryFn: () => list(), staleTime: 30_000 });
+}
 
 export const chatThreadsKey = ["chat", "threads"] as const;
 

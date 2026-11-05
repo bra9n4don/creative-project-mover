@@ -1,10 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { AppShell } from "@/components/shell";
 import { ProposalCard } from "@/components/chat/chat-window";
-import { listInboxFn } from "@/lib/ai/chat.functions";
+import { useInbox } from "@/components/chat/use-chat-threads";
 import type { InboxStatus } from "@/lib/ai/inbox";
 import { useWorkspace } from "@/lib/workspace";
 
@@ -29,11 +27,6 @@ export const Route = createFileRoute("/inbox")({
   }),
   component: InboxPage,
 });
-
-export function useInbox() {
-  const list = useServerFn(listInboxFn);
-  return useQuery({ queryKey: ["chat", "inbox"], queryFn: () => list() });
-}
 
 function InboxPage() {
   const tab = Route.useSearch().tab ?? "waiting";

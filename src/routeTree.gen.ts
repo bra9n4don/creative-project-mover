@@ -19,6 +19,7 @@ import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as HandoffsRouteImport } from './routes/handoffs'
 import { Route as IdeasRouteImport } from './routes/ideas'
 import { Route as ImportRouteImport } from './routes/import'
+import { Route as InboxRouteImport } from './routes/inbox'
 import { Route as KickoffRouteImport } from './routes/kickoff'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as MindMapRouteImport } from './routes/mind-map'
@@ -99,6 +100,11 @@ const IdeasRoute = IdeasRouteImport.update({
 const ImportRoute = ImportRouteImport.update({
   id: '/import',
   path: '/import',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InboxRoute = InboxRouteImport.update({
+  id: '/inbox',
+  path: '/inbox',
   getParentRoute: () => rootRouteImport,
 } as any)
 const KickoffRoute = KickoffRouteImport.update({
@@ -269,6 +275,7 @@ export interface FileRoutesByFullPath {
   '/handoffs': typeof HandoffsRoute
   '/ideas': typeof IdeasRoute
   '/import': typeof ImportRoute
+  '/inbox': typeof InboxRoute
   '/kickoff': typeof KickoffRoute
   '/mcp': typeof McpRoute
   '/mind-map': typeof MindMapRoute
@@ -312,6 +319,7 @@ export interface FileRoutesByTo {
   '/handoffs': typeof HandoffsRoute
   '/ideas': typeof IdeasRoute
   '/import': typeof ImportRoute
+  '/inbox': typeof InboxRoute
   '/kickoff': typeof KickoffRoute
   '/mcp': typeof McpRoute
   '/mind-map': typeof MindMapRoute
@@ -356,6 +364,7 @@ export interface FileRoutesById {
   '/handoffs': typeof HandoffsRoute
   '/ideas': typeof IdeasRoute
   '/import': typeof ImportRoute
+  '/inbox': typeof InboxRoute
   '/kickoff': typeof KickoffRoute
   '/mcp': typeof McpRoute
   '/mind-map': typeof MindMapRoute
@@ -401,6 +410,7 @@ export interface FileRouteTypes {
     | '/handoffs'
     | '/ideas'
     | '/import'
+    | '/inbox'
     | '/kickoff'
     | '/mcp'
     | '/mind-map'
@@ -444,6 +454,7 @@ export interface FileRouteTypes {
     | '/handoffs'
     | '/ideas'
     | '/import'
+    | '/inbox'
     | '/kickoff'
     | '/mcp'
     | '/mind-map'
@@ -487,6 +498,7 @@ export interface FileRouteTypes {
     | '/handoffs'
     | '/ideas'
     | '/import'
+    | '/inbox'
     | '/kickoff'
     | '/mcp'
     | '/mind-map'
@@ -531,6 +543,7 @@ export interface RootRouteChildren {
   HandoffsRoute: typeof HandoffsRoute
   IdeasRoute: typeof IdeasRoute
   ImportRoute: typeof ImportRoute
+  InboxRoute: typeof InboxRoute
   KickoffRoute: typeof KickoffRoute
   McpRoute: typeof McpRoute
   MindMapRoute: typeof MindMapRoute
@@ -634,6 +647,13 @@ declare module '@tanstack/react-router' {
       path: '/import'
       fullPath: '/import'
       preLoaderRoute: typeof ImportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/inbox': {
+      id: '/inbox'
+      path: '/inbox'
+      fullPath: '/inbox'
+      preLoaderRoute: typeof InboxRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/kickoff': {
@@ -867,6 +887,7 @@ const rootRouteChildren: RootRouteChildren = {
   HandoffsRoute: HandoffsRoute,
   IdeasRoute: IdeasRoute,
   ImportRoute: ImportRoute,
+  InboxRoute: InboxRoute,
   KickoffRoute: KickoffRoute,
   McpRoute: McpRoute,
   MindMapRoute: MindMapRoute,
