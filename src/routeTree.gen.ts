@@ -52,6 +52,7 @@ import { Route as ApiPublicJobsGithubSyncRouteImport } from './routes/api/public
 import { Route as ApiPublicSlackEventsRouteImport } from './routes/api/public/slack/events'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
+import { Route as ProjectsIdTasksTaskIdRouteImport } from './routes/projects.$id_.tasks_.$taskId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -269,6 +270,11 @@ const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
   path: '/lovable/email/auth/webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProjectsIdTasksTaskIdRoute = ProjectsIdTasksTaskIdRouteImport.update({
+  id: '/projects/$id_/tasks_/$taskId',
+  path: '/projects/$id/tasks/$taskId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -314,6 +320,7 @@ export interface FileRoutesByFullPath {
   '/api/public/slack/events': typeof ApiPublicSlackEventsRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
+  '/projects/$id/tasks/$taskId': typeof ProjectsIdTasksTaskIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -359,6 +366,7 @@ export interface FileRoutesByTo {
   '/api/public/slack/events': typeof ApiPublicSlackEventsRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
+  '/projects/$id/tasks/$taskId': typeof ProjectsIdTasksTaskIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -405,6 +413,7 @@ export interface FileRoutesById {
   '/api/public/slack/events': typeof ApiPublicSlackEventsRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
+  '/projects/$id_/tasks_/$taskId': typeof ProjectsIdTasksTaskIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -452,6 +461,7 @@ export interface FileRouteTypes {
     | '/api/public/slack/events'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
+    | '/projects/$id/tasks/$taskId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -497,6 +507,7 @@ export interface FileRouteTypes {
     | '/api/public/slack/events'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
+    | '/projects/$id/tasks/$taskId'
   id:
     | '__root__'
     | '/'
@@ -542,6 +553,7 @@ export interface FileRouteTypes {
     | '/api/public/slack/events'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
+    | '/projects/$id_/tasks_/$taskId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -588,6 +600,7 @@ export interface RootRouteChildren {
   ApiPublicSlackEventsRoute: typeof ApiPublicSlackEventsRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
+  ProjectsIdTasksTaskIdRoute: typeof ProjectsIdTasksTaskIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -893,6 +906,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailAuthWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/projects/$id_/tasks_/$taskId': {
+      id: '/projects/$id_/tasks_/$taskId'
+      path: '/projects/$id/tasks/$taskId'
+      fullPath: '/projects/$id/tasks/$taskId'
+      preLoaderRoute: typeof ProjectsIdTasksTaskIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -941,6 +961,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicSlackEventsRoute: ApiPublicSlackEventsRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
+  ProjectsIdTasksTaskIdRoute: ProjectsIdTasksTaskIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

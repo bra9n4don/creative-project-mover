@@ -40,7 +40,7 @@ export default function ProjectTasks() {
       {visible.map(t => {
         const pct = taskProgress(t);
         return <li key={t.id} className="grid min-w-0 gap-3 py-4 lg:grid-cols-[minmax(0,2fr)_140px_140px_minmax(120px,1fr)_40px] lg:items-center lg:gap-4">
-          <div className="min-w-0"><div className="break-words font-medium">{t.title}</div>{t.description && <p className="mt-1 line-clamp-2 break-words text-sm text-muted-foreground">{t.description}</p>}
+          <div className="min-w-0"><Link href={`/projects/${id}/tasks/${t.id}`} data-testid={`link-task-${t.id}`} className="break-words font-medium hover:underline">{t.title}</Link>{t.description && <p className="mt-1 line-clamp-2 break-words text-sm text-muted-foreground">{t.description}</p>}
             {milestones.length > 0 && <MilestoneSelect task={t} milestones={milestones} />}</div>
           <div className="text-sm"><span className="mr-2 text-xs text-muted-foreground lg:hidden">Due</span>{t.dueDate ? <time dateTime={t.dueDate}>{new Date(`${t.dueDate}T12:00:00`).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}</time> : <span className="text-muted-foreground">No due date</span>}</div>
           <div>{t.status === "verified" ? <Pill value={t.status} /> : <select aria-label={`Status of ${t.title}`} className="max-w-full rounded-md border bg-background px-2 py-2 text-xs" value={t.status} disabled={update.isPending} onChange={e => guard("Updating tasks needs your own workspace.", () => update.mutate({ id: t.id, data: { status: e.target.value as Task["status"], expectedVersion: t.version } }, result("Task updated")))}>{["todo", "in_progress", "blocked", "done"].map(s => <option key={s} value={s}>{s.replace("_", " ")}</option>)}</select>}</div>

@@ -83,7 +83,7 @@ export function ProposalCard({ threadId, messageId, part }: { threadId: string; 
   const link = (() => {
     if (!created || !state) return null;
     if (created.kind === "idea") return state.ideas.some(i => i.id === created.id) ? { to: "/ideas" as const, label: "Open idea" } : "gone" as const;
-    if (created.kind === "task" || created.kind === "task_update") { const t = state.tasks.find(t => t.id === created.id); return t ? { to: "/projects/$id/tasks" as const, params: { id: t.projectId }, label: "Open task" } : "gone" as const; }
+    if (created.kind === "task" || created.kind === "task_update") { const t = state.tasks.find(t => t.id === created.id); return t ? { to: "/projects/$id/tasks/$taskId" as const, params: { id: t.projectId, taskId: t.id }, label: "Open task" } : "gone" as const; }
     const m = state.milestones?.find(m => m.id === created.id); return m ? { to: "/projects/$id/roadmap" as const, params: { id: m.projectId }, label: "Open roadmap" } : "gone" as const;
   })();
 
