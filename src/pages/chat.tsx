@@ -1,4 +1,5 @@
 import { useState } from "react";
+import type { UIMessage } from "ai";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { MessageSquarePlus, Pencil, Trash2 } from "lucide-react";
 import { AppShell } from "@/components/shell";
@@ -38,7 +39,7 @@ export function ChatThreadView({ threadId, projectId, onActivity }: { threadId: 
   if (isLoading) return <p className="p-6 text-sm text-muted-foreground">Loading chat…</p>;
   if (error) return <p className="p-6 text-sm text-destructive">{error.message}</p>;
   if (!data) return <p className="p-6 text-sm text-muted-foreground">This chat no longer exists. <Link to="/chat" className="text-primary underline">Start another</Link>.</p>;
-  return <ChatWindow key={threadId} threadId={threadId} initialMessages={data.messages} projectId={projectId} onActivity={onActivity} />;
+  return <ChatWindow key={threadId} threadId={threadId} initialMessages={data.messages as unknown as UIMessage[]} projectId={projectId} onActivity={onActivity} />;
 }
 
 export default function ChatPage({ threadId }: { threadId: string }) {

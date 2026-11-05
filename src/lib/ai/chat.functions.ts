@@ -1,6 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import type { UIMessage } from "ai";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Database, Json } from "@/integrations/supabase/types";
@@ -50,7 +49,7 @@ export const getChatMessagesFn = authed.inputValidator(z.object({ id: z.string()
   if (!thread) return null;
   const { data: rows, error } = await db.from("hub_chat_messages").select("message_id, role, parts").eq("thread_id", data.id).order("created_at");
   if (error) fail("Could not load messages.", error);
-  return { id: thread.id, title: thread.title, messages: (rows ?? []).map(r => ({ id: r.message_id, role: r.role, parts: r.parts })) as unknown as UIMessage[] };
+  return { id: thread.id, title: thread.title, messages: (rows ?? []).map(r => ({ id: r.message_id, role: r.role, parts: r.parts })) };
 });
 
 /** Records Approve/Dismiss on a proposal card so it stays decided after reload. */
