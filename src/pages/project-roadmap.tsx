@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useParams } from "@/lib/router-compat";
 import { ArrowDown, ArrowLeft, ArrowUp, Flag, Plus, Search, Sparkles, Trash2 } from "lucide-react";
 import { AppShell } from "@/components/shell";
@@ -82,6 +82,8 @@ function MilestoneCard({ m, tasks, all, first, last, onMove }: { m: Milestone; t
   const remove = useDeleteMilestone();
   const result = useHubResult();
   const [title, setTitle] = useState(m.title);
+  // Keep the heading in step with saves from elsewhere (e.g. an approved chat suggestion).
+  useEffect(() => { setTitle(m.title); }, [m.title]);
   const pr = milestoneProgress(m, tasks);
   const mine = tasks.filter(t => t.milestoneId === m.id);
   const save = (patch: { title?: string; targetDate?: string | null; outcome?: string }) =>
