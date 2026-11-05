@@ -7,6 +7,8 @@ import { useAuth } from "@/lib/auth";
 import { btn, field } from "@/components/kit";
 import { oauthReturnPath } from "@/lib/oauth-return-path";
 import { MIN_PASSWORD } from "@/lib/password-rules";
+import { takePendingLink } from "@/lib/pending-link";
+import { toast } from "sonner";
 
 function AuthFrame({ children, mode }: { children: ReactNode; mode: "in" | "up" }) {
   return (
@@ -47,7 +49,16 @@ export function AuthPage({ mode }: { mode: "in" | "up" | "forgot" | "reset" }) {
   const nextSearch = next === "/" ? "" : `?next=${encodeURIComponent(next)}`;
 
   useEffect(() => {
-    if (isSignedIn && (mode === "in" || mode === "up")) goDest();
+    if (!isSignedIn || (mode !== "in" && mode !== "up")) return;
+    // Returning from "Link Google/Microsoft" in Settings: redeem the saved code first.
+    const pending = takePendingLink(window.sessionStorage);
+    if (!pending) { goDest(); return; }
+    void supabase.rpc("redeem_link_code", { _code: pending.code }).then(async ({ error }) => {
+      if (!error) { toast.success("Sign-in linked to your workspace"); void navigate({ to: "/settings" }); return; }
+      if (/already|owner/i.test(error.message)) { toast.info("That sign-in is already linked."); void navigate({ to: "/settings" }); return; }
+      await supabase.auth.signOut({ scope: "local" });
+      setMsg({ kind: "err", text: `Couldn't link that account (${error.message}). Sign in with your main account and try again.` });
+    });
   }, [isSignedIn, mode, dest]);
 
   // Once the owner has claimed CarterHub, new sign-ups are hidden (linked sign-ins still work).
