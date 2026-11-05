@@ -2,12 +2,14 @@ import { HubError, type Actor, mutateState, audit, ok, requireOwner, readState }
 
 // Read-only GitHub access through the linked GitHub connection (credentials never reach the browser).
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/github";
-async function github<T>(path: string): Promise<T> {
+async function github<T>(path: string, init?: { method: "POST"; body: unknown }): Promise<T> {
   const lovableKey = process.env.LOVABLE_API_KEY;
   const githubKey = process.env.GITHUB_API_KEY;
   if (!lovableKey || !githubKey) throw new HubError(503, "GitHub isn't connected yet. Connect GitHub to enable repository sync.");
   const response = await fetch(`${GATEWAY_URL}${path}`, {
-    headers: { Authorization: `Bearer ${lovableKey}`, "X-Connection-Api-Key": githubKey, Accept: "application/vnd.github+json" },
+    method: init?.method ?? "GET",
+    headers: { Authorization: `Bearer ${lovableKey}`, "X-Connection-Api-Key": githubKey, Accept: "application/vnd.github+json", ...(init ? { "Content-Type": "application/json" } : {}) },
+    ...(init ? { body: JSON.stringify(init.body) } : {}),
   });
   if (!response.ok) {
     const body = await response.text();
@@ -35,6 +37,8 @@ export async function syncAndRecord(actor: Actor, trigger: "manual" | "automatic
   try {
     r = await syncRepos(actor);
     const queued = await syncIssueLinks(actor);
+    const ideasAdded = await syncIdeaIssues(actor).then(x => x.added).catch(e => { console.error("Idea issue sync failed", e); return 0; });
+    if (ideasAdded) r = { ...r, message: `${r.message} ${ideasAdded} new GitHub issue${ideasAdded === 1 ? "" : "s"} added to Ideas.` };
     if (queued) r = { ...r, message: `${r.message} ${queued} project${queued === 1 ? " has" : "s have"} GitHub issue changes waiting in Import.` };
   } catch (e) {
     await recordSync(actor.ownerId, trigger, false, e instanceof Error ? e.message : "Sync failed", false);
@@ -124,5 +128,54 @@ async function syncIssueLinks(actor: Actor) {
     let queued = 0; const now = new Date().toISOString();
     for (const snap of snapshots) { const link = s.githubLinks?.find(l => l.projectId === snap.projectId); if (link && queueSyncSuggestions(s, link, snap.issues, now)) queued++; }
     return queued;
+  });
+}
+
+/** Mirrors open issues from the chosen repo into inbox ideas (new ones only). */
+export async function syncIdeaIssues(actor: Actor) {
+  requireOwner(actor);
+  const state = await readState(actor.db, actor.ownerId);
+  const repo = state.ideaIssues?.repo;
+  if (!repo) return { added: 0 };
+  const list = await github<(GhIssue & { html_url: string })[]>(`/repos/${repo}/issues?state=open&sort=created&direction=desc&per_page=100`);
+  const issues = list.filter(i => !i.pull_request).map(i => ({ number: i.number, title: i.title, body: i.body ?? "", url: i.html_url }));
+  const { mergeIssuesIntoIdeas, emptyIdeaIssues } = await import("./idea-issues");
+  const { randomUUID } = await import("./store");
+  return mutateState(actor, s => {
+    s.ideaIssues ??= emptyIdeaIssues();
+    if (s.ideaIssues.repo !== repo) return { added: 0 };
+    const added = mergeIssuesIntoIdeas(s.ideas, s.ideaIssues, issues, new Date().toISOString(), randomUUID);
+    if (added) audit(s, actor, "GitHub issues added to Ideas", `${added} from ${repo}`, "", "sync");
+    return { added };
+  });
+}
+
+export async function setIdeaIssueRepo(actor: Actor, repo: string | null) {
+  requireOwner(actor);
+  const { REPO_RE, emptyIdeaIssues } = await import("./idea-issues");
+  if (repo && !REPO_RE.test(repo)) throw new HubError(400, "Pick a repository in owner/name format.");
+  if (repo) await github(`/repos/${repo}`);
+  return mutateState(actor, s => {
+    const prev = s.ideaIssues ?? emptyIdeaIssues();
+    // Links are per repo; switching repos starts fresh so issue numbers can't collide.
+    s.ideaIssues = prev.repo === repo ? prev : { repo, lastSyncedAt: null, links: [] };
+    return ok(repo ? `Ideas will sync with ${repo}.` : "Idea issue sync turned off.");
+  });
+}
+
+export async function createIssueFromIdea(actor: Actor, ideaId: string) {
+  requireOwner(actor);
+  const state = await readState(actor.db, actor.ownerId);
+  const repo = state.ideaIssues?.repo;
+  if (!repo) throw new HubError(400, "Choose a GitHub repository for ideas first.");
+  const idea = state.ideas.find(i => i.id === ideaId);
+  if (!idea) throw new HubError(404, "That idea no longer exists.");
+  const existing = state.ideaIssues!.links.find(l => l.ideaId === ideaId);
+  if (existing) return { number: existing.number, url: existing.url, created: false };
+  const issue = await github<{ number: number; html_url: string }>(`/repos/${repo}/issues`, { method: "POST", body: { title: idea.title, body: `${idea.description}\n\n_Created from CarterHub._`.trim() } });
+  return mutateState(actor, s => {
+    if (s.ideaIssues?.repo === repo && !s.ideaIssues.links.some(l => l.number === issue.number)) s.ideaIssues.links.push({ ideaId, number: issue.number, url: issue.html_url });
+    audit(s, actor, `GitHub issue #${issue.number} created`, idea.title, "", "idea");
+    return { number: issue.number, url: issue.html_url, created: true };
   });
 }

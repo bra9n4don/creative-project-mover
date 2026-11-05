@@ -6,7 +6,7 @@ import { getState } from "./context";
 import { demoState } from "./demo";
 import { HubError, readState, type Actor, type HubDb } from "./store";
 import { issueToken, revokeToken } from "./agent-auth.server";
-import { listRepos, syncAndRecord, importRepoDraft } from "./github.server";
+import { listRepos, syncAndRecord, importRepoDraft, syncIdeaIssues, setIdeaIssueRepo, createIssueFromIdea } from "./github.server";
 import { pushBackup } from "./backup.server";
 import { parseTheme, themePrefsSchema } from "@/lib/theme";
 
@@ -87,6 +87,16 @@ export const discardImportFn = authed.inputValidator(idOnly).handler(({ context,
 export const unlinkRepoFn = authed.inputValidator(idOnly).handler(({ context, data }) => run(async () => ops.unlinkRepo(await ownerActor(context), data.id)));
 export const importRepoFn = authed.inputValidator(z.object({ repo: z.string().min(3).max(200), keepSynced: z.boolean() }))
   .handler(({ context, data }) => run(async () => importRepoDraft(await ownerActor(context), data.repo, data.keepSynced)));
+export const getIdeaIssuesFn = authed.handler(({ context }) => run(async () => {
+  const actor = await ownerActor(context);
+  const s = await readState(actor.db, actor.ownerId);
+  return s.ideaIssues ?? { repo: null, lastSyncedAt: null, links: [] };
+}));
+export const setIdeaIssueRepoFn = authed.inputValidator(z.object({ repo: z.string().max(200).nullable() }))
+  .handler(({ context, data }) => run(async () => setIdeaIssueRepo(await ownerActor(context), data.repo)));
+export const syncIdeaIssuesFn = authed.handler(({ context }) => run(async () => syncIdeaIssues(await ownerActor(context))));
+export const createIssueFromIdeaFn = authed.inputValidator(idOnly)
+  .handler(({ context, data }) => run(async () => createIssueFromIdea(await ownerActor(context), data.id)));
 export const syncGithubFn = authed.handler(({ context }) => run(async () => syncAndRecord(await ownerActor(context), "manual")));
 
 export const getSyncStatusFn = authed.handler(({ context }) => run(async () => {
