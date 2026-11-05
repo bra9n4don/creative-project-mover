@@ -3,6 +3,7 @@ import { LogOut, ShieldCheck, RefreshCw, Github } from "lucide-react";
 import { startTour } from "@/components/guided-tour";
 import { ThemeSettings } from "@/components/theme-controls";
 import { LinkedLogins, PasswordSignIn } from "@/components/linked-logins";
+import { ChangeEmail, ConnectedAssistants, SignOutOptions, TwoStep } from "@/components/account-security";
 import { useBackupNow, useGithubSyncStatus, useSyncGithub } from "@/lib/hub-api";
 import { useHubResult } from "@/lib/workspace";
 import { ago } from "@/components/kit";
@@ -58,15 +59,16 @@ export default function SettingsPage() {
                   <div className="text-lg font-medium" data-testid="text-user-name">{user?.fullName || "Owner"}</div>
                   <div className="font-mono text-sm text-muted-foreground" data-testid="text-user-email">{user?.primaryEmailAddress?.emailAddress}</div>
                   <p className="mt-3 text-sm text-muted-foreground">This workspace belongs to you alone. Nobody else can sign in to it.</p>
-                  <button className={`${btn.ghost} mt-5`} data-testid="button-sign-out" onClick={() => signOut({ redirectUrl: basePath || "/" })}>
-                    <LogOut className="h-4 w-4" /> Sign out
-                  </button>
                 </>
               )}
             </div>
           </Panel>
-          {!isDemo && <Panel title="Password sign-in"><PasswordSignIn /></Panel>}
           {!isDemo && <Panel title="Linked sign-ins"><LinkedLogins /></Panel>}
+          {!isDemo && <Panel title="Password sign-in"><PasswordSignIn /></Panel>}
+          {!isDemo && <Panel title="Change email"><ChangeEmail /></Panel>}
+          {!isDemo && <Panel title="Sign out"><SignOutOptions /></Panel>}
+          {!isDemo && <Panel title="Two-step verification"><TwoStep /></Panel>}
+          {!isDemo && <Panel title="Connected assistants"><ConnectedAssistants /></Panel>}
           {!isDemo && <GithubSyncPanel />}
           {!isDemo && <GithubBackupPanel />}
           <Panel title="Appearance"><ThemeSettings /></Panel>

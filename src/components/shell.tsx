@@ -128,7 +128,7 @@ function SignOutButton() {
   const { signOut } = useClerk();
   if (!user) return null;
   return (
-    <button data-testid="button-sidebar-sign-out" onClick={() => void signOut({ redirectUrl: "/sign-in" })}
+    <button data-testid="button-sidebar-sign-out" onClick={() => void signOut({ redirectUrl: "/sign-in", scope: "local" })}
       className="mt-auto flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground">
       <LogOut className="h-4 w-4" /> Log out
     </button>
