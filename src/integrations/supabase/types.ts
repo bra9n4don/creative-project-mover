@@ -103,6 +103,24 @@ export type Database = {
         }
         Relationships: []
       }
+      hub_link_attempts: {
+        Row: {
+          attempted_at: string
+          id: number
+          user_id: string
+        }
+        Insert: {
+          attempted_at?: string
+          id?: never
+          user_id: string
+        }
+        Update: {
+          attempted_at?: string
+          id?: never
+          user_id?: string
+        }
+        Relationships: []
+      }
       hub_link_codes: {
         Row: {
           code_hash: string

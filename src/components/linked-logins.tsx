@@ -75,7 +75,7 @@ export function LinkedLogins() {
       </div>
       {code && (
         <div className="mt-4 rounded-lg bg-accent/10 p-4">
-          <div className="font-mono text-2xl tracking-widest" data-testid="text-link-code">{code}</div>
+          <div className="break-all font-mono text-xl tracking-wider" data-testid="text-link-code">{code}</div>
           <p className="mt-2 text-muted-foreground">On any device, sign in with the other account, then enter this code on the screen that says it isn't the owner. Works once, for 10 minutes. New email account? Create it at <span className="font-mono">/sign-up?link=1</span>.</p>
         </div>
       )}
@@ -89,16 +89,17 @@ export function RedeemLinkCode({ onLinked }: { onLinked: () => void }) {
   const [busy, setBusy] = useState(false);
   const submit = async () => {
     setBusy(true);
-    const { error } = await supabase.rpc("redeem_link_code", { _code: value });
+    const { data, error } = await supabase.rpc("redeem_link_code", { _code: value });
     setBusy(false);
     if (error) { toast.error(error.message); return; }
+    if (data === false) { toast.error("That code is wrong, expired or already used. After 5 wrong tries you'll need to wait 15 minutes."); return; }
     toast.success("Sign-in linked to your workspace");
     onLinked();
   };
   return (
     <div className="mt-4 flex flex-wrap gap-2">
-      <input className="h-10 rounded-lg border border-input bg-background px-3 font-mono uppercase" placeholder="Link code" value={value} onChange={(e) => setValue(e.target.value)} data-testid="input-link-code" />
-      <button className={btn.primary} disabled={busy || value.trim().length < 9} onClick={() => void submit()} data-testid="button-redeem-link-code">Link this sign-in</button>
+      <input className="h-10 rounded-lg border border-input bg-background px-3 font-mono uppercase" placeholder="XXXXX-XXXXX-XXXXX-XXXXX" value={value} onChange={(e) => setValue(e.target.value)} data-testid="input-link-code" />
+      <button className={btn.primary} disabled={busy || value.replace(/\s/g, "").length < 23} onClick={() => void submit()} data-testid="button-redeem-link-code">Link this sign-in</button>
     </div>
   );
 }

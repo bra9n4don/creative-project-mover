@@ -85,6 +85,13 @@
       "when": 1793848288106,
       "tag": "0011_create_hub_chat",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1793853880031,
+      "tag": "0012_stronger_link_codes",
+      "breakpoints": true
     }
   ]
 }

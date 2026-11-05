@@ -53,7 +53,8 @@ export function AuthPage({ mode }: { mode: "in" | "up" | "forgot" | "reset" }) {
     // Returning from "Link Google/Microsoft" in Settings: redeem the saved code first.
     const pending = takePendingLink(window.sessionStorage);
     if (!pending) { goDest(); return; }
-    void supabase.rpc("redeem_link_code", { _code: pending.code }).then(async ({ error }) => {
+    void supabase.rpc("redeem_link_code", { _code: pending.code }).then(async ({ data, error: rpcError }) => {
+      const error = rpcError ?? (data === false ? { message: "That code is wrong, expired or already used" } : null);
       if (!error) { toast.success("Sign-in linked to your workspace"); void navigate({ to: "/settings" }); return; }
       if (/already|owner/i.test(error.message)) { toast.info("That sign-in is already linked."); void navigate({ to: "/settings" }); return; }
       await supabase.auth.signOut({ scope: "local" });
