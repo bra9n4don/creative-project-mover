@@ -22,7 +22,7 @@ export default function ProjectTasks() {
   const visible = tasks.filter(t => (status === "all" || t.status === status) && t.title.toLowerCase().includes(query.toLowerCase()));
   if (isLoading) return <AppShell><LoadingBlock /></AppShell>;
   if (error || !state) return <AppShell><ErrorBlock error={error} onRetry={refetch} /></AppShell>;
-  if (!project) return <AppShell><Empty title="Project not found" body=""><Button asChild variant="outline"><Link href="/dashboard">Dashboard</Link></Button></Empty></AppShell>;
+  if (!project) return <AppShell><Empty icon={<Search className="h-5 w-5" />} title="Project not found" body=""><Button asChild variant="outline"><Link href="/dashboard">Dashboard</Link></Button></Empty></AppShell>;
   return <AppShell>
     <Link href="/dashboard" className="mb-4 inline-flex items-center gap-1 text-sm text-muted-foreground"><ArrowLeft className="h-4 w-4" />Dashboard</Link>
     <header className="flex flex-wrap items-start justify-between gap-4">
@@ -46,7 +46,7 @@ export default function ProjectTasks() {
         </li>;
       })}
     </ul>
-    {!visible.length && <Empty title={tasks.length ? "No matching tasks" : "No tasks yet"} body="" />}
+    {!visible.length && <Empty icon={<Search className="h-5 w-5" />} title={tasks.length ? "No matching tasks" : "No tasks yet"} body="" />}
     <TaskDialog open={dialog !== null} onOpenChange={open => !open && setDialog(null)} task={dialog?.task} projectId={id} siblings={tasks} />
   </AppShell>;
 }
