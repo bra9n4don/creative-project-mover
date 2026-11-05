@@ -8,8 +8,16 @@ import { agentActorFromRequest } from "./agent-auth.server";
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json", "cache-control": "no-store" } });
 
+/** Message safe to show agent callers: owner-facing 4xx reasons and validation errors only; never database/internal text. */
+export function safeAgentMessage(e: unknown) {
+  if (e instanceof HubError && e.status < 500) return e.message;
+  if (e instanceof Error && e.name === "ZodError") return "Invalid arguments.";
+  console.error(e);
+  return "Operation failed";
+}
+
 export function errorResponse(e: unknown) {
-  if (e instanceof HubError) return json({ error: e.message }, e.status);
+  if (e instanceof HubError && e.status < 500) return json({ error: e.message }, e.status);
   if (e instanceof Error && e.name === "ZodError") return json({ error: "Invalid request body.", issues: (e as unknown as { issues: unknown }).issues }, 400);
   console.error(e);
   return json({ error: "Operation failed" }, 500);
@@ -54,7 +62,7 @@ export async function handleMcp(request: Request) {
           const args = tool.schema.parse(m.params?.arguments ?? {}) as Record<string, unknown>;
           return reply({ content: [{ type: "text", text: JSON.stringify(await tool.run(actor, args)) }] });
         } catch (e) {
-          return reply({ isError: true, content: [{ type: "text", text: e instanceof Error ? e.message : "Operation failed" }] });
+          return reply({ isError: true, content: [{ type: "text", text: safeAgentMessage(e) }] });
         }
       }
       default:
