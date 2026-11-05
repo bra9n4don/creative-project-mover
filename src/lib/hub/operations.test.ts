@@ -71,7 +71,7 @@ describe("guarded automation rules", () => {
   it("deleting a project also removes its milestones", async () => {
     const { db, owner } = setup();
     const p = await ops.addProject(owner, { title: "Gone" });
-    await ops.createMilestone(owner, { projectId: p.id, title: "M" });
+    await ops.addMilestone(owner, { projectId: p.id, title: "M" });
     await ops.removeProject(owner, p.id);
     expect(db.state.milestones ?? []).toHaveLength(0);
   });
