@@ -3,6 +3,7 @@ import { z } from "zod";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Database, Json } from "@/integrations/supabase/types";
+import { extractInboxItems, type InboxItem } from "@/lib/ai/inbox";
 
 type Db = SupabaseClient<Database>;
 const authed = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]);
@@ -50,6 +51,18 @@ export const getChatMessagesFn = authed.inputValidator(z.object({ id: z.string()
   const { data: rows, error } = await db.from("hub_chat_messages").select("message_id, role, parts").eq("thread_id", data.id).order("created_at");
   if (error) fail("Could not load messages.", error);
   return { id: thread.id, title: thread.title, messages: (rows ?? []).map(r => ({ id: r.message_id, role: r.role, parts: r.parts })) };
+});
+
+/** AI inbox: every chat suggestion across threads, newest first (capped). */
+export const listInboxFn = authed.handler(async ({ context }) => {
+  const db = context.supabase as Db;
+  const { data: threads, error: tErr } = await db.from("hub_chat_threads").select("id, title");
+  if (tErr) fail("Could not load the AI inbox.", tErr);
+  const { data: rows, error } = await db.from("hub_chat_messages").select("thread_id, message_id, created_at, parts").eq("role", "assistant").order("created_at", { ascending: false }).limit(400);
+  if (error) fail("Could not load the AI inbox.", error);
+  const titles = Object.fromEntries((threads ?? []).map(t => [t.id, t.title]));
+  // Sent as JSON text: stored tool parts are loosely typed, so skip the serializer's type check.
+  return { json: JSON.stringify(extractInboxItems(rows ?? [], titles) satisfies InboxItem[]) };
 });
 
 /** Records Approve/Dismiss on a proposal card so it stays decided after reload. */

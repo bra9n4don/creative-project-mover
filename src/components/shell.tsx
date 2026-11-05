@@ -2,7 +2,7 @@ import { ChatDock } from "@/components/chat/chat-panel";
 import { useState, type ReactNode } from "react";
 import { Link, useLocation } from "@/lib/router-compat";
 import { useUser, useClerk } from "@/lib/auth";
-import { BarChart3, Download, ListChecks, Bookmark, FolderKanban, History, Lightbulb, LogOut, Menu, MessageCircle, MoreHorizontal, Network, Plug, Rocket, Settings, ShieldCheck, Sunrise, X } from "lucide-react";
+import { BarChart3, Download, ListChecks, Bookmark, FolderKanban, History, Inbox, Lightbulb, LogOut, Menu, MessageCircle, MoreHorizontal, Network, Plug, Rocket, Settings, ShieldCheck, Sunrise, X } from "lucide-react";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { useWorkspace } from "@/lib/workspace";
@@ -17,6 +17,7 @@ const primaryNav = [
   { href: "/dashboard", label: "Dashboard", icon: BarChart3 },
   { href: "/projects", label: "Projects", icon: FolderKanban },
   { href: "/chat", label: "Chat", icon: MessageCircle },
+  { href: "/inbox", label: "AI inbox", icon: Inbox },
   { href: "/kickoff", label: "Kickoff", icon: Rocket },
   { href: "/handoffs", label: "Checkpoints", icon: Bookmark },
   { href: "/ideas", label: "Ideas", icon: Lightbulb },
