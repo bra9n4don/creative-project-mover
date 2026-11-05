@@ -19,7 +19,9 @@ export async function assistantActor(ctx: ToolContext): Promise<Actor> {
     const { data: name } = await db.rpc("hub_oauth_client_name", { _client_id: clientId });
     if (typeof name === "string" && name.trim()) source = name.trim().slice(0, 60);
   }
-  return { ownerId: userId, agent: true, source, db };
+  const { data: ownerId } = await db.rpc("hub_owner_uid");
+  if (!ownerId) throw new ToolError("This account isn't linked to the Relay workspace.");
+  return { ownerId: ownerId as string, agent: true, source, db };
 }
 
 export async function runHub<T>(fn: () => Promise<T>): Promise<T> {
