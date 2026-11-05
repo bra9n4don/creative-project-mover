@@ -16,7 +16,7 @@ const bodySchema = z.object({
 const jsonError = (status: number, message: string) => Response.json({ message }, { status });
 
 const SYSTEM = `You are the CarterHub assistant for Brandon's private project workspace. Answer using the workspace context below; say when something isn't in it and never invent progress, dates or ids.
-When a new task (optionally in a roadmap milestone), a task status/title change, a new milestone, a milestone title/target-date change, or an idea would help, call the matching propose_* tool. Proposals are NOT saved: Brandon approves or dismisses each card. After proposing, say briefly what you suggested. Use exact ids from context. Be concise and use markdown.`;
+When a new task (optionally in a roadmap milestone), a task status/title/milestone/due-date change, a new milestone, a milestone title/target-date change, or an idea would help, call the matching propose_* tool. Proposals are NOT saved: Brandon approves or dismisses each card. After proposing, say briefly what you suggested. For roadmap planning, prefer several cards (milestone target dates, task milestone assignments and due dates) over plain text. Use exact ids from context. Be concise and use markdown.`;
 
 export async function handleChat(request: Request): Promise<Response> {
   const token = request.headers.get("authorization")?.match(/^Bearer (.+)$/)?.[1];
@@ -70,7 +70,7 @@ export async function handleChat(request: Request): Promise<Response> {
     providerOptions: { anthropic: { thinking: { type: "disabled" } } },
     tools: {
       propose_task: tool({ description: "Suggest a new task for a project (owner must approve).", inputSchema: proposeTaskInput, execute: async i => proposeTask(state, i) }),
-      propose_task_update: tool({ description: "Suggest changing an existing task's status or title (owner must approve).", inputSchema: proposeTaskUpdateInput, execute: async i => proposeTaskUpdate(state, i) }),
+      propose_task_update: tool({ description: "Suggest changing an existing task's status, title, roadmap milestone or due date (owner must approve).", inputSchema: proposeTaskUpdateInput, execute: async i => proposeTaskUpdate(state, i) }),
       propose_milestone: tool({ description: "Suggest a new roadmap milestone for a project (owner must approve).", inputSchema: proposeMilestoneInput, execute: async i => proposeMilestone(state, i) }),
       propose_milestone_update: tool({ description: "Suggest renaming a milestone or changing its target date (owner must approve).", inputSchema: proposeMilestoneUpdateInput, execute: async i => proposeMilestoneUpdate(state, i) }),
       propose_idea: tool({ description: "Suggest an idea for the Ideas inbox (owner must approve).", inputSchema: proposeIdeaInput, execute: async i => proposeIdea(state, i) }),
