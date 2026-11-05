@@ -62,7 +62,7 @@ export async function handleMcp(request: Request) {
           const args = tool.schema.parse(m.params?.arguments ?? {}) as Record<string, unknown>;
           return reply({ content: [{ type: "text", text: JSON.stringify(await tool.run(actor, args)) }] });
         } catch (e) {
-          return reply({ isError: true, content: [{ type: "text", text: e instanceof Error ? e.message : "Operation failed" }] });
+          return reply({ isError: true, content: [{ type: "text", text: safeAgentMessage(e) }] });
         }
       }
       default:
