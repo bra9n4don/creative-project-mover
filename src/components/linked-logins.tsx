@@ -77,3 +77,31 @@ export function RedeemLinkCode({ onLinked }: { onLinked: () => void }) {
     </div>
   );
 }
+
+/** Adds an email + password to the account you're signed in with now — no link code needed. */
+export function PasswordSignIn() {
+  const [email, setEmail] = useState<string | null>(null);
+  const [pw, setPw] = useState("");
+  const [current, setCurrent] = useState("");
+  const [busy, setBusy] = useState(false);
+  useState(() => { void supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? null)); });
+  const save = async () => {
+    if (pw.length < 8) { toast.error("Use at least 8 characters."); return; }
+    setBusy(true);
+    const { error } = await supabase.auth.updateUser(current ? { password: pw, current_password: current } as never : { password: pw });
+    setBusy(false);
+    if (error) { toast.error(/current/i.test(error.message) ? "Enter your current password too." : error.message); return; }
+    setPw(""); setCurrent("");
+    toast.success("Password saved. You can now sign in with your email and this password.");
+  };
+  return (
+    <div className="p-5 text-sm space-y-3">
+      <p className="text-muted-foreground">
+        Sign in with <span className="font-medium text-foreground">{email ?? "your email"}</span> and a password. It opens this same account.
+      </p>
+      <input type="password" autoComplete="new-password" placeholder="New password (8+ characters)" value={pw} onChange={(e) => setPw(e.target.value)} className="w-full rounded-md border border-border bg-background px-3 py-2" data-testid="input-new-password" />
+      <input type="password" autoComplete="current-password" placeholder="Current password (only if you already have one)" value={current} onChange={(e) => setCurrent(e.target.value)} className="w-full rounded-md border border-border bg-background px-3 py-2" />
+      <button className={btn()} disabled={busy || !email} onClick={save} data-testid="button-save-password">{busy ? "Saving…" : "Save password"}</button>
+    </div>
+  );
+}

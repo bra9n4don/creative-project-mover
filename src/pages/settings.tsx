@@ -2,7 +2,7 @@ import { Link } from "@/lib/router-compat";
 import { LogOut, ShieldCheck, RefreshCw, Github } from "lucide-react";
 import { startTour } from "@/components/guided-tour";
 import { ThemeSettings } from "@/components/theme-controls";
-import { LinkedLogins } from "@/components/linked-logins";
+import { LinkedLogins, PasswordSignIn } from "@/components/linked-logins";
 import { useBackupNow, useGithubSyncStatus, useSyncGithub } from "@/lib/hub-api";
 import { useHubResult } from "@/lib/workspace";
 import { ago } from "@/components/kit";
@@ -65,6 +65,7 @@ export default function SettingsPage() {
               )}
             </div>
           </Panel>
+          {!isDemo && <Panel title="Password sign-in"><PasswordSignIn /></Panel>}
           {!isDemo && <Panel title="Linked sign-ins"><LinkedLogins /></Panel>}
           {!isDemo && <GithubSyncPanel />}
           {!isDemo && <GithubBackupPanel />}
