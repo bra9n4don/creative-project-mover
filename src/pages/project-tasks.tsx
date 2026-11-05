@@ -10,7 +10,8 @@ import { useUpdateTask, type Task } from "@/lib/hub-api";
 import { taskProgress } from "@/lib/hub/timeline";
 import { ChatSourceLink, useChatSources } from "@/components/chat/chat-source-link";
 import { MilestoneSelect } from "@/components/milestone-select";
-import { effectiveDue } from "@/lib/hub/milestones";
+import { effectiveDue, groupTasksByMilestone } from "@/lib/hub/milestones";
+import { MilestoneBar } from "@/components/milestone-bar";
 
 export default function ProjectTasks() {
   const { id } = useParams<{ id: string }>();
@@ -40,8 +41,14 @@ export default function ProjectTasks() {
       <select aria-label="Filter task status" className={`${field} w-auto max-w-full`} value={status} onChange={e => setStatus(e.target.value)}><option value="all">All statuses</option>{["todo", "in_progress", "blocked", "done", "verified"].map(s => <option key={s} value={s}>{s.replace("_", " ")}</option>)}</select>
     </div>
     <div className="hidden grid-cols-[minmax(0,2fr)_140px_140px_minmax(120px,1fr)_40px] gap-4 border-b pb-3 text-xs text-muted-foreground lg:grid"><span>Task</span><span>Due date</span><span>Status</span><span>Progress</span><span /></div>
+    {(() => { const filtering = !!query || status !== "all"; return (milestones.length ? groupTasksByMilestone(visible, milestones, tasks) : [{ milestone: null, tasks: visible, progress: null }]).filter(g => g.tasks.length || (g.milestone && !filtering)).map(g => <section key={g.milestone?.id ?? "none"} data-testid={`task-group-${g.milestone?.id ?? "none"}`}>
+    {milestones.length > 0 && <div className="mt-4 grid gap-1 rounded-md bg-muted/40 px-3 py-2 sm:grid-cols-[minmax(0,1fr)_auto_180px] sm:items-center sm:gap-4">
+      <span className="truncate text-sm font-semibold">{g.milestone ? g.milestone.title : "No milestone"}</span>
+      {g.milestone && <span className="text-xs text-muted-foreground">{g.milestone.targetDate ? new Date(`${g.milestone.targetDate}T12:00:00`).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : "No target date"}</span>}
+      {g.milestone && g.progress && <MilestoneBar m={g.milestone} pr={g.progress} />}
+    </div>}
     <ul className="divide-y border-b">
-      {visible.map(t => {
+      {g.tasks.map(t => {
         const pct = taskProgress(t);
         return <li key={t.id} className="grid min-w-0 gap-3 py-4 lg:grid-cols-[minmax(0,2fr)_140px_140px_minmax(120px,1fr)_40px] lg:items-center lg:gap-4">
           <div className="min-w-0"><Link href={`/projects/${id}/tasks/${t.id}`} data-testid={`link-task-${t.id}`} className="break-words font-medium hover:underline">{t.title}</Link>{t.notes?.trim() && <NotebookPen aria-label="Has notes" className="ml-1 inline h-3.5 w-3.5 text-muted-foreground" />} <ChatSourceLink id={t.id} sources={sources} />{t.description && <p className="mt-1 line-clamp-2 break-words text-sm text-muted-foreground">{t.description}</p>}
@@ -52,7 +59,7 @@ export default function ProjectTasks() {
           <Button variant="ghost" size="icon" aria-label={`Edit ${t.title}`} title="Edit task" onClick={() => guard("Editing tasks needs your own workspace.", () => setDialog({ task: t }))}><Pencil /></Button>
         </li>;
       })}
-    </ul>
+    </ul></section>); })()}
     {!visible.length && <Empty icon={<Search className="h-5 w-5" />} title={tasks.length ? "No matching tasks" : "No tasks yet"} body="" />}
     <TaskDialog open={dialog !== null} onOpenChange={open => !open && setDialog(null)} task={dialog?.task} projectId={id} siblings={tasks} />
   </AppShell>;
