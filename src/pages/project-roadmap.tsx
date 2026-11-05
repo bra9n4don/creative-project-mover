@@ -71,7 +71,7 @@ export default function ProjectRoadmap() {
 
 function TaskRow({ t, milestones }: { t: Task; milestones: Milestone[] }) {
   return <li className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-sm">
-    <span className="min-w-0 break-words">{t.title}</span>
+    <Link href={`/projects/${t.projectId}/tasks/${t.id}`} className="min-w-0 break-words hover:underline">{t.title}</Link>
     <span className="flex items-center gap-2"><Pill value={t.status} />{milestones.length > 0 && <MilestoneSelect task={t} milestones={milestones} />}</span>
   </li>;
 }
