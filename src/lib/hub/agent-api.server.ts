@@ -1,3 +1,4 @@
+import { createImportSchema } from "./imports";
 import { z } from "zod/v4";
 import { CreateProjectBody, UpdateProjectBody, CreateIdeaBody, CreateTaskBody, UpdateTaskBody, CreateHandoffBody } from "./api-zod";
 import * as ops from "./operations";
@@ -35,6 +36,7 @@ const tools: Tool[] = [
   { name: "hub_add_task", description: "Draft a task in an existing project.", schema: CreateTaskBody, annotations: { destructiveHint: false }, run: (a, x) => ops.addTask(a, x) },
   { name: "hub_update_task", description: "Report task progress using expectedVersion from the current plan. Include real evidence. Agent done is not owner-verified. Scope/priority edits become proposals.", schema: withId(UpdateTaskBody), annotations: { destructiveHint: false },
     run: (a, { id, ...data }) => ops.editTask(a, String(id), data) },
+  { name: "hub_import_project", description: "Send a project started in this chat to the owner's import inbox as a draft (source, content.project, content.tasks, content.ideas, content.handoff). Nothing is saved until the owner approves.", schema: createImportSchema, annotations: { destructiveHint: false }, run: (a, x) => ops.createImportDraft(a, x) },
   { name: "hub_save_checkpoint", description: "Save where the user left off BEFORE stopping or switching focus: actual progress, evidence, blockers, and ONE small nextAction. No fabricated progress.", schema: CreateHandoffBody, annotations: { destructiveHint: false }, run: (a, x) => ops.addHandoff(a, x) },
 ];
 

@@ -6,7 +6,7 @@ import { getState } from "./context";
 import { demoState } from "./demo";
 import { HubError, readState, type Actor, type HubDb } from "./store";
 import { issueToken, revokeToken } from "./agent-auth.server";
-import { listRepos, syncAndRecord } from "./github.server";
+import { listRepos, syncAndRecord, importRepoDraft } from "./github.server";
 import { pushBackup } from "./backup.server";
 import { parseTheme, themePrefsSchema } from "@/lib/theme";
 
@@ -73,6 +73,16 @@ export const decideApprovalFn = authed.inputValidator(idData).handler(({ context
 export const issueAgentTokenFn = authed.inputValidator(idOnly).handler(({ context, data }) => run(async () => issueToken(await ownerActor(context), data.id)));
 export const revokeAgentTokenFn = authed.inputValidator(idOnly).handler(({ context, data }) => run(async () => revokeToken(await ownerActor(context), data.id)));
 export const listGithubReposFn = authed.handler(({ context }) => run(async () => listRepos(await ownerActor(context))));
+export const getImportsFn = authed.handler(({ context }) => run(async () => {
+  const actor = await ownerActor(context);
+  const s = await readState(actor.db, actor.ownerId);
+  return { imports: s.imports ?? [], links: s.githubLinks ?? [], projects: s.projects.map(p => ({ id: p.id, title: p.title, repository: p.repository })) };
+}));
+export const approveImportFn = authed.inputValidator(dataOnly).handler(({ context, data }) => run(async () => ops.approveImport(await ownerActor(context), data.data)));
+export const discardImportFn = authed.inputValidator(idOnly).handler(({ context, data }) => run(async () => ops.discardImport(await ownerActor(context), data.id)));
+export const unlinkRepoFn = authed.inputValidator(idOnly).handler(({ context, data }) => run(async () => ops.unlinkRepo(await ownerActor(context), data.id)));
+export const importRepoFn = authed.inputValidator(z.object({ repo: z.string().min(3).max(200), keepSynced: z.boolean() }))
+  .handler(({ context, data }) => run(async () => importRepoDraft(await ownerActor(context), data.repo, data.keepSynced)));
 export const syncGithubFn = authed.handler(({ context }) => run(async () => syncAndRecord(await ownerActor(context), "manual")));
 
 export const getSyncStatusFn = authed.handler(({ context }) => run(async () => {

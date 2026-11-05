@@ -18,6 +18,7 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as HandoffsRouteImport } from './routes/handoffs'
 import { Route as IdeasRouteImport } from './routes/ideas'
+import { Route as ImportRouteImport } from './routes/import'
 import { Route as KickoffRouteImport } from './routes/kickoff'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as MindMapRouteImport } from './routes/mind-map'
@@ -30,6 +31,7 @@ import { Route as SignUpRouteImport } from './routes/sign-up'
 import { Route as UsageRouteImport } from './routes/usage'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
+import { Route as ApiImportDraftRouteImport } from './routes/api/import-draft'
 import { Route as ApiKickoffDraftRouteImport } from './routes/api/kickoff-draft'
 import { Route as ApiProjectUpdateRouteImport } from './routes/api/project-update'
 import { Route as ChatIndexRouteImport } from './routes/chat.index'
@@ -94,6 +96,11 @@ const IdeasRoute = IdeasRouteImport.update({
   path: '/ideas',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ImportRoute = ImportRouteImport.update({
+  id: '/import',
+  path: '/import',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const KickoffRoute = KickoffRouteImport.update({
   id: '/kickoff',
   path: '/kickoff',
@@ -153,6 +160,11 @@ const Char91DotwellKnownChar93OauthProtectedResourceRoute =
 const ApiChatRoute = ApiChatRouteImport.update({
   id: '/api/chat',
   path: '/api/chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiImportDraftRoute = ApiImportDraftRouteImport.update({
+  id: '/api/import-draft',
+  path: '/api/import-draft',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiKickoffDraftRoute = ApiKickoffDraftRouteImport.update({
@@ -256,6 +268,7 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof ForgotPasswordRoute
   '/handoffs': typeof HandoffsRoute
   '/ideas': typeof IdeasRoute
+  '/import': typeof ImportRoute
   '/kickoff': typeof KickoffRoute
   '/mcp': typeof McpRoute
   '/mind-map': typeof MindMapRoute
@@ -268,6 +281,7 @@ export interface FileRoutesByFullPath {
   '/usage': typeof UsageRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/import-draft': typeof ApiImportDraftRoute
   '/api/kickoff-draft': typeof ApiKickoffDraftRoute
   '/api/project-update': typeof ApiProjectUpdateRoute
   '/chat/$threadId': typeof ChatThreadIdRoute
@@ -297,6 +311,7 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
   '/handoffs': typeof HandoffsRoute
   '/ideas': typeof IdeasRoute
+  '/import': typeof ImportRoute
   '/kickoff': typeof KickoffRoute
   '/mcp': typeof McpRoute
   '/mind-map': typeof MindMapRoute
@@ -309,6 +324,7 @@ export interface FileRoutesByTo {
   '/usage': typeof UsageRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/import-draft': typeof ApiImportDraftRoute
   '/api/kickoff-draft': typeof ApiKickoffDraftRoute
   '/api/project-update': typeof ApiProjectUpdateRoute
   '/chat/$threadId': typeof ChatThreadIdRoute
@@ -339,6 +355,7 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/handoffs': typeof HandoffsRoute
   '/ideas': typeof IdeasRoute
+  '/import': typeof ImportRoute
   '/kickoff': typeof KickoffRoute
   '/mcp': typeof McpRoute
   '/mind-map': typeof MindMapRoute
@@ -351,6 +368,7 @@ export interface FileRoutesById {
   '/usage': typeof UsageRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/import-draft': typeof ApiImportDraftRoute
   '/api/kickoff-draft': typeof ApiKickoffDraftRoute
   '/api/project-update': typeof ApiProjectUpdateRoute
   '/chat/$threadId': typeof ChatThreadIdRoute
@@ -382,6 +400,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/handoffs'
     | '/ideas'
+    | '/import'
     | '/kickoff'
     | '/mcp'
     | '/mind-map'
@@ -394,6 +413,7 @@ export interface FileRouteTypes {
     | '/usage'
     | '/.well-known/oauth-protected-resource'
     | '/api/chat'
+    | '/api/import-draft'
     | '/api/kickoff-draft'
     | '/api/project-update'
     | '/chat/$threadId'
@@ -423,6 +443,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/handoffs'
     | '/ideas'
+    | '/import'
     | '/kickoff'
     | '/mcp'
     | '/mind-map'
@@ -435,6 +456,7 @@ export interface FileRouteTypes {
     | '/usage'
     | '/.well-known/oauth-protected-resource'
     | '/api/chat'
+    | '/api/import-draft'
     | '/api/kickoff-draft'
     | '/api/project-update'
     | '/chat/$threadId'
@@ -464,6 +486,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/handoffs'
     | '/ideas'
+    | '/import'
     | '/kickoff'
     | '/mcp'
     | '/mind-map'
@@ -476,6 +499,7 @@ export interface FileRouteTypes {
     | '/usage'
     | '/.well-known/oauth-protected-resource'
     | '/api/chat'
+    | '/api/import-draft'
     | '/api/kickoff-draft'
     | '/api/project-update'
     | '/chat/$threadId'
@@ -506,6 +530,7 @@ export interface RootRouteChildren {
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   HandoffsRoute: typeof HandoffsRoute
   IdeasRoute: typeof IdeasRoute
+  ImportRoute: typeof ImportRoute
   KickoffRoute: typeof KickoffRoute
   McpRoute: typeof McpRoute
   MindMapRoute: typeof MindMapRoute
@@ -518,6 +543,7 @@ export interface RootRouteChildren {
   UsageRoute: typeof UsageRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   ApiChatRoute: typeof ApiChatRoute
+  ApiImportDraftRoute: typeof ApiImportDraftRoute
   ApiKickoffDraftRoute: typeof ApiKickoffDraftRoute
   ApiProjectUpdateRoute: typeof ApiProjectUpdateRoute
   ChatThreadIdRoute: typeof ChatThreadIdRoute
@@ -603,6 +629,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IdeasRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/import': {
+      id: '/import'
+      path: '/import'
+      fullPath: '/import'
+      preLoaderRoute: typeof ImportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/kickoff': {
       id: '/kickoff'
       path: '/kickoff'
@@ -685,6 +718,13 @@ declare module '@tanstack/react-router' {
       path: '/api/chat'
       fullPath: '/api/chat'
       preLoaderRoute: typeof ApiChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/import-draft': {
+      id: '/api/import-draft'
+      path: '/api/import-draft'
+      fullPath: '/api/import-draft'
+      preLoaderRoute: typeof ApiImportDraftRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/kickoff-draft': {
@@ -826,6 +866,7 @@ const rootRouteChildren: RootRouteChildren = {
   ForgotPasswordRoute: ForgotPasswordRoute,
   HandoffsRoute: HandoffsRoute,
   IdeasRoute: IdeasRoute,
+  ImportRoute: ImportRoute,
   KickoffRoute: KickoffRoute,
   McpRoute: McpRoute,
   MindMapRoute: MindMapRoute,
@@ -839,6 +880,7 @@ const rootRouteChildren: RootRouteChildren = {
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
   ApiChatRoute: ApiChatRoute,
+  ApiImportDraftRoute: ApiImportDraftRoute,
   ApiKickoffDraftRoute: ApiKickoffDraftRoute,
   ApiProjectUpdateRoute: ApiProjectUpdateRoute,
   ChatThreadIdRoute: ChatThreadIdRoute,
