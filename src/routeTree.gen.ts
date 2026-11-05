@@ -43,6 +43,7 @@ import { Route as ProjectsIdRouteImport } from './routes/projects.$id'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as ApiPublicHealthzRouteImport } from './routes/api/public/healthz'
 import { Route as ApiPublicMcpRouteImport } from './routes/api/public/mcp'
+import { Route as ProjectsIdChatsRouteImport } from './routes/projects.$id_.chats'
 import { Route as ProjectsIdRoadmapRouteImport } from './routes/projects.$id_.roadmap'
 import { Route as ProjectsIdTasksRouteImport } from './routes/projects.$id_.tasks'
 import { Route as ApiPublicHubSplatRouteImport } from './routes/api/public/hub/$'
@@ -226,6 +227,11 @@ const ApiPublicMcpRoute = ApiPublicMcpRouteImport.update({
   path: '/api/public/mcp',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProjectsIdChatsRoute = ProjectsIdChatsRouteImport.update({
+  id: '/projects/$id_/chats',
+  path: '/projects/$id/chats',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProjectsIdRoadmapRoute = ProjectsIdRoadmapRouteImport.update({
   id: '/projects/$id_/roadmap',
   path: '/projects/$id/roadmap',
@@ -317,6 +323,7 @@ export interface FileRoutesByFullPath {
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/api/public/healthz': typeof ApiPublicHealthzRoute
   '/api/public/mcp': typeof ApiPublicMcpRoute
+  '/projects/$id/chats': typeof ProjectsIdChatsRoute
   '/projects/$id/roadmap': typeof ProjectsIdRoadmapRoute
   '/projects/$id/tasks': typeof ProjectsIdTasksRoute
   '/api/public/hub/$': typeof ApiPublicHubSplatRoute
@@ -364,6 +371,7 @@ export interface FileRoutesByTo {
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/api/public/healthz': typeof ApiPublicHealthzRoute
   '/api/public/mcp': typeof ApiPublicMcpRoute
+  '/projects/$id/chats': typeof ProjectsIdChatsRoute
   '/projects/$id/roadmap': typeof ProjectsIdRoadmapRoute
   '/projects/$id/tasks': typeof ProjectsIdTasksRoute
   '/api/public/hub/$': typeof ApiPublicHubSplatRoute
@@ -412,6 +420,7 @@ export interface FileRoutesById {
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/api/public/healthz': typeof ApiPublicHealthzRoute
   '/api/public/mcp': typeof ApiPublicMcpRoute
+  '/projects/$id_/chats': typeof ProjectsIdChatsRoute
   '/projects/$id_/roadmap': typeof ProjectsIdRoadmapRoute
   '/projects/$id_/tasks': typeof ProjectsIdTasksRoute
   '/api/public/hub/$': typeof ApiPublicHubSplatRoute
@@ -461,6 +470,7 @@ export interface FileRouteTypes {
     | '/.lovable/oauth/consent'
     | '/api/public/healthz'
     | '/api/public/mcp'
+    | '/projects/$id/chats'
     | '/projects/$id/roadmap'
     | '/projects/$id/tasks'
     | '/api/public/hub/$'
@@ -508,6 +518,7 @@ export interface FileRouteTypes {
     | '/.lovable/oauth/consent'
     | '/api/public/healthz'
     | '/api/public/mcp'
+    | '/projects/$id/chats'
     | '/projects/$id/roadmap'
     | '/projects/$id/tasks'
     | '/api/public/hub/$'
@@ -555,6 +566,7 @@ export interface FileRouteTypes {
     | '/.lovable/oauth/consent'
     | '/api/public/healthz'
     | '/api/public/mcp'
+    | '/projects/$id_/chats'
     | '/projects/$id_/roadmap'
     | '/projects/$id_/tasks'
     | '/api/public/hub/$'
@@ -603,6 +615,7 @@ export interface RootRouteChildren {
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   ApiPublicHealthzRoute: typeof ApiPublicHealthzRoute
   ApiPublicMcpRoute: typeof ApiPublicMcpRoute
+  ProjectsIdChatsRoute: typeof ProjectsIdChatsRoute
   ProjectsIdRoadmapRoute: typeof ProjectsIdRoadmapRoute
   ProjectsIdTasksRoute: typeof ProjectsIdTasksRoute
   ApiPublicHubSplatRoute: typeof ApiPublicHubSplatRoute
@@ -856,6 +869,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicMcpRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/projects/$id_/chats': {
+      id: '/projects/$id_/chats'
+      path: '/projects/$id/chats'
+      fullPath: '/projects/$id/chats'
+      preLoaderRoute: typeof ProjectsIdChatsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/projects/$id_/roadmap': {
       id: '/projects/$id_/roadmap'
       path: '/projects/$id/roadmap'
@@ -972,6 +992,7 @@ const rootRouteChildren: RootRouteChildren = {
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   ApiPublicHealthzRoute: ApiPublicHealthzRoute,
   ApiPublicMcpRoute: ApiPublicMcpRoute,
+  ProjectsIdChatsRoute: ProjectsIdChatsRoute,
   ProjectsIdRoadmapRoute: ProjectsIdRoadmapRoute,
   ProjectsIdTasksRoute: ProjectsIdTasksRoute,
   ApiPublicHubSplatRoute: ApiPublicHubSplatRoute,
