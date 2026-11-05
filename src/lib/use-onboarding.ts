@@ -15,8 +15,10 @@ export function useOnboarding() {
 
   const claim = useQuery({
     queryKey: ["hub", "claim-status", user?.id ?? "anon"],
-    enabled: isLoaded,
+    enabled: isLoaded && !!user,
     queryFn: async () => {
+      // refetch() bypasses enabled; never send the check without a signed-in user.
+      if (!user) return { claimed: false, isOwner: false };
       const { data: claimed, error } = await supabase.rpc("hub_is_claimed");
       if (error) throw new Error("Couldn't check who owns this workspace.");
       let isOwner = false;
@@ -49,5 +51,5 @@ export function useOnboarding() {
     return !!data;
   };
 
-  return { claimError: claim.error, retryClaim: () => void claim.refetch(), steps, progress: onboardingProgress(steps), isLoading: !isLoaded || claim.isLoading, host, claimNow, connections: isOwner ? state?.connections ?? [] : [] };
+  return { claimError: claim.error, retryClaim: () => { if (user) void claim.refetch(); }, steps, progress: onboardingProgress(steps), isLoading: !isLoaded || (!!user && claim.isLoading), host, claimNow, connections: isOwner ? state?.connections ?? [] : [] };
 }
