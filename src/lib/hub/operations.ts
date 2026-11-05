@@ -46,6 +46,7 @@ export function removeProject(actor: Actor, id: string) {
     s.tasks = s.tasks.filter(t => t.projectId !== id);
     s.handoffs = s.handoffs.filter(h => h.projectId !== id);
     s.kickoffs = s.kickoffs.filter(k => k.projectId !== id);
+    if (s.milestones) s.milestones = s.milestones.filter(m => m.projectId !== id);
     s.approvals.filter(a => a.projectId === id && a.status === "pending").forEach(a => { a.status = "rejected"; });
     audit(s, actor, `Deleted project: ${p.title}`, "Project tasks and checkpoints were removed. This audit record remains.", id, "delete");
     return ok("Project and its tasks and checkpoints deleted.");
