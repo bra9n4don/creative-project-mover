@@ -22,12 +22,12 @@ export function LinkedLogins() {
   });
   const makeCode = async () => {
     const { data, error } = await supabase.rpc("create_link_code");
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     setCode(data as string);
   };
   const remove = async (id: string) => {
     const { error } = await supabase.rpc("unlink_login", { _user_id: id });
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success("Sign-in removed");
     void qc.invalidateQueries({ queryKey: ["hub", "linked-logins"] });
   };
@@ -66,7 +66,7 @@ export function RedeemLinkCode({ onLinked }: { onLinked: () => void }) {
     setBusy(true);
     const { error } = await supabase.rpc("redeem_link_code", { _code: value });
     setBusy(false);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success("Sign-in linked to your workspace");
     onLinked();
   };
