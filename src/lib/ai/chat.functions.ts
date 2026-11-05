@@ -3,7 +3,7 @@ import { z } from "zod";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Database, Json } from "@/integrations/supabase/types";
-import { extractInboxItems, type InboxItem } from "@/lib/ai/inbox";
+import { applyDecision, extractInboxItems, type CreatedRef, type InboxItem } from "@/lib/ai/inbox";
 
 type Db = SupabaseClient<Database>;
 const authed = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]);
@@ -65,14 +65,22 @@ export const listInboxFn = authed.handler(async ({ context }) => {
   return { json: JSON.stringify(extractInboxItems(rows ?? [], titles) satisfies InboxItem[]) };
 });
 
+type DecideResult = { ok: boolean; alreadyApproved?: boolean; locked?: boolean; created?: CreatedRef };
 /** Records Approve/Dismiss on a proposal card so it stays decided after reload. */
-export const decideProposalFn = authed.inputValidator(z.object({ threadId: z.string().uuid(), messageId: z.string().min(1), toolCallId: z.string().min(1), decision: z.enum(["approved", "dismissed"]) })).handler(async ({ context, data }) => {
+export const decideProposalFn = authed.inputValidator(z.object({ threadId: z.string().uuid(), messageId: z.string().min(1), toolCallId: z.string().min(1), decision: z.enum(["approving", "approved", "dismissed"]), created: z.object({ kind: z.enum(["task", "idea", "milestone", "task_update", "milestone_update"]), id: z.string().min(1) }).optional() })).handler(async ({ context, data }) => {
   const db = context.supabase as Db;
   const { data: row, error } = await db.from("hub_chat_messages").select("id, parts").eq("thread_id", data.threadId).eq("message_id", data.messageId).maybeSingle();
   if (error) fail("Could not update this suggestion.", error);
-  if (!row) return { ok: false };
-  const parts = (row.parts as Array<Record<string, unknown>>).map(p => p.toolCallId === data.toolCallId ? { ...p, decision: data.decision } : p);
+  if (!row) return { ok: false } as DecideResult;
+  let result: DecideResult = { ok: false };
+  const parts = (row.parts as Array<Record<string, unknown>>).map(p => {
+    if (p.toolCallId !== data.toolCallId) return p;
+    const r = applyDecision(p, data.decision, data.created);
+    result = r.result;
+    return r.part;
+  });
+  if (result.alreadyApproved || result.locked) return result;
   const { error: uErr } = await db.from("hub_chat_messages").update({ parts: parts as unknown as Json }).eq("id", row.id);
   if (uErr) fail("Could not update this suggestion.", uErr);
-  return { ok: true };
+  return result;
 });

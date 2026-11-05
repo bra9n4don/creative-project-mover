@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { extractInboxItems } from "./inbox";
+import { APPROVING_LOCK_MS, applyDecision, extractInboxItems } from "./inbox";
 
 const idea = (id: string, decision?: string) => ({ type: "tool-propose_idea", toolCallId: id, state: "output-available", output: { kind: "idea", ok: true, title: id }, ...(decision ? { decision } : {}) });
 
@@ -11,5 +11,25 @@ describe("AI inbox", () => {
   it("skips failed suggestions and plain text", () => {
     const items = extractInboxItems([{ thread_id: "t", message_id: "m", created_at: "x", parts: [{ type: "text", text: "hi" }, { type: "tool-propose_task", toolCallId: "z", state: "output-available", output: { ok: false, error: "no" } }] }], {});
     expect(items).toHaveLength(0);
+  });
+});
+
+describe("AI inbox approval links", () => {
+  it("passes the created item through on approved cards", () => {
+    const part = { ...idea("a", "approved"), created: { kind: "idea", id: "i1" } };
+    const [item] = extractInboxItems([{ thread_id: "t", message_id: "m", created_at: "x", parts: [part] }], {});
+    expect(item!.part.created).toEqual({ kind: "idea", id: "i1" });
+  });
+  it("treats a stale approving lock as waiting and lets it be retaken", () => {
+    const part = { ...idea("a"), approvingAt: 1 };
+    expect(extractInboxItems([{ thread_id: "t", message_id: "m", created_at: "x", parts: [part] }], {})[0]!.status).toBe("waiting");
+    expect(applyDecision(part, "approving", undefined, 1 + APPROVING_LOCK_MS + 1).result.ok).toBe(true);
+    expect(applyDecision(part, "approving", undefined, 1000).result.locked).toBe(true);
+  });
+  it("never overwrites an approved card", () => {
+    const part = { ...idea("a", "approved"), created: { kind: "idea", id: "i1" } };
+    const r = applyDecision(part, "dismissed", undefined);
+    expect(r.result.alreadyApproved).toBe(true);
+    expect(r.part.decision).toBe("approved");
   });
 });
