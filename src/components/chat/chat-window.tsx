@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { useQueryClient } from "@tanstack/react-query";
@@ -78,7 +78,10 @@ function ProposalCard({ threadId, messageId, part }: { threadId: string; message
   );
 }
 
-export function ChatWindow({ threadId, initialMessages, projectId, onActivity }: { threadId: string; initialMessages: UIMessage[]; projectId?: string; onActivity?: () => void }) {
+/** Optional floating-dock layout: conversation card above a pill composer. */
+export type DockLayout = { open: boolean; setOpen: (open: boolean) => void; header: (count: number) => ReactNode; leading: ReactNode; trailing: ReactNode };
+
+export function ChatWindow({ threadId, initialMessages, projectId, onActivity, dock }: { threadId: string; initialMessages: UIMessage[]; projectId?: string; onActivity?: () => void; dock?: DockLayout }) {
   const [text, setText] = useState("");
   const [err, setErr] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -102,8 +105,14 @@ export function ChatWindow({ threadId, initialMessages, projectId, onActivity }:
   useEffect(() => { textareaRef.current?.focus(); }, [threadId]);
 
   const busy = status === "submitted" || status === "streaming";
-  return (
-    <div className="flex h-full min-h-0 flex-col">
+  const submit = (msg: { text: string }) => {
+    const t = msg.text.trim();
+    if (!t || busy) return;
+    setErr(""); setText("");
+    dock?.setOpen(true);
+    void sendMessage({ text: t });
+  };
+  const conversation = (
       <Conversation className="min-h-0 flex-1">
         <ConversationContent className="gap-5">
           {messages.length === 0 ? (
@@ -137,14 +146,37 @@ export function ChatWindow({ threadId, initialMessages, projectId, onActivity }:
         </ConversationContent>
         <ConversationScrollButton />
       </Conversation>
+  );
+  if (dock) return (
+    <div className="flex flex-col gap-2">
+      {dock.open && (
+        <div data-testid="chat-dock-card" className="flex h-[min(60dvh,560px)] flex-col overflow-hidden rounded-3xl border bg-card/95 shadow-dock backdrop-blur">
+          {dock.header(messages.length)}
+          {conversation}
+        </div>
+      )}
+      {(busy || err) && (
+        <div className={`self-start rounded-xl border bg-card/95 px-3 py-1.5 text-xs shadow-dock backdrop-blur ${err ? "text-destructive" : "text-muted-foreground"}`} data-testid={err ? "chat-error" : "chat-status"}>
+          {err || (status === "submitted" ? "Thinking…" : <>Writing a reply <span className="text-primary">for you</span></>)}
+        </div>
+      )}
+      <PromptInput onSubmit={submit} className="rounded-2xl border bg-card/95 shadow-dock backdrop-blur [&_[data-slot=input-group]]:rounded-2xl">
+        <div className="flex w-full items-center gap-1 px-2 py-1.5">
+          {dock.leading}
+          <PromptInputTextarea ref={textareaRef} value={text} maxLength={CHAT_INPUT_LIMIT} onFocus={() => dock.setOpen(true)} onChange={e => setText(e.target.value)} placeholder="Ask CarterHub…" data-testid="input-chat" className="min-h-9 flex-1 py-2" rows={1} />
+          <PromptInputSubmit status={status} onStop={stop} disabled={!busy && !text.trim()} data-testid="button-chat-send" className="shrink-0 rounded-full" />
+          <span className="mx-1 h-5 w-px bg-border" />
+          {dock.trailing}
+        </div>
+      </PromptInput>
+    </div>
+  );
+  return (
+    <div className="flex h-full min-h-0 flex-col">
+      {conversation}
       <div className="border-t p-3">
         {err && <p className="mb-2 text-xs text-destructive" data-testid="chat-error">{err}</p>}
-        <PromptInput onSubmit={(msg) => {
-          const t = msg.text.trim();
-          if (!t || busy) return;
-          setErr(""); setText("");
-          void sendMessage({ text: t });
-        }}>
+        <PromptInput onSubmit={submit}>
           <PromptInputTextarea ref={textareaRef} value={text} maxLength={CHAT_INPUT_LIMIT} onChange={e => setText(e.target.value)} placeholder="Ask CarterHub…" data-testid="input-chat" />
           <PromptInputFooter>
             <ModelBadge label={UPDATE_MODEL_LABEL} />

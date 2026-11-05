@@ -34,12 +34,12 @@ function ThreadList({ activeId }: { activeId: string }) {
   );
 }
 
-export function ChatThreadView({ threadId, projectId, onActivity }: { threadId: string; projectId?: string; onActivity?: () => void }) {
+export function ChatThreadView({ threadId, projectId, onActivity, dock }: { threadId: string; projectId?: string; onActivity?: () => void; dock?: DockLayout }) {
   const { data, isLoading, error } = useChatThreadMessages(threadId);
   if (isLoading) return <p className="p-6 text-sm text-muted-foreground">Loading chat…</p>;
   if (error) return <p className="p-6 text-sm text-destructive">{error.message}</p>;
   if (!data) return <p className="p-6 text-sm text-muted-foreground">This chat no longer exists. <Link to="/chat" className="text-primary underline">Start another</Link>.</p>;
-  return <ChatWindow key={threadId} threadId={threadId} initialMessages={data.messages as unknown as UIMessage[]} projectId={projectId} onActivity={onActivity} />;
+  return <ChatWindow key={threadId} threadId={threadId} initialMessages={data.messages as unknown as UIMessage[]} projectId={projectId} onActivity={onActivity} dock={dock} />;
 }
 
 export default function ChatPage({ threadId }: { threadId: string }) {
