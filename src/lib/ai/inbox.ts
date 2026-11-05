@@ -45,3 +45,22 @@ export function buildChatSources(items: InboxItem[]): Record<string, ChatSource>
   }
   return out;
 }
+
+export type TaskChatTouch = { threadId: string; threadTitle: string; others: number };
+/** For each task, the newest approved chat that created/changed it plus how many other chats also did. Only threads in `live` count (deleted chats are skipped). */
+export function buildTaskChatTouches(items: InboxItem[], live?: Set<string>): Record<string, TaskChatTouch> {
+  const byTask: Record<string, Array<{ threadId: string; threadTitle: string; at: string }>> = {};
+  for (const i of items) {
+    const c = i.part.created;
+    if (i.status !== "approved" || !c || (c.kind !== "task" && c.kind !== "task_update")) continue;
+    if (live && !live.has(i.threadId)) continue;
+    (byTask[c.id] ??= []).push({ threadId: i.threadId, threadTitle: i.threadTitle, at: i.createdAt });
+  }
+  const out: Record<string, TaskChatTouch> = {};
+  for (const [id, list] of Object.entries(byTask)) {
+    list.sort((a, b) => b.at.localeCompare(a.at));
+    const newest = list[0]!;
+    out[id] = { threadId: newest.threadId, threadTitle: newest.threadTitle, others: new Set(list.map(x => x.threadId)).size - 1 };
+  }
+  return out;
+}
