@@ -178,14 +178,14 @@ export function TaskDialog({ open, onOpenChange, projectId, task, siblings }: { 
   const create = useCreateTask();
   const update = useUpdateTask();
   const { state } = useWorkspace();
-  const [f, setF] = useState({ title: "", description: "", priority: "medium", agent: "", dependencies: [] as string[] });
+  const [f, setF] = useState({ title: "", description: "", priority: "medium", agent: "", dueDate: "", dependencies: [] as string[] });
   useEffect(() => {
-    if (open) setF(task ? { title: task.title, description: task.description, priority: task.priority, agent: task.agent, dependencies: task.dependencies } : { title: "", description: "", priority: "medium", agent: "", dependencies: [] });
+    if (open) setF(task ? { title: task.title, description: task.description, priority: task.priority, agent: task.agent, dueDate: task.dueDate ?? "", dependencies: task.dependencies } : { title: "", description: "", priority: "medium", agent: "", dueDate: "", dependencies: [] });
   }, [open, task]);
   const options = siblings.filter((s) => s.id !== task?.id);
   const submit = () => {
     if (!f.title.trim()) return;
-    const data = { title: f.title.trim(), description: f.description, priority: f.priority as Task["priority"], agent: f.agent, dependencies: f.dependencies };
+    const data = { title: f.title.trim(), description: f.description, priority: f.priority as Task["priority"], agent: f.agent, dependencies: f.dependencies, dueDate: f.dueDate || null };
     if (task) update.mutate({ id: task.id, data: { ...data, expectedVersion: task.version } }, result("Task updated", () => onOpenChange(false)));
     else create.mutate({ data: { ...data, projectId } }, result("Task added", () => onOpenChange(false)));
   };
@@ -216,6 +216,9 @@ export function TaskDialog({ open, onOpenChange, projectId, task, siblings }: { 
             </select>
           </Field>
         </div>
+        <Field label="Due date (optional)">
+          <input type="date" aria-label="Due date" className={field} value={f.dueDate} onChange={e => setF({ ...f, dueDate: e.target.value })} />
+        </Field>
         <Field label="Waits on" hint={options.length ? "This task stays blocked until these are done." : "No other tasks in this project yet."}>
           <div className="max-h-40 space-y-1 overflow-y-auto rounded-lg border p-2">
             {options.map((s) => (

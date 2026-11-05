@@ -23,4 +23,5 @@ export interface Task {
   updatedAt: string;
   startedAt?: string;
   completedAt?: string;
+  dueDate?: string | null;
 }

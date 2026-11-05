@@ -9,6 +9,7 @@ import type { TaskInputPriority } from './taskInputPriority';
 
 export interface TaskInput {
   projectId: string;
+  dueDate?: string | null;
   /**
      * @minLength 1
      * @maxLength 200
