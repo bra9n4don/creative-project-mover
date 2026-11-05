@@ -485,3 +485,5 @@ export function queueSyncSuggestions(s: HubState, link: GithubLink, issues: Issu
     content: { project: { title: p.title, description: "", goal: "" }, tasks, ideas: [], handoff: null }, changes: { close: close.slice(0, 100), rename: rename.slice(0, 100) }, createdAt: now });
   return true;
 }
+/** Test hook: run a pure state change through the same guarded write path. */
+export const mutateStateForTest = <T,>(actor: Actor, fn: (s: HubState) => T) => mutateState(actor, fn);
