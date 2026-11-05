@@ -1,12 +1,14 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "@/lib/router-compat";
-import { ArrowUpRight, Flag, CheckCircle2, Clock3, FolderKanban, ListChecks, RotateCw } from "lucide-react";
+import { ArrowUpRight, Flag, CheckCircle2, Clock3, FolderKanban, ListChecks, Pencil, RotateCw, Trash2 } from "lucide-react";
 import { AppShell } from "@/components/shell";
 import { Button } from "@/components/ui/button";
-import { Empty, ErrorBlock, LoadingBlock, PageHeader, Pill } from "@/components/kit";
-import { useWorkspace } from "@/lib/workspace";
+import { Empty, ErrorBlock, LoadingBlock, PageHeader, Pill, field } from "@/components/kit";
+import { useHubResult, useWorkspace } from "@/lib/workspace";
+import { useDeleteMilestone, useUpdateMilestone } from "@/lib/hub-api";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { dashboardData } from "@/lib/hub/dashboard";
-import { upcomingMilestones } from "@/lib/hub/milestones";
+import { upcomingMilestones, type Milestone } from "@/lib/hub/milestones";
 import { ChatTouchPill, useTaskChatTouches } from "@/components/chat/chat-source-link";
 
 type Props = { days: 7 | 30; projectId: string; onDays: (days: 7 | 30) => void; onProject: (id: string) => void };
@@ -98,11 +100,12 @@ export default function DashboardPage({ days, projectId, onDays, onProject }: Pr
             <h2 id="milestones-heading" className="mb-4 font-display text-xl font-semibold">Upcoming milestones</h2>
             {!milestones.length ? <p className="text-sm text-muted-foreground">No dated milestones with work left. Set target dates on a project's Roadmap.</p> : (
               <div className="divide-y border-y">
-                {milestones.map(({ milestone: m, progress: pr }) => <Link key={m.id} href={`/projects/${m.projectId}/roadmap`} className="grid gap-2 py-3 hover:bg-muted/30 sm:grid-cols-[minmax(0,1fr)_140px_180px] sm:items-center">
-                  <div className="min-w-0"><div className="flex items-center gap-2 font-medium"><Flag className="h-3.5 w-3.5 shrink-0 text-primary" /><span className="truncate">{m.title}</span></div><div className="mt-0.5 truncate text-xs text-muted-foreground">{state.projects.find(p => p.id === m.projectId)?.title}</div></div>
-                  <div className={`text-sm ${pr.overdue ? "font-medium text-destructive" : ""}`}><time dateTime={m.targetDate!}>{new Date(`${m.targetDate}T12:00:00`).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}</time>{pr.overdue && <span className="block text-xs">Overdue</span>}</div>
+                {milestones.map(({ milestone: m, progress: pr }) => <div key={m.id} className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 py-3 sm:grid-cols-[minmax(0,1fr)_140px_180px_auto] sm:items-center">
+                  <Link href={`/projects/${m.projectId}/roadmap`} className="min-w-0 hover:underline"><div className="flex items-center gap-2 font-medium"><Flag className="h-3.5 w-3.5 shrink-0 text-primary" /><span className="truncate">{m.title}</span></div><div className="mt-0.5 truncate text-xs text-muted-foreground">{state.projects.find(p => p.id === m.projectId)?.title}</div></Link>
+                  <div className={`col-start-1 text-sm sm:col-start-auto ${pr.overdue ? "font-medium text-destructive" : ""}`}><time dateTime={m.targetDate ?? undefined}>{new Date(`${m.targetDate}T12:00:00`).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}</time>{pr.overdue && <span className="block text-xs">Overdue</span>}</div>
                   <div><div className="h-2 rounded-full bg-muted"><div className="h-full rounded-full bg-accent" style={{ width: `${pr.percent}%` }} /></div><div className="mt-1 text-xs text-muted-foreground">{pr.total ? `${pr.done}/${pr.total} tasks · ${pr.percent}%` : "No tasks yet"}</div></div>
-                </Link>)}
+                  <div className="col-start-2 row-start-1 sm:col-start-auto sm:row-start-auto"><DashboardMilestoneActions milestone={m} /></div>
+                </div>)}
               </div>
             )}
           </section>
@@ -134,4 +137,44 @@ export default function DashboardPage({ days, projectId, onDays, onProject }: Pr
       )}
     </AppShell>
   );
+}
+
+function DashboardMilestoneActions({ milestone: m }: { milestone: Milestone }) {
+  const { guard } = useWorkspace();
+  const update = useUpdateMilestone();
+  const remove = useDeleteMilestone();
+  const result = useHubResult();
+  const [open, setOpen] = useState(false);
+  const [title, setTitle] = useState(m.title);
+  const [target, setTarget] = useState(m.targetDate ?? "");
+  const [version, setVersion] = useState(m.version);
+  const pending = update.isPending || remove.isPending;
+  const edit = () => guard("Editing milestones needs your own workspace.", () => {
+    setTitle(m.title);
+    setTarget(m.targetDate ?? "");
+    setVersion(m.version);
+    setOpen(true);
+  });
+  const save = () => guard("Editing milestones needs your own workspace.", () => update.mutate({
+    id: m.id, data: { expectedVersion: version, title: title.trim(), targetDate: target || null },
+  }, result("Milestone saved", () => setOpen(false))));
+  const deleteMilestone = () => guard("Editing milestones needs your own workspace.", () => {
+    if (window.confirm(`Delete "${m.title}"? Its tasks are kept.`)) remove.mutate({ id: m.id }, result("Milestone deleted"));
+  });
+  return <>
+    <div className="flex shrink-0 gap-1">
+      <Button variant="ghost" size="icon" aria-label={`Edit ${m.title}`} title={`Edit ${m.title}`} disabled={pending} onClick={edit}><Pencil className="h-4 w-4" /></Button>
+      <Button variant="ghost" size="icon" aria-label={`Delete ${m.title}`} title={`Delete ${m.title}`} disabled={pending} onClick={deleteMilestone}><Trash2 className="h-4 w-4" /></Button>
+    </div>
+    <Dialog open={open} onOpenChange={value => { if (!pending) setOpen(value); }}>
+      <DialogContent className="w-[calc(100%-2rem)] max-w-md">
+        <DialogHeader><DialogTitle>Edit milestone</DialogTitle><DialogDescription>{m.title}</DialogDescription></DialogHeader>
+        <form className="grid gap-4" onSubmit={e => { e.preventDefault(); if (!pending && title.trim()) save(); }}>
+          <label className="grid gap-2 text-sm">Title<input className={field} value={title} onChange={e => setTitle(e.target.value)} maxLength={200} required disabled={pending} /></label>
+          <label className="grid gap-2 text-sm">Target date<input className={`${field} min-w-0 w-full`} type="date" value={target} onChange={e => setTarget(e.target.value)} disabled={pending} /></label>
+          <DialogFooter className="gap-2"><Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={pending}>Cancel</Button><Button type="submit" disabled={pending || !title.trim()}>{update.isPending ? "Saving…" : "Save"}</Button></DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  </>;
 }
