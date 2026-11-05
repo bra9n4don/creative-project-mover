@@ -29,7 +29,8 @@ export async function handleProjectUpdate(request: Request): Promise<Response> {
   const parsed = inputSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return jsonError(400, "Choose a project and paste an update of up to 8,000 characters.");
   try {
-    const state = await readState(db, auth.user.id);
+    const { data: ownerId } = await db.rpc("hub_owner_uid");
+    const state = await readState(db, (ownerId as string | null) ?? auth.user.id);
     const p = project(state, parsed.data.projectId);
     const projectTasks = state.tasks.filter(t => t.projectId === p.id);
     const done = (s: string) => s === "done" || s === "verified";
