@@ -41,3 +41,16 @@ export function milestoneProgress(m: Pick<Milestone, "id" | "targetDate">, tasks
 }
 
 export const MILESTONE_CONTEXT_LIMIT = 12;
+
+/** A task's own due date wins; otherwise it falls back to its milestone's target date (shown, never saved to the task). */
+export function effectiveDue(task: { dueDate?: string | null; milestoneId?: string | null }, milestones: Pick<Milestone, "id" | "title" | "targetDate">[]): { date: string; from: "task" | "milestone"; milestoneTitle?: string } | null {
+  if (task.dueDate) return { date: task.dueDate, from: "task" };
+  const m = task.milestoneId ? milestones.find(x => x.id === task.milestoneId) : undefined;
+  return m?.targetDate ? { date: m.targetDate, from: "milestone", milestoneTitle: m.title } : null;
+}
+
+/** Dated milestones that still have work left, soonest first (overdue ones lead). */
+export function upcomingMilestones<M extends Pick<Milestone, "id" | "targetDate">>(milestones: M[], tasks: TaskLike[], today = new Date().toISOString().slice(0, 10)): Array<{ milestone: M; progress: MilestoneProgress }> {
+  return milestones.filter(m => m.targetDate).map(m => ({ milestone: m, progress: milestoneProgress(m, tasks, today) }))
+    .filter(x => !x.progress.complete).sort((a, b) => a.milestone.targetDate!.localeCompare(b.milestone.targetDate!));
+}

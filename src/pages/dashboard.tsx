@@ -1,17 +1,19 @@
 import { useMemo } from "react";
 import { Link } from "@/lib/router-compat";
-import { ArrowUpRight, CheckCircle2, Clock3, FolderKanban, ListChecks, RotateCw } from "lucide-react";
+import { ArrowUpRight, Flag, CheckCircle2, Clock3, FolderKanban, ListChecks, RotateCw } from "lucide-react";
 import { AppShell } from "@/components/shell";
 import { Button } from "@/components/ui/button";
 import { Empty, ErrorBlock, LoadingBlock, PageHeader, Pill } from "@/components/kit";
 import { useWorkspace } from "@/lib/workspace";
 import { dashboardData } from "@/lib/hub/dashboard";
+import { upcomingMilestones } from "@/lib/hub/milestones";
 
 type Props = { days: 7 | 30; projectId: string; onDays: (days: 7 | 30) => void; onProject: (id: string) => void };
 
 export default function DashboardPage({ days, projectId, onDays, onProject }: Props) {
   const { state, isLoading, error, refetch } = useWorkspace();
   const data = useMemo(() => state ? dashboardData(state.projects.filter(p => !projectId || p.id === projectId), state.tasks, days, new Date()) : null, [state, days, projectId]);
+  const milestones = useMemo(() => state ? upcomingMilestones((state.milestones ?? []).filter(m => !projectId || m.projectId === projectId), state.tasks).slice(0, 8) : [], [state, projectId]);
   const maxDaily = Math.max(1, ...(data?.daily.map(d => Math.max(d.added, d.updated)) ?? []));
   const maxInactive = Math.max(1, ...(data?.rows.map(r => r.inactive) ?? []));
   return (
@@ -87,6 +89,19 @@ export default function DashboardPage({ days, projectId, onDays, onProject }: Pr
               {!data.inactive && <p className="text-sm text-muted-foreground">No unfinished tasks have been inactive for seven days.</p>}
               {!data.rows.length && <p className="text-sm text-muted-foreground">Project not found. Select another project.</p>}
             </div>
+          </section>
+
+          <section className="mt-8" aria-labelledby="milestones-heading" data-testid="dashboard-milestones">
+            <h2 id="milestones-heading" className="mb-4 font-display text-xl font-semibold">Upcoming milestones</h2>
+            {!milestones.length ? <p className="text-sm text-muted-foreground">No dated milestones with work left. Set target dates on a project's Roadmap.</p> : (
+              <div className="divide-y border-y">
+                {milestones.map(({ milestone: m, progress: pr }) => <Link key={m.id} href={`/projects/${m.projectId}/roadmap`} className="grid gap-2 py-3 hover:bg-muted/30 sm:grid-cols-[minmax(0,1fr)_140px_180px] sm:items-center">
+                  <div className="min-w-0"><div className="flex items-center gap-2 font-medium"><Flag className="h-3.5 w-3.5 shrink-0 text-primary" /><span className="truncate">{m.title}</span></div><div className="mt-0.5 truncate text-xs text-muted-foreground">{state.projects.find(p => p.id === m.projectId)?.title}</div></div>
+                  <div className={`text-sm ${pr.overdue ? "font-medium text-destructive" : ""}`}><time dateTime={m.targetDate!}>{new Date(`${m.targetDate}T12:00:00`).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}</time>{pr.overdue && <span className="block text-xs">Overdue</span>}</div>
+                  <div><div className="h-2 rounded-full bg-muted"><div className="h-full rounded-full bg-accent" style={{ width: `${pr.percent}%` }} /></div><div className="mt-1 text-xs text-muted-foreground">{pr.total ? `${pr.done}/${pr.total} tasks · ${pr.percent}%` : "No tasks yet"}</div></div>
+                </Link>)}
+              </div>
+            )}
           </section>
 
           <section className="mt-8" aria-labelledby="progress-heading">
