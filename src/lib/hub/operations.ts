@@ -6,6 +6,7 @@ import {
   CreateProjectBody, UpdateProjectBody, CreateIdeaBody, UpdateIdeaBody,
   CreateTaskBody, UpdateTaskBody, CreateHandoffBody, DecideApprovalBody,
 } from "./api-zod";
+import { createImportSchema, approveImportSchema, findMatch, sourceLabels, IMPORT_MAX_TASKS, type ImportDraft, type ImportContent, type GithubLink } from "./imports";
 import { type Actor, type HubState, HubError, mutateState, audit, project, checkVersion, validateRepository, validateDependencies, requireOwner, ok } from "./store";
 
 export function addProject(actor: Actor, input: unknown) {
@@ -349,4 +350,138 @@ function closeTaskApprovals(s: HubState, taskId: string) {
     if (a.status !== "pending") continue;
     try { if (JSON.parse(a.changes).taskId === taskId) a.status = "rejected"; } catch { /* malformed proposal: leave as is */ }
   }
+}
+
+// ---------- Imports (chatbots, assistants, GitHub) ----------
+const newTask = (projectId: string, t: { title: string; description: string; priority: "low" | "medium" | "high" }, now: string) =>
+  ({ id: randomUUID(), projectId, title: t.title.trim(), description: t.description, priority: t.priority, status: "todo" as const, agent: "", evidence: "", dependencies: [], version: 1, createdAt: now, updatedAt: now });
+
+/** Creates a pending draft only; nothing reaches projects/tasks until the owner approves. Agents may call this. */
+export function createImportDraft(actor: Actor, input: unknown) {
+  const data = createImportSchema.parse(input);
+  if (data.repo) validateRepository(data.repo);
+  return mutateState(actor, s => {
+    s.imports ??= [];
+    if (s.imports.length >= 50) throw new HubError(409, "Your import inbox is full. Approve or discard some drafts first.");
+    const draft: ImportDraft = { id: randomUUID(), kind: "new", source: data.source, sourceDetail: data.sourceDetail || (actor.agent ? actor.source : ""), keepSynced: !!data.repo && data.keepSynced,
+      matchProjectId: findMatch(s.projects, data.content.project.title, data.repo), content: data.content, createdAt: new Date().toISOString(),
+      ...(data.repo ? { repo: data.repo } : {}), ...(data.trimmed ? { trimmed: true } : {}) };
+    s.imports.unshift(draft);
+    audit(s, actor, `Import draft ready to review: ${data.content.project.title}`, "Nothing is saved until you approve it.", "", "import");
+    return { ...ok("Saved to the CarterHub import inbox for the owner to review. Nothing was added to projects yet.", draft.id), draftId: draft.id };
+  });
+}
+
+export function discardImport(actor: Actor, id: string) {
+  requireOwner(actor);
+  return mutateState(actor, s => {
+    const d = (s.imports ?? []).find(i => i.id === id);
+    if (!d) throw new HubError(404, "Import draft not found");
+    s.imports = (s.imports ?? []).filter(i => i.id !== id);
+    audit(s, actor, `Discarded import: ${d.content.project.title}`, "", d.targetProjectId ?? "", "import");
+    return ok("Import discarded.");
+  });
+}
+
+/** Owner approval saves the reviewed draft (create or merge) and its audit event in one write. */
+export function approveImport(actor: Actor, input: unknown) {
+  requireOwner(actor);
+  const data = approveImportSchema.parse(input);
+  return mutateState(actor, s => {
+    const d = (s.imports ?? []).find(i => i.id === data.id);
+    if (!d) throw new HubError(404, "Import draft not found");
+    const now = new Date().toISOString();
+    const content = data.content ?? d.content;
+    if (d.kind === "sync") return applySync(s, actor, d, content, now);
+    let p: HubState["projects"][number];
+    if (data.mode === "merge") {
+      if (!data.targetProjectId) throw new HubError(400, "Choose the project to merge into.");
+      p = project(s, data.targetProjectId);
+      if (d.repo && !p.repository) p.repository = d.repo;
+      p.version++; p.updatedAt = now;
+    } else {
+      p = { id: randomUUID(), title: content.project.title.trim(), description: content.project.description, goal: content.project.goal, status: "planning", priority: "medium", repository: d.repo ?? "", color: "teal", version: 1, createdAt: now, updatedAt: now };
+      s.projects.unshift(p);
+    }
+    const existing = new Set(s.tasks.filter(t => t.projectId === p.id).map(t => t.title.toLowerCase()));
+    const link = d.repo && (data.keepSynced ?? d.keepSynced) ? upsertLink(s, p.id, d.repo, now) : null;
+    let added = 0;
+    for (const t of content.tasks) {
+      if (existing.has(t.title.trim().toLowerCase())) continue;
+      const task = newTask(p.id, t, now); s.tasks.push(task); added++;
+      if (link && t.issueNumber !== undefined) link.issues[String(t.issueNumber)] = { taskId: task.id, version: 1, title: task.title };
+    }
+    for (const i of content.ideas) s.ideas.unshift({ id: randomUUID(), title: i.title.trim(), description: i.description, status: "inbox", tags: ["imported"], source: sourceLabels[d.source], createdAt: now });
+    if (content.handoff) s.handoffs.unshift({ ...content.handoff, id: randomUUID(), projectId: p.id, source: `You · Imported from ${sourceLabels[d.source]}`, createdAt: now });
+    s.imports = (s.imports ?? []).filter(i => i.id !== d.id);
+    audit(s, actor, `${data.mode === "merge" ? "Merged import into" : "Imported project"}: ${p.title}`, `${added} tasks, ${content.ideas.length} ideas from ${sourceLabels[d.source]}${link ? " · GitHub sync on" : ""}`, p.id, "import");
+    return ok(data.mode === "merge" ? `Merged into ${p.title}.` : `${p.title} imported.`, p.id);
+  });
+}
+
+function upsertLink(s: HubState, projectId: string, repo: string, now: string) {
+  s.githubLinks ??= [];
+  let link = s.githubLinks.find(l => l.projectId === projectId);
+  if (!link) { link = { projectId, repo, lastSyncedAt: now, issues: {} }; s.githubLinks.push(link); }
+  link.repo = repo;
+  return link;
+}
+
+/** Sync suggestions never overwrite a task the owner changed since CarterHub last wrote it. */
+function applySync(s: HubState, actor: Actor, d: ImportDraft, content: ImportContent, now: string) {
+  const p = project(s, d.targetProjectId ?? "");
+  const link = s.githubLinks?.find(l => l.projectId === p.id);
+  if (!link) throw new HubError(409, "This project is no longer linked to GitHub.");
+  let added = 0, closed = 0, renamed = 0, skipped = 0;
+  for (const t of content.tasks) {
+    if (t.issueNumber !== undefined && link.issues[String(t.issueNumber)]) continue;
+    const task = newTask(p.id, t, now); s.tasks.push(task); added++;
+    if (t.issueNumber !== undefined) link.issues[String(t.issueNumber)] = { taskId: task.id, version: 1, title: task.title };
+  }
+  for (const c of d.changes?.close ?? []) {
+    const t = s.tasks.find(x => x.id === c.taskId), m = link.issues[String(c.issueNumber)];
+    if (!t || !m || t.version !== m.version) { skipped++; continue; }
+    applyTaskPatch(t, { status: "done", evidence: t.evidence || `GitHub issue #${c.issueNumber} was closed.` }); m.version = t.version; closed++;
+  }
+  for (const r of d.changes?.rename ?? []) {
+    const t = s.tasks.find(x => x.id === r.taskId), m = link.issues[String(r.issueNumber)];
+    if (!t || !m || t.version !== m.version) { skipped++; continue; }
+    applyTaskPatch(t, { title: r.title }); m.version = t.version; m.title = r.title; renamed++;
+  }
+  s.imports = (s.imports ?? []).filter(i => i.id !== d.id);
+  audit(s, actor, `Applied GitHub changes: ${p.title}`, `${added} new, ${closed} closed, ${renamed} renamed${skipped ? `, ${skipped} skipped because you edited them` : ""}`, p.id, "sync");
+  return ok(`Applied GitHub changes to ${p.title}.${skipped ? ` ${skipped} skipped because you edited those tasks.` : ""}`, p.id);
+}
+
+export function unlinkRepo(actor: Actor, projectId: string) {
+  requireOwner(actor);
+  return mutateState(actor, s => {
+    const p = project(s, projectId);
+    s.githubLinks = (s.githubLinks ?? []).filter(l => l.projectId !== projectId);
+    s.imports = (s.imports ?? []).filter(i => !(i.kind === "sync" && i.targetProjectId === projectId));
+    audit(s, actor, `Stopped GitHub issue sync: ${p.title}`, "", projectId, "sync");
+    return ok("GitHub issue sync turned off for this project.");
+  });
+}
+
+export type IssueSnapshot = { number: number; title: string; body: string; open: boolean };
+/** Pure diff for the hourly sync: replaces any earlier pending suggestion for the project. */
+export function queueSyncSuggestions(s: HubState, link: GithubLink, issues: IssueSnapshot[], now: string) {
+  const p = s.projects.find(x => x.id === link.projectId);
+  if (!p) return false;
+  const tasks = issues.filter(i => i.open && !link.issues[String(i.number)]).slice(0, IMPORT_MAX_TASKS)
+    .map(i => ({ title: i.title.slice(0, 200), description: `GitHub issue #${i.number}\n${i.body}`.slice(0, 4000), priority: "medium" as const, issueNumber: i.number }));
+  const close: NonNullable<ImportDraft["changes"]>["close"] = [], rename: NonNullable<ImportDraft["changes"]>["rename"] = [];
+  for (const i of issues) {
+    const m = link.issues[String(i.number)]; if (!m) continue;
+    const t = s.tasks.find(x => x.id === m.taskId); if (!t) continue;
+    if (!i.open && !["done", "verified"].includes(t.status)) close.push({ taskId: t.id, title: t.title, issueNumber: i.number });
+    else if (i.title.slice(0, 200) !== m.title) rename.push({ taskId: t.id, from: m.title, title: i.title.slice(0, 200), issueNumber: i.number });
+  }
+  link.lastSyncedAt = now;
+  s.imports = (s.imports ?? []).filter(d => !(d.kind === "sync" && d.targetProjectId === p.id));
+  if (!tasks.length && !close.length && !rename.length) return false;
+  s.imports.unshift({ id: randomUUID(), kind: "sync", source: "github", sourceDetail: link.repo, repo: link.repo, keepSynced: true, matchProjectId: p.id, targetProjectId: p.id,
+    content: { project: { title: p.title, description: "", goal: "" }, tasks, ideas: [], handoff: null }, changes: { close: close.slice(0, 100), rename: rename.slice(0, 100) }, createdAt: now });
+  return true;
 }
