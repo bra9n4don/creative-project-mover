@@ -4,6 +4,8 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { btn } from "@/components/kit";
 import { checkNewPassword } from "@/lib/password-rules";
+import { lovable } from "@/integrations/lovable/index";
+import { savePendingLink, type LinkProvider } from "@/lib/pending-link";
 
 type Login = { user_id: string; provider: string | null; email: string | null; linked_at: string; is_primary: boolean; is_current: boolean };
 
@@ -25,6 +27,14 @@ export function LinkedLogins() {
     const { data, error } = await supabase.rpc("create_link_code");
     if (error) { toast.error(error.message); return; }
     setCode(data as string);
+  };
+  const linkProvider = async (provider: LinkProvider) => {
+    const { data, error } = await supabase.rpc("create_link_code");
+    if (error) { toast.error(error.message); return; }
+    savePendingLink(window.sessionStorage, data as string, provider);
+    await supabase.auth.signOut({ scope: "local" });
+    const result = await lovable.auth.signInWithOAuth(provider, { redirect_uri: `${window.location.origin}/sign-in` });
+    if (result.error) { toast.error(result.error.message ?? "Sign-in failed."); window.location.href = "/sign-in"; }
   };
   const remove = async (id: string) => {
     const { error } = await supabase.rpc("unlink_login", { _user_id: id });
@@ -58,7 +68,11 @@ export function LinkedLogins() {
           </li>
         ))}
       </ul>
-      <button className={`${btn.ghost} mt-4`} data-testid="button-link-login" onClick={() => void makeCode()}>Link another sign-in</button>
+      <div className="mt-4 flex flex-wrap gap-2">
+        <button className={btn.ghost} data-testid="button-link-google" onClick={() => void linkProvider("google")}>Link Google</button>
+        <button className={btn.ghost} data-testid="button-link-microsoft" onClick={() => void linkProvider("microsoft")}>Link Microsoft</button>
+        <button className={btn.ghost} data-testid="button-link-login" onClick={() => void makeCode()}>Use a link code</button>
+      </div>
       {code && (
         <div className="mt-4 rounded-lg bg-accent/10 p-4">
           <div className="font-mono text-2xl tracking-widest" data-testid="text-link-code">{code}</div>
