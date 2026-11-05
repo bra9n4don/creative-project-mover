@@ -85,7 +85,7 @@ export function TwoStep() {
     setSetup(null); await load();
     toast.success("Two-step verification is on.");
   });
-  const turnOff = (id: string) => confirm(verified[0].id, async () => {
+  const turnOff = (id: string) => confirm(verified[0]?.id ?? id, async () => {
     const { error } = await supabase.auth.mfa.unenroll({ factorId: id });
     if (error) toast.error(error.message); else toast.success("Device removed.");
     await load();
