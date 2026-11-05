@@ -116,6 +116,7 @@ export function addTask(actor: Actor, input: unknown) {
     const now = new Date().toISOString();
     const t: HubState["tasks"][number] = { id, projectId: data.projectId, title: data.title.trim(), description: data.description ?? "", status: "todo", priority: data.priority ?? "medium", agent: actor.agent ? actor.source : data.agent ?? "", evidence: "", dependencies: data.dependencies ?? [], version: 1, createdAt: now, updatedAt: now };
     if (data.dueDate !== undefined) t.dueDate = data.dueDate;
+    if (data.notes?.trim()) t.notes = data.notes;
     if (data.milestoneId) { milestone(s, data.milestoneId, data.projectId); t.milestoneId = data.milestoneId; }
     s.tasks.push(t); audit(s, actor, `Added next step: ${t.title}`, "", t.projectId, "task");
     return t;
@@ -144,7 +145,7 @@ export function editTask(actor: Actor, id: string, input: unknown) {
     if (actor.agent && data.status === "verified") throw new HubError(403, "Only you can verify completion. Agents can report done with evidence.");
     if (data.dependencies) validateDependencies(s, t.projectId, id, data.dependencies);
     if (data.milestoneId) milestone(s, data.milestoneId, t.projectId);
-    if (actor.agent && (data.priority !== undefined || data.title !== undefined || data.description !== undefined || data.dependencies !== undefined || data.dueDate !== undefined || data.milestoneId !== undefined)) {
+    if (actor.agent && (data.priority !== undefined || data.title !== undefined || data.description !== undefined || data.dependencies !== undefined || data.dueDate !== undefined || data.notes !== undefined || data.milestoneId !== undefined)) {
       return queueChange(s, actor, t.projectId, { type: "task", taskId: id, ...data }, `Review proposed changes to task: ${t.title}`);
     }
     const dependencies = data.dependencies ?? t.dependencies;

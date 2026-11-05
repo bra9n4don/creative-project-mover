@@ -24,5 +24,6 @@ export interface Task {
   startedAt?: string;
   completedAt?: string;
   dueDate?: string | null;
+  notes?: string;
   milestoneId?: string | null;
 }
