@@ -207,6 +207,7 @@ export type Database = {
           user_id: string
         }[]
       }
+      make_primary_login: { Args: { _user_id: string }; Returns: boolean }
       redeem_link_code: { Args: { _code: string }; Returns: boolean }
       unlink_login: { Args: { _user_id: string }; Returns: boolean }
     }
