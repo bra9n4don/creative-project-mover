@@ -18,6 +18,7 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as HandoffsRouteImport } from './routes/handoffs'
 import { Route as IdeasRouteImport } from './routes/ideas'
+import { Route as ImportRouteImport } from './routes/import'
 import { Route as KickoffRouteImport } from './routes/kickoff'
 import { Route as McpRouteImport } from './routes/mcp'
 import { Route as MindMapRouteImport } from './routes/mind-map'
@@ -93,6 +94,11 @@ const HandoffsRoute = HandoffsRouteImport.update({
 const IdeasRoute = IdeasRouteImport.update({
   id: '/ideas',
   path: '/ideas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ImportRoute = ImportRouteImport.update({
+  id: '/import',
+  path: '/import',
   getParentRoute: () => rootRouteImport,
 } as any)
 const KickoffRoute = KickoffRouteImport.update({
@@ -262,6 +268,7 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof ForgotPasswordRoute
   '/handoffs': typeof HandoffsRoute
   '/ideas': typeof IdeasRoute
+  '/import': typeof ImportRoute
   '/kickoff': typeof KickoffRoute
   '/mcp': typeof McpRoute
   '/mind-map': typeof MindMapRoute
@@ -304,6 +311,7 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
   '/handoffs': typeof HandoffsRoute
   '/ideas': typeof IdeasRoute
+  '/import': typeof ImportRoute
   '/kickoff': typeof KickoffRoute
   '/mcp': typeof McpRoute
   '/mind-map': typeof MindMapRoute
@@ -347,6 +355,7 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/handoffs': typeof HandoffsRoute
   '/ideas': typeof IdeasRoute
+  '/import': typeof ImportRoute
   '/kickoff': typeof KickoffRoute
   '/mcp': typeof McpRoute
   '/mind-map': typeof MindMapRoute
@@ -391,6 +400,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/handoffs'
     | '/ideas'
+    | '/import'
     | '/kickoff'
     | '/mcp'
     | '/mind-map'
@@ -433,6 +443,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/handoffs'
     | '/ideas'
+    | '/import'
     | '/kickoff'
     | '/mcp'
     | '/mind-map'
@@ -475,6 +486,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/handoffs'
     | '/ideas'
+    | '/import'
     | '/kickoff'
     | '/mcp'
     | '/mind-map'
@@ -518,6 +530,7 @@ export interface RootRouteChildren {
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   HandoffsRoute: typeof HandoffsRoute
   IdeasRoute: typeof IdeasRoute
+  ImportRoute: typeof ImportRoute
   KickoffRoute: typeof KickoffRoute
   McpRoute: typeof McpRoute
   MindMapRoute: typeof MindMapRoute
@@ -614,6 +627,13 @@ declare module '@tanstack/react-router' {
       path: '/ideas'
       fullPath: '/ideas'
       preLoaderRoute: typeof IdeasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/import': {
+      id: '/import'
+      path: '/import'
+      fullPath: '/import'
+      preLoaderRoute: typeof ImportRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/kickoff': {
@@ -846,6 +866,7 @@ const rootRouteChildren: RootRouteChildren = {
   ForgotPasswordRoute: ForgotPasswordRoute,
   HandoffsRoute: HandoffsRoute,
   IdeasRoute: IdeasRoute,
+  ImportRoute: ImportRoute,
   KickoffRoute: KickoffRoute,
   McpRoute: McpRoute,
   MindMapRoute: MindMapRoute,
