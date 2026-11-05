@@ -34,6 +34,8 @@ export async function syncAndRecord(actor: Actor, trigger: "manual" | "automatic
   let r: Awaited<ReturnType<typeof syncRepos>>;
   try {
     r = await syncRepos(actor);
+    const queued = await syncIssueLinks(actor);
+    if (queued) r = { ...r, message: `${r.message} ${queued} project${queued === 1 ? " has" : "s have"} GitHub issue changes waiting in Import.` };
   } catch (e) {
     await recordSync(actor.ownerId, trigger, false, e instanceof Error ? e.message : "Sync failed", false);
     throw e;
@@ -81,5 +83,46 @@ export async function syncRepos(actor: Actor) {
     s.activity.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
     if (added) audit(s, actor, "GitHub activity synced", `${added} new commits and pull request updates. Task completion was not inferred.`, "", "sync");
     return ok(`Synced ${added} new updates. No repositories were changed.${capped ? ` Only the latest ${ITEMS_PER_REPO} commits and pull requests per repository were checked; older ones were skipped.` : ""}`);
+  });
+}
+
+type GhIssue = { number: number; title: string; body: string | null; state: string; pull_request?: unknown };
+async function repoIssues(repo: string, state: "open" | "all") {
+  const list = await github<GhIssue[]>(`/repos/${repo}/issues?state=${state}&sort=updated&direction=desc&per_page=100`);
+  return list.filter(i => !i.pull_request).map(i => ({ number: i.number, title: i.title, body: (i.body ?? "").slice(0, 1500), open: i.state === "open" }));
+}
+
+/** Builds a reviewable draft from a repo's description, README and open issues. No AI, no writes to GitHub. */
+export async function importRepoDraft(actor: Actor, repo: string, keepSynced: boolean) {
+  requireOwner(actor);
+  if (!/^[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+$/.test(repo)) throw new HubError(400, "Pick a repository in owner/name format.");
+  const [info, issues, readme] = await Promise.all([
+    github<{ full_name: string; description: string | null; html_url: string }>(`/repos/${repo}`),
+    repoIssues(repo, "open"),
+    github<{ content?: string }>(`/repos/${repo}/readme`).then(r => r.content ? new TextDecoder().decode(Uint8Array.from(atob(r.content.replace(/\n/g, "")), c => c.charCodeAt(0))) : "").catch(() => ""),
+  ]);
+  const { createImportDraft } = await import("./operations");
+  const title = info.full_name.split("/")[1]!.replace(/[-_]+/g, " ");
+  return createImportDraft(actor, {
+    source: "github", sourceDetail: info.full_name, repo: info.full_name, keepSynced,
+    content: {
+      project: { title, goal: (info.description ?? "").slice(0, 2000), description: `${info.description ?? ""}\n\n${readme}`.trim().slice(0, 20000) },
+      tasks: issues.slice(0, 50).map(i => ({ title: i.title.slice(0, 200), description: `GitHub issue #${i.number}\n${i.body}`.slice(0, 4000), priority: "medium" as const, issueNumber: i.number })),
+      ideas: [], handoff: null,
+    },
+  });
+}
+
+/** Hourly: diff linked repos' issues into pending suggestions (never applied automatically). */
+async function syncIssueLinks(actor: Actor) {
+  const state = await readState(actor.db, actor.ownerId);
+  const links = state.githubLinks ?? [];
+  if (!links.length) return 0;
+  const snapshots = await Promise.all(links.map(async l => ({ projectId: l.projectId, issues: await repoIssues(l.repo, "all") })));
+  const { queueSyncSuggestions } = await import("./operations");
+  return mutateState(actor, s => {
+    let queued = 0; const now = new Date().toISOString();
+    for (const snap of snapshots) { const link = s.githubLinks?.find(l => l.projectId === snap.projectId); if (link && queueSyncSuggestions(s, link, snap.issues, now)) queued++; }
+    return queued;
   });
 }
