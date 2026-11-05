@@ -1,5 +1,5 @@
-import { effectiveDue, upcomingMilestones, describe, expect, it } from "vitest";
-import { milestoneProgress } from "./milestones";
+import { describe, expect, it } from "vitest";
+import { effectiveDue, milestoneProgress, upcomingMilestones } from "./milestones";
 import { proposeMilestoneUpdate, proposeTask } from "@/lib/ai/chat-tools";
 import { emptyState } from "./store";
 
