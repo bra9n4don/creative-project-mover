@@ -1,7 +1,8 @@
+import { ChatPanelButton } from "@/components/chat/chat-panel";
 import { useState, type ReactNode } from "react";
 import { Link, useLocation } from "@/lib/router-compat";
 import { useUser, useClerk } from "@/lib/auth";
-import { BarChart3, ListChecks, Bookmark, FolderKanban, History, Lightbulb, LogOut, Menu, MoreHorizontal, Network, Plug, Rocket, Settings, ShieldCheck, Sunrise, X } from "lucide-react";
+import { BarChart3, ListChecks, Bookmark, FolderKanban, History, Lightbulb, LogOut, Menu, MessageCircle, MoreHorizontal, Network, Plug, Rocket, Settings, ShieldCheck, Sunrise, X } from "lucide-react";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { useWorkspace } from "@/lib/workspace";
@@ -15,6 +16,7 @@ const primaryNav = [
   { href: "/overview", label: "Where I left off", icon: Sunrise },
   { href: "/dashboard", label: "Dashboard", icon: BarChart3 },
   { href: "/projects", label: "Projects", icon: FolderKanban },
+  { href: "/chat", label: "Chat", icon: MessageCircle },
   { href: "/kickoff", label: "Kickoff", icon: Rocket },
   { href: "/handoffs", label: "Checkpoints", icon: Bookmark },
   { href: "/ideas", label: "Ideas", icon: Lightbulb },
@@ -144,7 +146,10 @@ export function AppShell({ children }: { children: ReactNode }) {
       <aside className="dark fixed inset-y-0 left-0 z-30 hidden w-64 flex-col bg-sidebar px-4 py-5 text-sidebar-foreground md:flex">
         <div className="mb-8 flex items-center justify-between px-1 [&_span]:text-sidebar-foreground">
           <Logo />
-          <ThemeToggle className="rounded-lg p-2 text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground" />
+          <div className="flex items-center">
+            {!isDemo && authLoaded && <ChatPanelButton className="rounded-lg p-2 text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground" />}
+            <ThemeToggle className="rounded-lg p-2 text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground" />
+          </div>
         </div>
         <NavList />
         <SignOutButton />
@@ -152,6 +157,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <header className="sticky top-0 z-30 flex items-center justify-between border-b bg-background/90 px-4 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top))] backdrop-blur md:hidden">
         <Logo />
         <div className="flex items-center gap-2">
+          {!isDemo && authLoaded && <ChatPanelButton className="rounded-lg border p-2" />}
           <ThemeToggle className="rounded-lg border p-2.5" />
           <button data-testid="button-menu" onClick={() => setOpen(true)} className="rounded-lg border p-2" aria-label="Open menu">
             <Menu className="h-5 w-5" />

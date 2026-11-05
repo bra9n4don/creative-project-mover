@@ -78,6 +78,13 @@
       "when": 1793846071567,
       "tag": "0010_make_primary_login",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1793848288106,
+      "tag": "0011_create_hub_chat",
+      "breakpoints": true
     }
   ]
 }
