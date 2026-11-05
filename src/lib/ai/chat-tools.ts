@@ -28,6 +28,8 @@ export const proposeTaskUpdateInput = z.object({
   taskId: z.string().min(1).describe("Exact task id from context"),
   status: z.enum(["todo", "in_progress", "blocked", "done"]).optional(),
   title: z.string().min(1).max(200).optional(),
+  milestoneId: z.string().min(1).optional().describe("Exact milestone id (same project) to move the task into"),
+  dueDate: z.iso.date().optional().describe("Suggested due date, YYYY-MM-DD"),
 });
 export const proposeIdeaInput = z.object({ title: z.string().min(1).max(200), description: z.string().max(600).optional() });
 
@@ -35,7 +37,7 @@ export type Proposal =
   | { kind: "task"; ok: true; projectId: string; projectTitle: string; title: string; description?: string; priority?: "low" | "medium" | "high"; milestoneId?: string; milestoneTitle?: string }
   | { kind: "milestone"; ok: true; projectId: string; projectTitle: string; title: string; outcome?: string; targetDate?: string }
   | { kind: "milestone_update"; ok: true; milestoneId: string; milestoneTitle: string; title?: string; targetDate?: string }
-  | { kind: "task_update"; ok: true; taskId: string; taskTitle: string; status?: string; title?: string }
+  | { kind: "task_update"; ok: true; taskId: string; taskTitle: string; projectId?: string; status?: string; title?: string; milestoneId?: string; milestoneTitle?: string; dueDate?: string }
   | { kind: "idea"; ok: true; title: string; description?: string }
   | { ok: false; error: string };
 
@@ -64,8 +66,10 @@ export function proposeMilestoneUpdate(s: HubState, i: z.infer<typeof proposeMil
 export function proposeTaskUpdate(s: HubState, i: z.infer<typeof proposeTaskUpdateInput>): Proposal {
   const t = s.tasks.find(t => t.id === i.taskId);
   if (!t) return { ok: false, error: "Unknown task id." };
-  if (!i.status && !i.title) return { ok: false, error: "Nothing to change." };
-  return { kind: "task_update", ok: true, taskId: t.id, taskTitle: t.title, ...(i.status ? { status: i.status } : {}), ...(i.title ? { title: i.title } : {}) };
+  if (!i.status && !i.title && !i.milestoneId && !i.dueDate) return { ok: false, error: "Nothing to change." };
+  const m = i.milestoneId ? (s.milestones ?? []).find(m => m.id === i.milestoneId) : undefined;
+  if (i.milestoneId && (!m || m.projectId !== t.projectId)) return { ok: false, error: "Unknown milestone id for this task's project." };
+  return { kind: "task_update", ok: true, taskId: t.id, taskTitle: t.title, projectId: t.projectId, ...(i.status ? { status: i.status } : {}), ...(i.title ? { title: i.title } : {}), ...(m ? { milestoneId: m.id, milestoneTitle: m.title } : {}), ...(i.dueDate ? { dueDate: i.dueDate } : {}) };
 }
 export function proposeIdea(_s: HubState, i: z.infer<typeof proposeIdeaInput>): Proposal {
   return { kind: "idea", ok: true, title: i.title, ...(i.description ? { description: i.description } : {}) };

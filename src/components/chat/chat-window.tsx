@@ -5,7 +5,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Link } from "@tanstack/react-router";
 import type { CreatedRef } from "@/lib/ai/inbox";
-import { Check, Flag, Lightbulb, ListPlus, PencilLine, Waypoints, X } from "lucide-react";
+import { Check, CheckCheck, Flag, Map as MapIcon, MessageSquare, Lightbulb, ListPlus, PencilLine, Waypoints, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Conversation, ConversationContent, ConversationEmptyState, ConversationScrollButton } from "@/components/ai-elements/conversation";
 import { Message, MessageContent, MessageResponse } from "@/components/ai-elements/message";
@@ -28,10 +28,16 @@ export function AgentMark({ className = "h-7 w-7" }: { className?: string }) {
 
 type ToolPartLike = { type: string; toolCallId: string; state: string; input?: unknown; output?: unknown; errorText?: string; decision?: "approved" | "dismissed"; created?: CreatedRef };
 
+// Decisions made this session, so remounted cards (tab switches) don't show Approve again.
+const localDecisions = new Map<string, { decision: "approved" | "dismissed"; created?: CreatedRef }>();
+// Pending cards register their approve action so "Approve all" can run them one by one.
+const approvers = new Map<string, () => Promise<boolean>>();
+
 export function ProposalCard({ threadId, messageId, part }: { threadId: string; messageId: string; part: ToolPartLike }) {
   const p = part.output as Proposal | undefined;
-  const [decision, setDecision] = useState(part.decision);
-  const [created, setCreated] = useState<CreatedRef | undefined>(part.created);
+  const local = localDecisions.get(part.toolCallId);
+  const [decision, setDecision] = useState(local?.decision ?? part.decision);
+  const [created, setCreated] = useState<CreatedRef | undefined>(local?.created ?? part.created);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const { state } = useWorkspace();
@@ -42,21 +48,29 @@ export function ProposalCard({ threadId, messageId, part }: { threadId: string; 
   const createMilestone = useCreateMilestone();
   const updateMilestone = useUpdateMilestone();
   const decide = useServerFn(decideProposalFn);
+  const approveRef = useRef<() => Promise<boolean>>(async () => false);
+  useEffect(() => {
+    if (decision || !p?.ok) return;
+    const id = part.toolCallId; const fn = () => approveRef.current();
+    approvers.set(id, fn);
+    return () => { if (approvers.get(id) === fn) approvers.delete(id); };
+  }, [decision, part.toolCallId, p?.ok]);
   if (!p) return null;
   if (!p.ok) return <p className="text-xs text-muted-foreground">Suggestion couldn't be made: {p.error}</p>;
 
   const send = (d: "approving" | "approved" | "dismissed", c?: CreatedRef) => decide({ data: { threadId, messageId, toolCallId: part.toolCallId, decision: d, ...(c ? { created: c } : {}) } });
   const record = (d: "approved" | "dismissed", c?: CreatedRef) => {
     setDecision(d); if (c) setCreated(c);
+    localDecisions.set(part.toolCallId, { decision: d, ...(c ? { created: c } : {}) });
     // Retry once so a saved item never shows Approve again.
     void send(d, c).catch(() => send(d, c)).then(() => qc.invalidateQueries({ queryKey: ["chat"] })).catch(() => {});
   };
   const missing = p.kind === "task" || p.kind === "milestone" ? !state?.projects.some(x => x.id === p.projectId) : p.kind === "task_update" ? !state?.tasks.some(t => t.id === p.taskId) : p.kind === "milestone_update" ? !state?.milestones?.some(m => m.id === p.milestoneId) : false;
-  const approve = async () => {
+  const approve = async (): Promise<boolean> => {
     setBusy(true); setError("");
     try {
       const lock = await send("approving");
-      if (lock.alreadyApproved) { setDecision("approved"); if (lock.created) setCreated(lock.created); await qc.invalidateQueries({ queryKey: ["chat"] }); return; }
+      if (lock.alreadyApproved) { setDecision("approved"); if (lock.created) setCreated(lock.created); localDecisions.set(part.toolCallId, { decision: "approved", ...(lock.created ? { created: lock.created } : {}) }); await qc.invalidateQueries({ queryKey: ["chat"] }); return true; }
       if (lock.locked) throw new Error("This suggestion is already being saved. Try again in a couple of minutes.");
       let c: CreatedRef;
       if (p.kind === "task") c = { kind: "task", id: (await createTask.mutateAsync({ data: { projectId: p.projectId, title: p.title, description: p.description, priority: p.priority, ...(p.milestoneId && state?.milestones?.some(m => m.id === p.milestoneId) ? { milestoneId: p.milestoneId } : {}) } as never })).id };
@@ -71,15 +85,19 @@ export function ProposalCard({ threadId, messageId, part }: { threadId: string; 
       else {
         const task = state?.tasks.find(t => t.id === p.taskId);
         if (!task) throw new Error("That task no longer exists.");
-        await updateTask.mutateAsync({ id: p.taskId, data: { expectedVersion: task.version, ...(p.status ? { status: p.status } : {}), ...(p.title ? { title: p.title } : {}) } as never });
+        if (p.milestoneId && !state?.milestones?.some(m => m.id === p.milestoneId && m.projectId === task.projectId)) throw new Error("That milestone no longer exists.");
+        await updateTask.mutateAsync({ id: p.taskId, data: { expectedVersion: task.version, ...(p.status ? { status: p.status } : {}), ...(p.title ? { title: p.title } : {}), ...(p.milestoneId ? { milestoneId: p.milestoneId } : {}), ...(p.dueDate ? { dueDate: p.dueDate } : {}) } as never });
         c = { kind: "task_update", id: task.id };
       }
       await qc.invalidateQueries({ queryKey: ["hub"] });
       record("approved", c);
+      return true;
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not save this suggestion.");
+      return false;
     } finally { setBusy(false); }
   };
+  approveRef.current = approve;
   const link = (() => {
     if (!created || !state) return null;
     if (created.kind === "idea") return state.ideas.some(i => i.id === created.id) ? { to: "/ideas" as const, label: "Open idea" } : "gone" as const;
@@ -89,7 +107,7 @@ export function ProposalCard({ threadId, messageId, part }: { threadId: string; 
 
   const Icon = p.kind === "task" ? ListPlus : p.kind === "idea" ? Lightbulb : p.kind === "milestone" || p.kind === "milestone_update" ? Flag : PencilLine;
   const heading = p.kind === "task" ? `New task in ${p.projectTitle}${p.milestoneTitle ? ` · ${p.milestoneTitle}` : ""}` : p.kind === "idea" ? "New idea" : p.kind === "milestone" ? `New milestone in ${p.projectTitle}` : p.kind === "milestone_update" ? `Change milestone “${p.milestoneTitle}”` : `Change “${p.taskTitle}”`;
-  const body = p.kind === "task_update" ? [p.status && `Status → ${p.status.replace("_", " ")}`, p.title && `Title → ${p.title}`].filter(Boolean).join(" · ")
+  const body = p.kind === "task_update" ? [p.status && `Status → ${p.status.replace("_", " ")}`, p.title && `Title → ${p.title}`, p.milestoneTitle && `Milestone → ${p.milestoneTitle}`, p.dueDate && `Due → ${p.dueDate}`].filter(Boolean).join(" · ")
     : p.kind === "milestone_update" ? [p.title && `Title → ${p.title}`, p.targetDate && `Target → ${p.targetDate}`].filter(Boolean).join(" · ")
     : p.kind === "milestone" ? `${p.title}${p.targetDate ? ` · target ${p.targetDate}` : ""}` : p.title;
   const detail = p.kind === "task" || p.kind === "idea" ? p.description : p.kind === "milestone" ? p.outcome : undefined;
@@ -118,7 +136,8 @@ export function ProposalCard({ threadId, messageId, part }: { threadId: string; 
 /** Optional floating-dock layout: conversation card above a pill composer. */
 export type DockLayout = { open: boolean; setOpen: (open: boolean) => void; header: (count: number) => ReactNode; leading: ReactNode; trailing: ReactNode };
 
-export function ChatWindow({ threadId, initialMessages, projectId, onActivity, dock }: { threadId: string; initialMessages: UIMessage[]; projectId?: string; onActivity?: () => void; dock?: DockLayout }) {
+export function ChatWindow({ threadId, initialMessages, projectId, onActivity, dock, roadmapTab }: { threadId: string; initialMessages: UIMessage[]; projectId?: string; onActivity?: () => void; dock?: DockLayout; roadmapTab?: boolean }) {
+  const [tab, setTab] = useState<"chat" | "roadmap">("chat");
   const [text, setText] = useState("");
   const [err, setErr] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -217,19 +236,83 @@ export function ChatWindow({ threadId, initialMessages, projectId, onActivity, d
       </PromptInput>
     </div>
   );
+  const roadmapCount = roadmapItems(messages).length;
   return (
     <div className="flex h-full min-h-0 flex-col">
-      {conversation}
+      {roadmapTab && (
+        <div role="tablist" className="flex gap-1 border-b px-3 pt-2">
+          {(["chat", "roadmap"] as const).map(t => (
+            <button key={t} role="tab" aria-selected={tab === t} data-testid={`tab-chat-${t}`} onClick={() => setTab(t)} className={`-mb-px inline-flex items-center gap-1.5 border-b-2 px-3 py-2 text-sm ${tab === t ? "border-primary font-medium text-foreground" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
+              {t === "chat" ? <><MessageSquare className="h-4 w-4" />Chat</> : <><MapIcon className="h-4 w-4" />Roadmap{roadmapCount > 0 && <span className="rounded-full bg-muted px-1.5 font-mono text-[10px]">{roadmapCount}</span>}</>}
+            </button>
+          ))}
+        </div>
+      )}
+      {roadmapTab && tab === "roadmap" ? <RoadmapPlan threadId={threadId} messages={messages} busy={busy} onPlan={() => submit({ text: "Plan my roadmap: suggest milestone target dates, which existing tasks belong in each milestone, and due dates. Use suggestion cards, not plain text." })} /> : conversation}
       <div className="border-t p-3">
         {err && <p className="mb-2 text-xs text-destructive" data-testid="chat-error">{err}</p>}
         <PromptInput onSubmit={submit}>
-          <PromptInputTextarea ref={textareaRef} value={text} maxLength={CHAT_INPUT_LIMIT} onChange={e => setText(e.target.value)} placeholder="Ask CarterHub…" data-testid="input-chat" />
+          <PromptInputTextarea ref={textareaRef} value={text} maxLength={CHAT_INPUT_LIMIT} onChange={e => setText(e.target.value)} placeholder={tab === "roadmap" ? "Ask for roadmap changes…" : "Ask CarterHub…"} data-testid="input-chat" />
           <PromptInputFooter>
             <ModelBadge label={UPDATE_MODEL_LABEL} />
             <PromptInputSubmit status={status} onStop={stop} disabled={!busy && !text.trim()} data-testid="button-chat-send" />
           </PromptInputFooter>
         </PromptInput>
       </div>
+    </div>
+  );
+}
+
+type RoadmapItem = { messageId: string; part: ToolPartLike; group: string };
+/** Roadmap-related suggestion cards in a conversation, grouped by milestone. */
+function roadmapItems(messages: UIMessage[]): RoadmapItem[] {
+  const out: RoadmapItem[] = [];
+  for (const m of messages) for (const raw of m.parts) {
+    if (!raw.type.startsWith("tool-")) continue;
+    const part = raw as unknown as ToolPartLike;
+    const p = part.output as Proposal | undefined;
+    if (part.state !== "output-available" || !p?.ok) continue;
+    const group = p.kind === "milestone" ? p.title : p.kind === "milestone_update" ? p.milestoneTitle : p.kind === "task" && p.milestoneTitle ? p.milestoneTitle : p.kind === "task_update" && (p.milestoneTitle || p.dueDate) ? p.milestoneTitle ?? "Due dates" : null;
+    if (group) out.push({ messageId: m.id, part, group });
+  }
+  return out;
+}
+
+function RoadmapPlan({ threadId, messages, busy, onPlan }: { threadId: string; messages: UIMessage[]; busy: boolean; onPlan: () => void }) {
+  const items = roadmapItems(messages);
+  const [running, setRunning] = useState(false);
+  const [note, setNote] = useState("");
+  const groups = new Map<string, RoadmapItem[]>();
+  for (const it of items) groups.set(it.group, [...(groups.get(it.group) ?? []), it]);
+  const pendingIds = items.map(i => i.part.toolCallId).filter(id => approvers.has(id));
+  const approveAll = async () => {
+    setRunning(true); setNote("");
+    let failed = 0;
+    // Milestones first so later task cards can find them; one at a time keeps versions fresh.
+    const order = [...items].sort((a, b) => Number((b.part.output as Proposal & { kind?: string }).kind === "milestone") - Number((a.part.output as Proposal & { kind?: string }).kind === "milestone"));
+    for (const it of order) { const fn = approvers.get(it.part.toolCallId); if (fn && !(await fn())) failed++; }
+    setRunning(false);
+    if (failed) setNote(`${failed} suggestion${failed > 1 ? "s" : ""} couldn't be saved — see the card${failed > 1 ? "s" : ""} below.`);
+  };
+  return (
+    <div className="min-h-0 flex-1 overflow-y-auto p-4" data-testid="chat-roadmap-plan">
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <p className="mr-auto text-sm text-muted-foreground">Milestone dates, task assignments and due dates suggested in this chat. Nothing saves until you approve.</p>
+        <button disabled={busy} onClick={onPlan} data-testid="button-roadmap-plan" className="inline-flex items-center gap-1 rounded-md border px-3 py-1.5 text-xs font-medium disabled:opacity-60"><Waypoints className="h-3.5 w-3.5" />Suggest a roadmap plan</button>
+        {pendingIds.length > 1 && <button disabled={running} onClick={() => void approveAll()} data-testid="button-roadmap-approve-all" className="inline-flex items-center gap-1 rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground disabled:opacity-60"><CheckCheck className="h-3.5 w-3.5" />{running ? "Saving…" : `Approve all (${pendingIds.length})`}</button>}
+      </div>
+      {note && <p className="mb-3 text-xs text-destructive">{note}</p>}
+      {busy && <p className="mb-3 animate-pulse text-sm text-muted-foreground">Thinking…</p>}
+      {items.length === 0 && !busy ? <p className="text-sm text-muted-foreground">No roadmap suggestions yet. Click <span className="font-medium">Suggest a roadmap plan</span> or ask below.</p> : (
+        <div className="space-y-5">
+          {[...groups].map(([g, list]) => (
+            <section key={g}>
+              <h3 className="mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground"><Flag className="h-3.5 w-3.5" />{g}</h3>
+              <div className="space-y-2">{list.map(it => <ProposalCard key={it.part.toolCallId} threadId={threadId} messageId={it.messageId} part={it.part} />)}</div>
+            </section>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

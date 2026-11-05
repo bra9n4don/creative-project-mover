@@ -15,6 +15,11 @@ describe("chat proposals never write and validate ids", () => {
     expect(proposeTask(state, { projectId: "nope", title: "x" }).ok).toBe(false);
     expect(proposeTaskUpdate(state, { taskId: "nope", status: "done" }).ok).toBe(false);
   });
+  it("suggests moving a task into a same-project milestone with a due date", () => {
+    const st = { ...state, tasks: [{ id: "t1", title: "Ship", projectId: "p1", version: 3 }], milestones: [{ id: "m1", projectId: "p1", title: "Beta" }, { id: "m2", projectId: "p2", title: "Other" }] } as unknown as HubState;
+    expect(proposeTaskUpdate(st, { taskId: "t1", milestoneId: "m1", dueDate: "2026-12-01" })).toMatchObject({ ok: true, milestoneTitle: "Beta", dueDate: "2026-12-01" });
+    expect(proposeTaskUpdate(st, { taskId: "t1", milestoneId: "m2" }).ok).toBe(false);
+  });
   it("rejects a task change with nothing to change", () => {
     expect(proposeTaskUpdate(state, { taskId: "t1" }).ok).toBe(false);
   });

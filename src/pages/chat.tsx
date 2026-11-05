@@ -34,12 +34,12 @@ function ThreadList({ activeId }: { activeId: string }) {
   );
 }
 
-export function ChatThreadView({ threadId, projectId, onActivity, dock }: { threadId: string; projectId?: string; onActivity?: () => void; dock?: DockLayout }) {
+export function ChatThreadView({ threadId, projectId, onActivity, dock, roadmapTab }: { threadId: string; projectId?: string; onActivity?: () => void; dock?: DockLayout; roadmapTab?: boolean }) {
   const { data, isLoading, error } = useChatThreadMessages(threadId);
   if (isLoading) return <p className="p-6 text-sm text-muted-foreground">Loading chat…</p>;
   if (error) return <p className="p-6 text-sm text-destructive">{error.message}</p>;
   if (!data) return <p className="p-6 text-sm text-muted-foreground">This chat no longer exists. <Link to="/chat" className="text-primary underline">Start another</Link>.</p>;
-  return <ChatWindow key={threadId} threadId={threadId} initialMessages={data.messages as unknown as UIMessage[]} projectId={projectId} onActivity={onActivity} dock={dock} />;
+  return <ChatWindow key={threadId} threadId={threadId} initialMessages={data.messages as unknown as UIMessage[]} projectId={projectId} onActivity={onActivity} dock={dock} roadmapTab={roadmapTab} />;
 }
 
 export default function ChatPage({ threadId }: { threadId: string }) {
@@ -57,7 +57,7 @@ export default function ChatPage({ threadId }: { threadId: string }) {
         <div className="grid h-[calc(100dvh-13rem)] min-h-[420px] gap-4 md:h-[calc(100dvh-10rem)] md:grid-cols-[240px_1fr]">
           <aside className={`${showList ? "block" : "hidden"} min-h-0 md:block`}><ThreadList activeId={threadId} /></aside>
           <section className={`${showList ? "hidden" : "flex"} min-h-0 flex-col overflow-hidden rounded-2xl border bg-background md:flex`}>
-            <ChatThreadView threadId={threadId} onActivity={() => void actions.refresh()} />
+            <ChatThreadView threadId={threadId} roadmapTab onActivity={() => void actions.refresh()} />
           </section>
         </div>
       )}
