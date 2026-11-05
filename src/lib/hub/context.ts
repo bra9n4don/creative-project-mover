@@ -1,5 +1,6 @@
 import { readState, summarize, type Actor, type HubState } from "./store";
 import { clients } from "./clients";
+import { MILESTONE_CONTEXT_LIMIT, milestoneProgress } from "./milestones";
 
 export async function getState(actor: Actor) {
   const state = await readState(actor.db, actor.ownerId);
@@ -39,8 +40,12 @@ export function buildResumeContext(s: HubState, projectId?: string) {
       whereYouLeftOff: last?.summary ?? "No checkpoint saved yet.",
       nextAction: last?.nextAction ?? next?.title ?? "Save a checkpoint with your progress and one next action.",
       checkpoint: last ? { title: last.title, createdAt: last.createdAt } : null,
+      milestones: (s.milestones ?? []).filter(m => m.projectId === p.id).sort((a, b) => a.order - b.order).slice(0, MILESTONE_CONTEXT_LIMIT).map(m => {
+        const pr = milestoneProgress(m, tasks);
+        return { id: m.id, title: clip(m.title, 120), targetDate: m.targetDate ?? undefined, version: m.version, progress: `${pr.done}/${pr.total}`, overdue: pr.overdue || undefined };
+      }),
       openTaskCount: open.length,
-      openTasks: open.slice(0, OPEN_TASK_LIMIT).map(t => ({ id: t.id, title: t.title, status: t.status, priority: t.priority, version: t.version, description: t.description ? clip(t.description, 300) : undefined, dependencies: t.dependencies.length ? t.dependencies : undefined })),
+      openTasks: open.slice(0, OPEN_TASK_LIMIT).map(t => ({ id: t.id, title: t.title, status: t.status, milestoneId: t.milestoneId ?? undefined, priority: t.priority, version: t.version, description: t.description ? clip(t.description, 300) : undefined, dependencies: t.dependencies.length ? t.dependencies : undefined })),
       finishedTaskCount: tasks.filter(t => CLOSED.includes(t.status)).length,
       finishedTaskTitles: tasks.filter(t => CLOSED.includes(t.status)).slice(-FINISHED_TITLE_LIMIT).map(t => clip(t.title, 120)),
       pendingChanges: s.approvals.filter(a => a.projectId === p.id && a.status === "pending").length,
