@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 const origin = typeof window === "undefined" ? "" : window.location.origin;
 const host = typeof window === "undefined" ? "" : window.location.hostname;
 const isDev = /localhost|127\.0\.0\.1|id-preview--|lovableproject\.com/.test(host);
-const mcpUrl = `${origin}/api/public/mcp`;
+const mcpUrl = `${origin}/api/public/relay-mcp`;
 
 const nativeSnippet = JSON.stringify({ mcpServers: { relay: { type: "http", url: mcpUrl, headers: { Authorization: "Bearer YOUR_RELAY_TOKEN" } } } }, null, 2);
 const bridgeSnippet = JSON.stringify(

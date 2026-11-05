@@ -31,7 +31,7 @@ const A = ({ href, children }: { href: string; children: ReactNode }) => <a href
 export default function ConnectPage() {
   usePageTitle("Connect an assistant");
   const [url, setUrl] = useState("");
-  useEffect(() => setUrl(new URL("/mcp", window.location.origin).toString()), []);
+  useEffect(() => setUrl(new URL("/api/public/mcp", window.location.origin).toString()), []);
   const quoted = `'${url.replace(/'/g, "'\\''")}'`;
   const cmd = `claude mcp add --scope user --transport http ${SLUG} ${quoted}`;
   const claudeLink = `https://claude.ai/customize/connectors?modal=add-custom-connector&connectorName=${encodeURIComponent(APP_NAME)}&connectorUrl=${encodeURIComponent(url)}`;
