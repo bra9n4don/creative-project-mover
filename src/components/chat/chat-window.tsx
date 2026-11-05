@@ -16,6 +16,10 @@ import { decideProposalFn } from "@/lib/ai/chat.functions";
 import { useCreateIdea, useCreateMilestone, useCreateTask, useUpdateMilestone, useUpdateTask } from "@/lib/hub-api";
 import { useWorkspace } from "@/lib/workspace";
 
+export const DOCK_ASK_EVENT = "carterhub:dock-ask";
+/** Sends a question to the floating chat dock (opens it). */
+export function askDock(text: string) { window.dispatchEvent(new CustomEvent(DOCK_ASK_EVENT, { detail: text })); }
+
 export function AgentMark({ className = "h-7 w-7" }: { className?: string }) {
   return <span className={`grid shrink-0 place-items-center rounded-full bg-primary text-primary-foreground ${className}`}><Waypoints className="h-[55%] w-[55%]" /></span>;
 }
@@ -129,6 +133,15 @@ export function ChatWindow({ threadId, initialMessages, projectId, onActivity, d
     dock?.setOpen(true);
     void sendMessage({ text: t });
   };
+  // Pages (e.g. a project roadmap) can ask the dock a ready-made question.
+  const submitRef = useRef(submit);
+  submitRef.current = submit;
+  useEffect(() => {
+    if (!dock) return;
+    const onAsk = (e: Event) => { const text = (e as CustomEvent<string>).detail; if (typeof text === "string") submitRef.current({ text }); };
+    window.addEventListener(DOCK_ASK_EVENT, onAsk);
+    return () => window.removeEventListener(DOCK_ASK_EVENT, onAsk);
+  }, [!!dock]); // eslint-disable-line react-hooks/exhaustive-deps
   const conversation = (
       <Conversation className="min-h-0 flex-1">
         <ConversationContent className="gap-5">
