@@ -19,6 +19,9 @@ import { useCreateIdea, useCreateMilestone, useCreateTask, useUpdateMilestone, u
 import { useWorkspace } from "@/lib/workspace";
 
 export const DOCK_ASK_EVENT = "carterhub:dock-ask";
+let pendingDockAsk: string | null = null;
+/** Queues a question for the dock chat to send when it mounts (used when the dock was a pill). */
+export function setPendingDockAsk(text: string) { pendingDockAsk = text; }
 /** Sends a question to the floating chat dock (opens it). */
 export function askDock(text: string) { window.dispatchEvent(new CustomEvent(DOCK_ASK_EVENT, { detail: text })); }
 
@@ -175,6 +178,7 @@ export function ChatWindow({ threadId, initialMessages, projectId, onActivity, d
     if (!dock) return;
     const onAsk = (e: Event) => { const text = (e as CustomEvent<string>).detail; if (typeof text === "string") submitRef.current({ text }); };
     window.addEventListener(DOCK_ASK_EVENT, onAsk);
+    if (pendingDockAsk) { const t = pendingDockAsk; pendingDockAsk = null; submitRef.current({ text: t }); }
     return () => window.removeEventListener(DOCK_ASK_EVENT, onAsk);
   }, [!!dock]); // eslint-disable-line react-hooks/exhaustive-deps
   const conversation = (

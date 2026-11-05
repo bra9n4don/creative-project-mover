@@ -4,7 +4,7 @@ import { ChevronLeft, ChevronRight, ChevronsDownUp, Inbox, Maximize2, MoreHorizo
 import { useInbox } from "./use-chat-threads";
 import { ChatThreadView } from "@/pages/chat";
 import { useChatThreadActions, useChatThreads } from "./use-chat-threads";
-import { AgentMark } from "./chat-window";
+import { AgentMark, DOCK_ASK_EVENT, setPendingDockAsk } from "./chat-window";
 
 const OPEN_KEY = "carterhub.chatDock.open";
 const MINI_KEY = "carterhub.chatDock.mini";
@@ -18,6 +18,13 @@ export function ChatDock() {
   useEffect(() => { setOpenState(localStorage.getItem(OPEN_KEY) === "1"); setMiniState(localStorage.getItem(MINI_KEY) !== "0"); }, []);
   const setOpen = (v: boolean) => { setOpenState(v); localStorage.setItem(OPEN_KEY, v ? "1" : "0"); };
   const setMini = (v: boolean) => { setMiniState(v); localStorage.setItem(MINI_KEY, v ? "1" : "0"); if (v) setOpen(false); };
+  // A page asking the dock a question while it's a pill: expand, and the chat sends it once mounted.
+  useEffect(() => {
+    if (!mini) return;
+    const onAsk = (e: Event) => { const t = (e as CustomEvent<string>).detail; if (typeof t !== "string") return; setPendingDockAsk(t); setMiniState(false); localStorage.setItem(MINI_KEY, "0"); setOpen(true); };
+    window.addEventListener(DOCK_ASK_EVENT, onAsk);
+    return () => window.removeEventListener(DOCK_ASK_EVENT, onAsk);
+  }, [mini]); // eslint-disable-line react-hooks/exhaustive-deps
   if (pathname.startsWith("/chat")) return null;
   if (mini) return <MiniDock onExpand={() => setMini(false)} />;
   return (
