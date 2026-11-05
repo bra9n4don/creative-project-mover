@@ -48,7 +48,7 @@ export function LinkedLogins() {
         {q.data?.map((l) => (
           <li key={l.user_id} className="flex items-center justify-between gap-3 rounded-lg border border-border p-3">
             <div className="min-w-0">
-              <div className="font-medium">{label(l.provider)}{l.is_primary && " · original"}{l.is_current && " · this device"}</div>
+              <div className="font-medium">{label(l.provider)}{l.is_primary && " · main"}{l.is_current && " · this device"}</div>
               <div className="truncate font-mono text-xs text-muted-foreground">{l.email} · added {new Date(l.linked_at).toLocaleDateString()}</div>
             </div>
             <div className="flex shrink-0 gap-2">
