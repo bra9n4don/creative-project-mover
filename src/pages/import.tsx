@@ -139,7 +139,7 @@ function Review({ draft, projects, onDone }: { draft: ImportDraft; projects: { i
   return (
     <div className="space-y-4 rounded-xl border p-4" data-testid={`import-draft-${draft.id}`}>
       <div className="flex flex-wrap items-center gap-2">
-        <Pill>{sourceLabels[draft.source]}</Pill>{draft.sourceDetail && <span className="text-xs text-muted-foreground">{draft.sourceDetail}</span>}
+        <Pill value={draft.source} label={sourceLabels[draft.source]} />{draft.sourceDetail && <span className="text-xs text-muted-foreground">{draft.sourceDetail}</span>}
         <span className="ml-auto text-xs text-muted-foreground">{ago(draft.createdAt)}</span>
       </div>
       {isSync ? <h3 className="font-display text-lg">GitHub changes for {c.project.title}</h3> : (<>
@@ -194,14 +194,14 @@ export default function ImportPage() {
   const pending = q.data?.imports ?? [];
   return (
     <AppShell>
-      <PageHeader title="Import" description="Bring in projects you started elsewhere. Everything lands in your inbox for review first." />
+      <PageHeader eyebrow="Bring it in" title="Import" lede="Bring in projects you started elsewhere. Everything lands in your inbox for review first." />
       <div className="mb-4 flex flex-wrap gap-2">{tabs.map(t => (
         <button key={t.id} onClick={() => setTab(t.id)} className={cn("inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-sm", tab === t.id ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground")}><t.icon className="h-4 w-4" />{t.label}</button>
       ))}</div>
       <section className="mb-8 rounded-xl border p-4">{tab === "chat" ? <ChatImport onDone={refresh} /> : tab === "github" ? <GithubImport onDone={refresh} /> : <AssistantImport />}</section>
       <h2 className="mb-3 font-display text-xl">Import inbox {pending.length > 0 && <span className="ml-1 rounded-full bg-primary px-2 py-0.5 text-xs text-primary-foreground">{pending.length}</span>}</h2>
       {q.isLoading ? <LoadingBlock /> : q.error ? <p className="text-sm text-destructive">{errMsg(q.error)}</p> : pending.length === 0
-        ? <Empty icon={Download} title="Nothing waiting" description="Drafts from chats, assistants and GitHub show up here for you to review." />
+        ? <Empty icon={<Download className="h-6 w-6" />} title="Nothing waiting" body="Drafts from chats, assistants and GitHub show up here for you to review." />
         : <div className="space-y-4">{pending.map(d => <Review key={d.id} draft={d} projects={q.data?.projects ?? []} onDone={refresh} />)}</div>}
       {(q.data?.links.length ?? 0) > 0 && (<>
         <h2 className="mb-3 mt-8 font-display text-xl">Synced repositories</h2>
