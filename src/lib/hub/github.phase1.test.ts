@@ -34,7 +34,7 @@ it("repeat issue sync through revision conflicts imports once and preserves owne
 });
 it("records repository activity failure and rethrows without workspace mutation", async () => {
   const s = emptyState(); s.projects = [{ ...fixtureProject(), repository: "synthetic/repo" }]; const db = memoryWorkspace(s);
-  mock.fetch.mockResolvedValue(new Response("Synthetic failure", { status: 500 }));
+  mock.fetch.mockImplementation(async () => new Response("Synthetic failure", { status: 500 }));
   await expect(syncAndRecord(db.actor, "automatic")).rejects.toMatchObject({ status: 502 });
   expect(mock.record).toHaveBeenCalledWith(expect.objectContaining({ last_sync_ok: false, last_sync_trigger: "automatic" }));
   expect(db.update).not.toHaveBeenCalled();

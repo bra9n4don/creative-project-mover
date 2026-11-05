@@ -39,18 +39,28 @@ function DockBody({ open, setOpen, projectId, onMinimize }: { open: boolean; set
   const actions = useChatThreadActions();
   const [threadId, setThreadId] = useState<string>();
   const [menu, setMenu] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
   const waiting = useInbox().data?.filter(i => i.status === "waiting").length ?? 0;
   useEffect(() => {
     if (!data || threadId) return;
     if (data[0]) setThreadId(data[0].id);
-    else void actions.create().then(t => setThreadId(t.id));
+    else {
+      let cancelled = false;
+      void actions.create().then(t => { if (!cancelled) setThreadId(t.id); }).catch(e => { if (!cancelled) setCreateError(e instanceof Error ? e.message : "Could not open chat."); });
+      return () => { cancelled = true; };
+    }
   }, [data, threadId, actions]);
   const title = data?.find(t => t.id === threadId)?.title ?? "Chat";
-  const newChat = () => void actions.create().then(t => { setThreadId(t.id); setOpen(true); });
+  const newChat = () => {
+    setCreateError(null);
+    void actions.create().then(t => { setThreadId(t.id); setOpen(true); }).catch(e => setCreateError(e instanceof Error ? e.message : "Could not create chat."));
+  };
   if (error) return <p className="rounded-2xl border bg-card p-3 text-sm text-destructive">{error.message}</p>;
+  if (!threadId && createError) return <p role="alert" className="rounded-2xl border bg-card p-3 text-sm text-destructive">{createError}</p>;
   if (!threadId) return <div className="rounded-2xl border bg-card/95 px-4 py-3 text-sm text-muted-foreground shadow-dock">Opening chat…</div>;
   return (
     <div className="relative">
+      {createError && <p role="alert" className="mb-2 rounded-lg border bg-card p-2 text-sm text-destructive">{createError}</p>}
       {menu && (
         <div className="absolute bottom-full right-0 mb-2 max-h-72 w-64 overflow-y-auto rounded-2xl border bg-card p-1.5 shadow-dock" role="menu">
           <p className="px-2 py-1 text-xs font-medium text-muted-foreground">Recent chats</p>

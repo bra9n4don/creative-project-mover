@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -110,7 +110,11 @@ export function PasswordSignIn() {
   const [pw, setPw] = useState("");
   const [current, setCurrent] = useState("");
   const [busy, setBusy] = useState(false);
-  useState(() => { void supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? null)); });
+  useEffect(() => {
+    let active = true;
+    void supabase.auth.getUser().then(({ data }) => { if (active) setEmail(data.user?.email ?? null); }).catch(() => { if (active) setEmail(null); });
+    return () => { active = false; };
+  }, []);
   const save = async () => {
     const bad = checkNewPassword(pw, undefined, current);
     if (bad) { toast.error(bad); return; }

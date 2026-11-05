@@ -37,6 +37,15 @@ async function ensureRepo(): Promise<string> {
   return info.full_name;
 }
 
+async function verifyPrivateRepo(repo: string) {
+  const response = await gh(`/repos/${repo}`);
+  if (!response.ok) await fail(response, "Verifying backup repository privacy");
+  const info = await response.json() as { private?: boolean; full_name?: string };
+  if (info.private !== true || info.full_name !== repo) {
+    throw new Error(`${repo} is public or could not be verified private, so Relay won't back up into it.`);
+  }
+}
+
 async function putFile(repo: string, path: string, content: string, sha: string | undefined) {
   const send = (s?: string) => gh(`/repos/${repo}/contents/${path}`, { method: "PUT", body: { message: `Relay backup: ${path}`, content: toBase64(content), ...(s ? { sha: s } : {}) } });
   let res = await send(sha);
@@ -62,6 +71,7 @@ export async function pushBackup(ownerId: string, state: HubState, opts: { force
     const changed = Object.keys(files).filter(p => opts.force || shas[p] !== known[p]);
     if (!changed.length && owner?.backup_repo) return { ok: true, message: "Already up to date." };
     const repo = owner?.backup_repo ?? await ensureRepo();
+    if (owner?.backup_repo) await verifyPrivateRepo(repo);
     for (const p of changed) await putFile(repo, p, files[p]!, known[p]);
     const message = `Backed up ${state.projects.length} projects, ${state.ideas.length} ideas, ${state.handoffs.length} checkpoints.`;
     await record(true, message, { backup_repo: repo, backup_shas: { ...known, ...shas } });

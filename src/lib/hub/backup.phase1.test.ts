@@ -39,9 +39,9 @@ it("matching content hashes skip all network writes", async () => {
 });
 it.each([409, 422])("refreshes remote SHA and retries a mocked %i conflict", async status => {
   mock.owner.backup_repo = "synthetic/relay-workspace";
-  mock.fetch.mockResolvedValueOnce(new Response("conflict", { status })).mockResolvedValueOnce(Response.json({ sha: "remote-sha" })).mockImplementation(async () => Response.json({}));
+  mock.fetch.mockResolvedValueOnce(Response.json({ private: true, full_name: "synthetic/relay-workspace" })).mockResolvedValueOnce(new Response("conflict", { status })).mockResolvedValueOnce(Response.json({ sha: "remote-sha" })).mockImplementation(async () => Response.json({}));
   expect(await pushBackup("synthetic-owner", emptyState(), { force: true })).toMatchObject({ ok: true });
-  expect(JSON.parse(mock.fetch.mock.calls[2][1].body)).toMatchObject({ sha: "remote-sha" });
+  expect(JSON.parse(mock.fetch.mock.calls[3][1].body)).toMatchObject({ sha: "remote-sha" });
   expect(mock.fetch.mock.calls.filter(([, init]) => init.method === "PUT")).toHaveLength(3);
 });
 it("failed write returns failure and does not mark hashes successfully backed up", async () => {
@@ -52,13 +52,23 @@ it("failed write returns failure and does not mark hashes successfully backed up
 });
 it("simultaneous mocked pushes settle after delayed requests without dropping file hashes", async () => {
   mock.owner.backup_repo = "synthetic/relay-workspace";
-  const releases: (() => void)[] = [];
-  mock.fetch.mockImplementation(async () => { if (releases.length < 2) await new Promise<void>(resolve => releases.push(resolve)); return Response.json({}); });
+  let releaseFirstWrite: (() => void) | undefined;
+  let writes = 0;
+  mock.fetch.mockImplementation(async (_url, init) => {
+    if (init.method === "GET") return Response.json({ private: true, full_name: "synthetic/relay-workspace" });
+    writes++;
+    if (writes === 1) await new Promise<void>(resolve => { releaseFirstWrite = resolve; });
+    return Response.json({});
+  });
   const a = pushBackup("synthetic-owner", emptyState(), { force: true });
-  const b = pushBackup("synthetic-owner", emptyState(), { force: true });
-  await vi.waitFor(() => expect(releases).toHaveLength(2));
-  releases.forEach(resolve => resolve());
-  expect(await Promise.all([a, b])).toEqual([expect.objectContaining({ ok: true }), expect.objectContaining({ ok: true })]);
+  try {
+    await vi.waitFor(() => expect(releaseFirstWrite).toBeTypeOf("function"));
+    const b = pushBackup("synthetic-owner", emptyState(), { force: true });
+    releaseFirstWrite?.();
+    expect(await Promise.all([a, b])).toEqual([expect.objectContaining({ ok: true }), expect.objectContaining({ ok: true })]);
+  } finally {
+    releaseFirstWrite?.();
+  }
   expect(mock.record).toHaveBeenCalledTimes(2);
   for (const [record] of mock.record.mock.calls) expect(Object.keys(record.backup_shas).sort()).toEqual(["workspace.json", "workspace.md"]);
 });

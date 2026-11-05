@@ -37,7 +37,7 @@ export async function syncAndRecord(actor: Actor, trigger: "manual" | "automatic
   try {
     r = await syncRepos(actor);
     const queued = await syncIssueLinks(actor);
-    const ideasAdded = await syncIdeaIssues(actor).then(x => x.added).catch(e => { console.error("Idea issue sync failed", e); return 0; });
+    const ideasAdded = (await syncIdeaIssues(actor)).added;
     if (ideasAdded) r = { ...r, message: `${r.message} ${ideasAdded} new GitHub issue${ideasAdded === 1 ? "" : "s"} added to Ideas.` };
     if (queued) r = { ...r, message: `${r.message} ${queued} project${queued === 1 ? " has" : "s have"} GitHub issue changes waiting in Import.` };
   } catch (e) {
