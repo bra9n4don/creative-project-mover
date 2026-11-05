@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { ChevronsDownUp, Maximize2, MoreHorizontal, Plus } from "lucide-react";
+import { ChevronsDownUp, Inbox, Maximize2, MoreHorizontal, Plus } from "lucide-react";
+import { useInbox } from "./use-chat-threads";
 import { ChatThreadView } from "@/pages/chat";
 import { useChatThreadActions, useChatThreads } from "./use-chat-threads";
 import { AgentMark } from "./chat-window";
@@ -27,6 +28,7 @@ function DockBody({ open, setOpen, projectId }: { open: boolean; setOpen: (v: bo
   const actions = useChatThreadActions();
   const [threadId, setThreadId] = useState<string>();
   const [menu, setMenu] = useState(false);
+  const waiting = useInbox().data?.filter(i => i.status === "waiting").length ?? 0;
   useEffect(() => {
     if (!data || threadId) return;
     if (data[0]) setThreadId(data[0].id);
@@ -58,6 +60,7 @@ function DockBody({ open, setOpen, projectId }: { open: boolean; setOpen: (v: bo
         ),
         leading: <button aria-label="New chat" title="New chat" onClick={newChat} className={iconBtn}><Plus className="h-4 w-4" /></button>,
         trailing: <>
+          <Link to="/inbox" aria-label="AI inbox" title="AI inbox" data-testid="link-dock-inbox" className={`${iconBtn} relative`}><Inbox className="h-4 w-4" />{waiting > 0 && <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground">{waiting}</span>}</Link>
           <Link to="/chat/$threadId" params={{ threadId }} aria-label="Open full page" title="Open full page" className={`${iconBtn} hidden sm:grid`}><Maximize2 className="h-4 w-4" /></Link>
           <button aria-label="Recent chats" title="Recent chats" onClick={() => setMenu(m => !m)} className={iconBtn}><MoreHorizontal className="h-4 w-4" /></button>
         </>,

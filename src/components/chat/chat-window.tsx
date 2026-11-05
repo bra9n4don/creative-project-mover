@@ -22,7 +22,7 @@ export function AgentMark({ className = "h-7 w-7" }: { className?: string }) {
 
 type ToolPartLike = { type: string; toolCallId: string; state: string; input?: unknown; output?: unknown; errorText?: string; decision?: "approved" | "dismissed" };
 
-function ProposalCard({ threadId, messageId, part }: { threadId: string; messageId: string; part: ToolPartLike }) {
+export function ProposalCard({ threadId, messageId, part }: { threadId: string; messageId: string; part: ToolPartLike }) {
   const p = part.output as Proposal | undefined;
   const [decision, setDecision] = useState(part.decision);
   const [error, setError] = useState("");
@@ -36,7 +36,13 @@ function ProposalCard({ threadId, messageId, part }: { threadId: string; message
   if (!p) return null;
   if (!p.ok) return <p className="text-xs text-muted-foreground">Suggestion couldn't be made: {p.error}</p>;
 
-  const record = (d: "approved" | "dismissed") => { setDecision(d); void decide({ data: { threadId, messageId, toolCallId: part.toolCallId, decision: d } }).catch(() => {}); };
+  const record = (d: "approved" | "dismissed") => {
+    setDecision(d);
+    void decide({ data: { threadId, messageId, toolCallId: part.toolCallId, decision: d } })
+      .then(() => qc.invalidateQueries({ queryKey: ["chat"] }))
+      .catch(() => {});
+  };
+  const missing = p.kind === "task" ? !state?.projects.some(x => x.id === p.projectId) : p.kind === "task_update" ? !state?.tasks.some(t => t.id === p.taskId) : false;
   const approve = async () => {
     setBusy(true); setError("");
     try {
@@ -69,7 +75,8 @@ function ProposalCard({ threadId, messageId, part }: { threadId: string; message
           <span className="text-xs text-muted-foreground">{decision === "approved" ? "Saved to your workspace." : "Dismissed."}</span>
         ) : (
           <>
-            <button disabled={busy} onClick={() => void approve()} data-testid="button-proposal-approve" className="inline-flex items-center gap-1 rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground disabled:opacity-60"><Check className="h-3.5 w-3.5" />{busy ? "Saving…" : "Approve"}</button>
+            {missing && state && <span className="self-center text-xs text-destructive">{p.kind === "task" ? "That project no longer exists." : "That task no longer exists."}</span>}
+            <button disabled={busy || (missing && !!state)} onClick={() => void approve()} data-testid="button-proposal-approve" className="inline-flex items-center gap-1 rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground disabled:opacity-60"><Check className="h-3.5 w-3.5" />{busy ? "Saving…" : "Approve"}</button>
             <button disabled={busy} onClick={() => record("dismissed")} data-testid="button-proposal-dismiss" className="inline-flex items-center gap-1 rounded-md border px-3 py-1.5 text-xs"><X className="h-3.5 w-3.5" />Dismiss</button>
           </>
         )}
