@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useBlocker, useNavigate } from "@tanstack/react-router";
-import { ArrowLeft, Search, Trash2 } from "lucide-react";
+import { ArrowLeft, Plus, Search, Trash2, X } from "lucide-react";
 import { Link, useParams } from "@/lib/router-compat";
 import { AppShell } from "@/components/shell";
 import { Button } from "@/components/ui/button";
@@ -12,8 +12,9 @@ import { milestoneProgress } from "@/lib/hub/milestones";
 import { ChatSourceLink, useChatSources } from "@/components/chat/chat-source-link";
 import { isTaskOverdue } from "@/lib/hub/task-due";
 
-type Draft = { title: string; description: string; status: Task["status"]; priority: Task["priority"]; dueDate: string; milestoneId: string; notes: string };
-const toDraft = (t: Task): Draft => ({ title: t.title, description: t.description, status: t.status, priority: t.priority, dueDate: t.dueDate ?? "", milestoneId: t.milestoneId ?? "", notes: t.notes ?? "" });
+type Draft = { title: string; description: string; status: Task["status"]; priority: Task["priority"]; dueDate: string; milestoneId: string; notes: string; checklist: Check[] };
+type Check = { id: string; text: string; done: boolean };
+const toDraft = (t: Task): Draft => ({ title: t.title, description: t.description, status: t.status, priority: t.priority, dueDate: t.dueDate ?? "", milestoneId: t.milestoneId ?? "", notes: t.notes ?? "", checklist: t.checklist ?? [] });
 const fmt = (d: string) => new Date(d.length === 10 ? `${d}T12:00:00` : d).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 
 export default function TaskDetail() {
@@ -46,7 +47,7 @@ export default function TaskDetail() {
 
   const save = () => guard("Editing tasks needs your own workspace.", () => {
     if (!draft.title.trim()) { setMsg({ kind: "err", text: "Give the task a title." }); return; }
-    update.mutate({ id: task.id, data: { expectedVersion: task.version, title: draft.title.trim(), description: draft.description, priority: draft.priority, dueDate: draft.dueDate || null, milestoneId: draft.milestoneId || null, notes: draft.notes, ...(draft.status !== task.status && task.status !== "verified" ? { status: draft.status } : {}) } as never }, {
+    update.mutate({ id: task.id, data: { expectedVersion: task.version, title: draft.title.trim(), description: draft.description, priority: draft.priority, dueDate: draft.dueDate || null, milestoneId: draft.milestoneId || null, notes: draft.notes, checklist: draft.checklist.filter(c => c.text.trim()).map(c => ({ ...c, text: c.text.trim() })), ...(draft.status !== task.status && task.status !== "verified" ? { status: draft.status } : {}) } as never }, {
       onSuccess: () => { setDraft(null); setMsg({ kind: "ok", text: "Saved." }); },
       onError: e => { const m = errMessage(e); setMsg({ kind: "err", text: /version|changed|conflict/i.test(m) ? "This task changed, reload to see the latest." : m }); },
     });
@@ -69,6 +70,7 @@ export default function TaskDetail() {
       <section className="space-y-4 rounded-xl border bg-card p-4" aria-label="Edit task">
         <label className="block text-sm"><span className="text-muted-foreground">Title</span><input data-testid="input-task-title" className={`${field} mt-1`} value={draft.title} onChange={e => set("title", e.target.value)} /></label>
         <label className="block text-sm"><span className="text-muted-foreground">Description</span><textarea className={`${field} mt-1 min-h-28`} value={draft.description} onChange={e => set("description", e.target.value)} /></label>
+        <Checklist items={draft.checklist} onChange={v => set("checklist", v)} />
         <label className="block text-sm"><span className="text-muted-foreground">Notes</span><textarea data-testid="input-task-notes" maxLength={10000} placeholder="Progress, links, decisions…" className={`${field} mt-1 min-h-32`} value={draft.notes} onChange={e => set("notes", e.target.value)} /></label>
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="block text-sm"><span className="text-muted-foreground">Status</span>
@@ -110,4 +112,28 @@ export default function TaskDetail() {
       </aside>
     </div>
   </AppShell>;
+}
+
+function Checklist({ items, onChange }: { items: Check[]; onChange: (v: Check[]) => void }) {
+  const [text, setText] = useState("");
+  const done = items.filter(i => i.done).length;
+  const add = () => { if (!text.trim() || items.length >= 100) return; onChange([...items, { id: crypto.randomUUID().slice(0, 12), text: text.trim(), done: false }]); setText(""); };
+  return (
+    <div className="text-sm" data-testid="task-checklist">
+      <div className="flex items-center justify-between"><span className="text-muted-foreground">Checklist</span>{items.length > 0 && <span className="font-mono text-xs text-muted-foreground">{done}/{items.length}</span>}</div>
+      <ul className="mt-1 space-y-1">
+        {items.map(i => (
+          <li key={i.id} className="flex items-center gap-2">
+            <input type="checkbox" aria-label={`Done: ${i.text}`} checked={i.done} onChange={e => onChange(items.map(x => x.id === i.id ? { ...x, done: e.target.checked } : x))} className="h-4 w-4 accent-primary" />
+            <input aria-label="Checklist item" className={`flex-1 rounded-md border-transparent bg-transparent px-1 py-0.5 hover:border-input focus:border-input ${i.done ? "text-muted-foreground line-through" : ""}`} value={i.text} maxLength={500} onChange={e => onChange(items.map(x => x.id === i.id ? { ...x, text: e.target.value } : x))} />
+            <button aria-label={`Remove ${i.text}`} onClick={() => onChange(items.filter(x => x.id !== i.id))} className="rounded p-1 text-muted-foreground hover:bg-accent"><X className="h-3.5 w-3.5" /></button>
+          </li>
+        ))}
+      </ul>
+      <div className="mt-2 flex gap-2">
+        <input data-testid="input-checklist-new" className={field} placeholder="Add a checklist item" value={text} maxLength={500} onChange={e => setText(e.target.value)} onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); add(); } }} />
+        <Button variant="outline" onClick={add} disabled={!text.trim()}><Plus />Add</Button>
+      </div>
+    </div>
+  );
 }

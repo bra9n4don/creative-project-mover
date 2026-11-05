@@ -68,6 +68,16 @@ describe("guarded automation rules", () => {
     expect(db.state.approvals).toHaveLength(1);
   });
 
+  it("saves owner checklists and queues assistant checklist changes", async () => {
+    const { db, owner, agent } = setup();
+    const p = await ops.addProject(owner, { title: "Checklist" });
+    const t = await ops.addTask(owner, { projectId: p.id, title: "Ship" });
+    await ops.editTask(owner, t.id, { expectedVersion: 1, checklist: [{ id: "a", text: "Write tests", done: true }] });
+    expect(db.state.tasks[0]?.checklist).toEqual([{ id: "a", text: "Write tests", done: true }]);
+    await ops.editTask(agent, t.id, { expectedVersion: 2, checklist: [] });
+    expect(db.state.tasks[0]?.checklist).toHaveLength(1);
+  });
+
   it("requires review of assistant due-date changes", async () => {
     const { db, owner, agent } = setup();
     const p = await ops.addProject(owner, { title: "Dates" });
