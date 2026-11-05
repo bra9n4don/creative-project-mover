@@ -10,6 +10,7 @@
 <!-- LOVABLE:END -->
 
 ## Architecture rules
+- Claim status is authenticated-only; public sign-in uses a static private-app message and signed-out onboarding never queries claim state — prevents anonymous workspace-state disclosure without breaking linked sign-ins.
 - Project task lists use an unnested detail child route and optional date-only dueDate in the workspace aggregate; due dates remain separate from actual task timestamps and dashboard inactivity — preserves existing detail pages and counts.
 - Task actual dates are recorded by the shared task patch path for direct edits and approved proposals; timelines read those optional aggregate fields without reconstructing history — keeps all callers consistent and older dates honest.
 - Dashboard metrics derive from the existing workspace task records, with URL-backed filters and latest-update daily buckets — avoids new storage and misleading completion history.

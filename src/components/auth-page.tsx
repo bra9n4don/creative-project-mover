@@ -25,7 +25,7 @@ function AuthFrame({ children, mode }: { children: ReactNode; mode: "in" | "up" 
             {mode === "in" ? "Welcome back. Your last checkpoint is waiting." : "One quiet place that remembers every project for you."}
           </p>
           <p className="mt-4 text-sm leading-relaxed text-sidebar-foreground/70">
-            Single owner, private by default. The first account to sign in with a verified email claims this workspace.
+            Single owner, private by default. Only the owner's linked sign-ins can open this workspace.
           </p>
         </div>
       </div>
@@ -62,14 +62,13 @@ export function AuthPage({ mode }: { mode: "in" | "up" | "forgot" | "reset" }) {
     });
   }, [isSignedIn, mode, dest]);
 
-  // Once the owner has claimed CarterHub, new sign-ups are hidden (linked sign-ins still work).
-  const [claimed, setClaimed] = useState(false);
+  // This is a private app, not a public signup flow. No anonymous claim-state lookup.
+  const [linkSignup, setLinkSignup] = useState(false);
   useEffect(() => {
-    void supabase.rpc("hub_is_claimed").then(({ data }) => {
-      const c = data === true;
-      setClaimed(c);
-      if (c && mode === "up" && !new URLSearchParams(window.location.search).has("link")) void navigate({ href: `/sign-in${nextSearch}` });
-    });
+    if (mode !== "up") return;
+    const linking = new URLSearchParams(window.location.search).has("link");
+    setLinkSignup(linking);
+    if (!linking) void navigate({ href: `/sign-in${nextSearch}` });
   }, [mode]);
 
   const submit = async (e: FormEvent) => {
@@ -81,6 +80,7 @@ export function AuthPage({ mode }: { mode: "in" | "up" | "forgot" | "reset" }) {
         if (error) throw error;
         goDest();
       } else if (mode === "up") {
+        if (!linkSignup) throw new Error("CarterHub is private. Sign in with your linked account.");
         const { error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: new URL(dest, window.location.origin).href } });
         if (error) throw error;
         setMsg({ kind: "ok", text: "Check your email to confirm your address, then come back to sign in." });
@@ -114,6 +114,8 @@ export function AuthPage({ mode }: { mode: "in" | "up" | "forgot" | "reset" }) {
     reset: ["Choose a new password", "You'll be signed in right after"],
   }[mode];
 
+  if (mode === "up" && !linkSignup) return null;
+
   return (
     <AuthFrame mode={mode === "up" ? "up" : "in"}>
       <div className="w-[420px] max-w-full rounded-2xl border bg-card p-7 shadow-2xl">
@@ -145,7 +147,7 @@ export function AuthPage({ mode }: { mode: "in" | "up" | "forgot" | "reset" }) {
           </button>
         </form>
         <div className="mt-5 flex flex-wrap justify-between gap-2 text-sm text-muted-foreground">
-          {mode === "in" && <><Link to="/forgot-password" className="text-primary">Forgot password?</Link>{claimed ? <span>Private app. Only the owner can sign in.</span> : <span>New here? <Link to={`/sign-up${nextSearch}` as "/sign-up"} className="font-semibold text-primary">Create account</Link></span>}</>}
+          {mode === "in" && <><Link to="/forgot-password" className="text-primary">Forgot password?</Link><span>Private app. Only the owner can sign in.</span></>}
           {mode === "up" && <span>Already have one? <Link to={`/sign-in${nextSearch}` as "/sign-in"} className="font-semibold text-primary">Sign in</Link></span>}
           {(mode === "forgot" || mode === "reset") && <Link to="/sign-in" className="text-primary">Back to sign in</Link>}
         </div>
