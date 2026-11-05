@@ -58,7 +58,7 @@ function DockBody({ open, setOpen, projectId }: { open: boolean; setOpen: (v: bo
         ),
         leading: <button aria-label="New chat" title="New chat" onClick={newChat} className={iconBtn}><Plus className="h-4 w-4" /></button>,
         trailing: <>
-          <Link to="/chat/$threadId" params={{ threadId }} aria-label="Open full page" title="Open full page" className={iconBtn}><Maximize2 className="h-4 w-4" /></Link>
+          <Link to="/chat/$threadId" params={{ threadId }} aria-label="Open full page" title="Open full page" className={`${iconBtn} hidden sm:grid`}><Maximize2 className="h-4 w-4" /></Link>
           <button aria-label="Recent chats" title="Recent chats" onClick={() => setMenu(m => !m)} className={iconBtn}><MoreHorizontal className="h-4 w-4" /></button>
         </>,
       }} />

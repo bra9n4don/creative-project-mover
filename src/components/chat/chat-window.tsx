@@ -100,9 +100,9 @@ export function ChatWindow({ threadId, initialMessages, projectId, onActivity, d
     messages: initialMessages,
     transport,
     onError: e => { let m = e.message; try { m = JSON.parse(m).message ?? m; } catch { /* plain text */ } setErr(m || "Chat failed. Try again."); },
-    onFinish: () => { onActivity?.(); textareaRef.current?.focus(); },
+    onFinish: () => { onActivity?.(); if (!dock || dock.open) textareaRef.current?.focus(); },
   });
-  useEffect(() => { textareaRef.current?.focus(); }, [threadId]);
+  useEffect(() => { if (!dock) textareaRef.current?.focus(); }, [threadId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const busy = status === "submitted" || status === "streaming";
   const submit = (msg: { text: string }) => {
@@ -163,9 +163,9 @@ export function ChatWindow({ threadId, initialMessages, projectId, onActivity, d
       <PromptInput onSubmit={submit} className="rounded-2xl border bg-card/95 shadow-dock backdrop-blur [&_[data-slot=input-group]]:rounded-2xl">
         <div className="flex w-full items-center gap-1 px-2 py-1.5">
           {dock.leading}
-          <PromptInputTextarea ref={textareaRef} value={text} maxLength={CHAT_INPUT_LIMIT} onFocus={() => dock.setOpen(true)} onChange={e => setText(e.target.value)} placeholder="Ask CarterHub…" data-testid="input-chat" className="min-h-9 flex-1 py-2" rows={1} />
+          <PromptInputTextarea ref={textareaRef} value={text} maxLength={CHAT_INPUT_LIMIT} onClick={() => dock.setOpen(true)} onChange={e => setText(e.target.value)} placeholder="Ask CarterHub…" data-testid="input-chat" className="min-h-9 min-w-0 flex-1 truncate py-2" rows={1} />
           <PromptInputSubmit status={status} onStop={stop} disabled={!busy && !text.trim()} data-testid="button-chat-send" className="shrink-0 rounded-full" />
-          <span className="mx-1 h-5 w-px bg-border" />
+          <span className="mx-1 hidden h-5 w-px bg-border sm:block" />
           {dock.trailing}
         </div>
       </PromptInput>
