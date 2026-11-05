@@ -6,6 +6,7 @@ import { Confirm, Empty, ErrorBlock, Field, LoadingBlock, PageHeader, Pill, ago,
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useHubResult, usePageTitle, useWorkspace } from "@/lib/workspace";
 import { cn } from "@/lib/utils";
+import { ChatSourceLink, useChatSources } from "@/components/chat/chat-source-link";
 
 const tabs = ["inbox", "exploring", "promoted", "archived"] as const;
 const parseTags = (s: string) => s.split(",").map((t) => t.trim()).filter(Boolean).slice(0, 12);
@@ -43,6 +44,7 @@ function EditIdea({ idea, onClose }: { idea: Idea | null; onClose: () => void })
 export default function IdeasPage() {
   usePageTitle("Ideas", "Catch ideas before they vanish. Promote the good ones into projects.");
   const { state, isLoading, error, refetch, guard } = useWorkspace();
+  const sources = useChatSources();
   const [tab, setTab] = useState<(typeof tabs)[number]>("inbox");
   const [cap, setCap] = useState({ title: "", description: "", tags: "" });
   const [editing, setEditing] = useState<Idea | null>(null);
