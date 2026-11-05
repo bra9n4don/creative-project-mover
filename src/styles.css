@@ -6,7 +6,7 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --shadow-dock: 0 12px 40px -12px color-mix(in oklab, var(--foreground) 35%, transparent), 0 2px 8px -2px color-mix(in oklab, var(--foreground) 15%, transparent);
+  --shadow-dock: 0 12px 40px -12px hsl(var(--foreground) / 0.35), 0 2px 8px -2px hsl(var(--foreground) / 0.15);
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
   --color-border: hsl(var(--border));
