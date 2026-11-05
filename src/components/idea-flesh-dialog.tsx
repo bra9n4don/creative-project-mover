@@ -62,7 +62,7 @@ export function IdeaFleshDialog({ idea, onClose }: { idea: Idea | null; onClose:
     if (!idea || !draft) return;
     const validated = reviewedIdeaDraftSchema.safeParse(draft);
     if (!validated.success) { setError(validated.error.issues[0]?.message ?? "Check the draft fields."); return; }
-    update.mutate({ id: idea.id, data: { description: buildDescription(idea, validated.data), status: idea.status === "inbox" ? "exploring" : idea.status } }, result("Idea fleshed out", () => { setDraft(null); setNotes(""); onClose(); }));
+    update.mutate({ id: idea.id, data: { description: buildDescription(idea, validated.data), ...(idea.status === "inbox" ? { status: "exploring" as const } : {}) } }, result("Idea fleshed out", () => { setDraft(null); setNotes(""); onClose(); }));
   };
 
   const saving = update.isPending;
