@@ -24,6 +24,7 @@ const THEME_BOOT = `try{var t=JSON.parse(localStorage.getItem("relay-theme")||"n
 import { WorkspaceProvider } from "../lib/workspace";
 import { TooltipProvider } from "../components/ui/tooltip";
 import { Toaster } from "../components/ui/toaster";
+import { Toaster as SonnerToaster } from "sonner";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 
 function NotFoundComponent() {
@@ -150,6 +151,7 @@ function RootComponent() {
             </WorkspaceProvider>
           </AccountTheme>
           <Toaster />
+          <SonnerToaster position="top-center" toastOptions={{ classNames: { toast: "!bg-card !text-card-foreground !border-border", error: "!text-destructive" } }} />
         </TooltipProvider>
       </AuthProvider>
     </QueryClientProvider>

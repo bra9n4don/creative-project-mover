@@ -92,6 +92,13 @@
       "when": 1793853880031,
       "tag": "0012_stronger_link_codes",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1793855516766,
+      "tag": "0013_revoke_anon_is_hub_owner",
+      "breakpoints": true
     }
   ]
 }
