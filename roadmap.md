@@ -6,5 +6,5 @@
 - [x] Add project dashboard with daily task charts, progress, and seven-day inactive counts.
 - [x] Set up email infrastructure for carterlab.app (domain verifying DNS; scaffold + branding done)
 - [x] Brand CarterHub auth emails (ember accent, noreply@carterlab.app)
-- [ ] Publish to carterhub.carterlab.app — publishing requested this turn
-- [ ] Monitor DNS verification in More → Emails (can take up to 72h; nothing to build)
+- [x] Publish dashboard and project task lists; verify all five real projects on the published site.
+- [x] Confirm carterlab.app email DNS verification and enabled auth emails.
