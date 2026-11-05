@@ -25,5 +25,6 @@ export interface Task {
   completedAt?: string;
   dueDate?: string | null;
   notes?: string;
+  checklist?: { id: string; text: string; done: boolean }[];
   milestoneId?: string | null;
 }

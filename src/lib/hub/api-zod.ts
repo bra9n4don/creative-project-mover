@@ -44,6 +44,7 @@ export const GetDemoStateResponse = zod.object({
   "completedAt": zod.iso.datetime().optional(),
   "dueDate": zod.iso.date().nullable().optional(),
   "notes": zod.string().max(10000).optional(),
+  "checklist": zod.array(zod.object({ "id": zod.string().min(1).max(64), "text": zod.string().trim().min(1).max(500), "done": zod.boolean() })).max(100).optional(),
   "milestoneId": zod.string().nullable().optional()
 })),
   "ideas": zod.array(zod.object({
@@ -140,6 +141,7 @@ export const GetHubStateResponse = zod.object({
   "completedAt": zod.iso.datetime().optional(),
   "dueDate": zod.iso.date().nullable().optional(),
   "notes": zod.string().max(10000).optional(),
+  "checklist": zod.array(zod.object({ "id": zod.string().min(1).max(64), "text": zod.string().trim().min(1).max(500), "done": zod.boolean() })).max(100).optional(),
   "milestoneId": zod.string().nullable().optional()
 })),
   "ideas": zod.array(zod.object({
@@ -379,6 +381,7 @@ export const createTaskBodyDependenciesMax = 50;
 export const CreateTaskBody = zod.object({
   "dueDate": zod.iso.date().nullable().optional(),
   "notes": zod.string().max(10000).optional(),
+  "checklist": zod.array(zod.object({ "id": zod.string().min(1).max(64), "text": zod.string().trim().min(1).max(500), "done": zod.boolean() })).max(100).optional(),
   "milestoneId": zod.string().nullable().optional(),
   "projectId": zod.string(),
   "title": zod.string().min(1).max(createTaskBodyTitleMax),
@@ -404,7 +407,8 @@ export const CreateTaskResponse = zod.object({
   "startedAt": zod.iso.datetime().optional(),
   "completedAt": zod.iso.datetime().optional(),
   "dueDate": zod.iso.date().nullable().optional(),
-  "notes": zod.string().max(10000).optional()
+  "notes": zod.string().max(10000).optional(),
+  "checklist": zod.array(zod.object({ "id": zod.string().min(1).max(64), "text": zod.string().trim().min(1).max(500), "done": zod.boolean() })).max(100).optional()
 })
 
 
@@ -428,6 +432,7 @@ export const updateTaskBodyDependenciesMax = 50;
 export const UpdateTaskBody = zod.object({
   "dueDate": zod.iso.date().nullable().optional(),
   "notes": zod.string().max(10000).optional(),
+  "checklist": zod.array(zod.object({ "id": zod.string().min(1).max(64), "text": zod.string().trim().min(1).max(500), "done": zod.boolean() })).max(100).optional(),
   "milestoneId": zod.string().nullable().optional(),
   "expectedVersion": zod.number().int().min(1),
   "title": zod.string().min(1).max(updateTaskBodyTitleMax).optional(),
