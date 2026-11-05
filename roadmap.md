@@ -1,7 +1,7 @@
 # Roadmap
 
 ## Current
-- [ ] Add project task lists linked from the dashboard with optional due dates, status, and progress.
+- [x] Add project task lists linked from the dashboard with optional due dates, status, and progress.
 - [x] Add per-project actual-date task timeline and status-based progress bars; test saved transitions.
 - [x] Add project dashboard with daily task charts, progress, and seven-day inactive counts.
 - [x] Set up email infrastructure for carterlab.app (domain verifying DNS; scaffold + branding done)
