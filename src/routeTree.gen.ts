@@ -21,7 +21,6 @@ import { Route as IdeasRouteImport } from './routes/ideas'
 import { Route as ImportRouteImport } from './routes/import'
 import { Route as InboxRouteImport } from './routes/inbox'
 import { Route as KickoffRouteImport } from './routes/kickoff'
-import { Route as McpRouteImport } from './routes/mcp'
 import { Route as MindMapRouteImport } from './routes/mind-map'
 import { Route as OverviewRouteImport } from './routes/overview'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
@@ -30,7 +29,6 @@ import { Route as SetupRouteImport } from './routes/setup'
 import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as SignUpRouteImport } from './routes/sign-up'
 import { Route as UsageRouteImport } from './routes/usage'
-import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ApiIdeaFleshRouteImport } from './routes/api/idea-flesh'
 import { Route as ApiImportDraftRouteImport } from './routes/api/import-draft'
@@ -44,9 +42,11 @@ import { Route as ProjectsIdRouteImport } from './routes/projects.$id'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as ApiPublicHealthzRouteImport } from './routes/api/public/healthz'
 import { Route as ApiPublicMcpRouteImport } from './routes/api/public/mcp'
+import { Route as ApiPublicRelayMcpRouteImport } from './routes/api/public/relay-mcp'
 import { Route as ProjectsIdChatsRouteImport } from './routes/projects.$id_.chats'
 import { Route as ProjectsIdRoadmapRouteImport } from './routes/projects.$id_.roadmap'
 import { Route as ProjectsIdTasksRouteImport } from './routes/projects.$id_.tasks'
+import { Route as ApiPublicChar91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/api/public/[.well-known]/oauth-protected-resource'
 import { Route as ApiPublicHubSplatRouteImport } from './routes/api/public/hub/$'
 import { Route as ApiPublicHubDemoRouteImport } from './routes/api/public/hub/demo'
 import { Route as ApiPublicHubDocsRouteImport } from './routes/api/public/hub/docs'
@@ -117,11 +117,6 @@ const KickoffRoute = KickoffRouteImport.update({
   path: '/kickoff',
   getParentRoute: () => rootRouteImport,
 } as any)
-const McpRoute = McpRouteImport.update({
-  id: '/mcp',
-  path: '/mcp',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const MindMapRoute = MindMapRouteImport.update({
   id: '/mind-map',
   path: '/mind-map',
@@ -162,12 +157,6 @@ const UsageRoute = UsageRouteImport.update({
   path: '/usage',
   getParentRoute: () => rootRouteImport,
 } as any)
-const Char91DotwellKnownChar93OauthProtectedResourceRoute =
-  Char91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
-    id: '/.well-known/oauth-protected-resource',
-    path: '/.well-known/oauth-protected-resource',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 const ApiChatRoute = ApiChatRouteImport.update({
   id: '/api/chat',
   path: '/api/chat',
@@ -233,6 +222,11 @@ const ApiPublicMcpRoute = ApiPublicMcpRouteImport.update({
   path: '/api/public/mcp',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicRelayMcpRoute = ApiPublicRelayMcpRouteImport.update({
+  id: '/api/public/relay-mcp',
+  path: '/api/public/relay-mcp',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProjectsIdChatsRoute = ProjectsIdChatsRouteImport.update({
   id: '/projects/$id_/chats',
   path: '/projects/$id/chats',
@@ -248,6 +242,12 @@ const ProjectsIdTasksRoute = ProjectsIdTasksRouteImport.update({
   path: '/projects/$id/tasks',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicChar91DotwellKnownChar93OauthProtectedResourceRoute =
+  ApiPublicChar91DotwellKnownChar93OauthProtectedResourceRouteImport.update({
+    id: '/api/public/.well-known/oauth-protected-resource',
+    path: '/api/public/.well-known/oauth-protected-resource',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHubSplatRoute = ApiPublicHubSplatRouteImport.update({
   id: '/api/public/hub/$',
   path: '/api/public/hub/$',
@@ -307,7 +307,6 @@ export interface FileRoutesByFullPath {
   '/import': typeof ImportRoute
   '/inbox': typeof InboxRoute
   '/kickoff': typeof KickoffRoute
-  '/mcp': typeof McpRoute
   '/mind-map': typeof MindMapRoute
   '/overview': typeof OverviewRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -316,7 +315,6 @@ export interface FileRoutesByFullPath {
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
   '/usage': typeof UsageRoute
-  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/api/chat': typeof ApiChatRoute
   '/api/idea-flesh': typeof ApiIdeaFleshRoute
   '/api/import-draft': typeof ApiImportDraftRoute
@@ -330,9 +328,11 @@ export interface FileRoutesByFullPath {
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/api/public/healthz': typeof ApiPublicHealthzRoute
   '/api/public/mcp': typeof ApiPublicMcpRoute
+  '/api/public/relay-mcp': typeof ApiPublicRelayMcpRoute
   '/projects/$id/chats': typeof ProjectsIdChatsRoute
   '/projects/$id/roadmap': typeof ProjectsIdRoadmapRoute
   '/projects/$id/tasks': typeof ProjectsIdTasksRoute
+  '/api/public/.well-known/oauth-protected-resource': typeof ApiPublicChar91DotwellKnownChar93OauthProtectedResourceRoute
   '/api/public/hub/$': typeof ApiPublicHubSplatRoute
   '/api/public/hub/demo': typeof ApiPublicHubDemoRoute
   '/api/public/hub/docs': typeof ApiPublicHubDocsRoute
@@ -356,7 +356,6 @@ export interface FileRoutesByTo {
   '/import': typeof ImportRoute
   '/inbox': typeof InboxRoute
   '/kickoff': typeof KickoffRoute
-  '/mcp': typeof McpRoute
   '/mind-map': typeof MindMapRoute
   '/overview': typeof OverviewRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -365,7 +364,6 @@ export interface FileRoutesByTo {
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
   '/usage': typeof UsageRoute
-  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/api/chat': typeof ApiChatRoute
   '/api/idea-flesh': typeof ApiIdeaFleshRoute
   '/api/import-draft': typeof ApiImportDraftRoute
@@ -379,9 +377,11 @@ export interface FileRoutesByTo {
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/api/public/healthz': typeof ApiPublicHealthzRoute
   '/api/public/mcp': typeof ApiPublicMcpRoute
+  '/api/public/relay-mcp': typeof ApiPublicRelayMcpRoute
   '/projects/$id/chats': typeof ProjectsIdChatsRoute
   '/projects/$id/roadmap': typeof ProjectsIdRoadmapRoute
   '/projects/$id/tasks': typeof ProjectsIdTasksRoute
+  '/api/public/.well-known/oauth-protected-resource': typeof ApiPublicChar91DotwellKnownChar93OauthProtectedResourceRoute
   '/api/public/hub/$': typeof ApiPublicHubSplatRoute
   '/api/public/hub/demo': typeof ApiPublicHubDemoRoute
   '/api/public/hub/docs': typeof ApiPublicHubDocsRoute
@@ -406,7 +406,6 @@ export interface FileRoutesById {
   '/import': typeof ImportRoute
   '/inbox': typeof InboxRoute
   '/kickoff': typeof KickoffRoute
-  '/mcp': typeof McpRoute
   '/mind-map': typeof MindMapRoute
   '/overview': typeof OverviewRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -415,7 +414,6 @@ export interface FileRoutesById {
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
   '/usage': typeof UsageRoute
-  '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   '/api/chat': typeof ApiChatRoute
   '/api/idea-flesh': typeof ApiIdeaFleshRoute
   '/api/import-draft': typeof ApiImportDraftRoute
@@ -429,9 +427,11 @@ export interface FileRoutesById {
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/api/public/healthz': typeof ApiPublicHealthzRoute
   '/api/public/mcp': typeof ApiPublicMcpRoute
+  '/api/public/relay-mcp': typeof ApiPublicRelayMcpRoute
   '/projects/$id_/chats': typeof ProjectsIdChatsRoute
   '/projects/$id_/roadmap': typeof ProjectsIdRoadmapRoute
   '/projects/$id_/tasks': typeof ProjectsIdTasksRoute
+  '/api/public/.well-known/oauth-protected-resource': typeof ApiPublicChar91DotwellKnownChar93OauthProtectedResourceRoute
   '/api/public/hub/$': typeof ApiPublicHubSplatRoute
   '/api/public/hub/demo': typeof ApiPublicHubDemoRoute
   '/api/public/hub/docs': typeof ApiPublicHubDocsRoute
@@ -457,7 +457,6 @@ export interface FileRouteTypes {
     | '/import'
     | '/inbox'
     | '/kickoff'
-    | '/mcp'
     | '/mind-map'
     | '/overview'
     | '/reset-password'
@@ -466,7 +465,6 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/sign-up'
     | '/usage'
-    | '/.well-known/oauth-protected-resource'
     | '/api/chat'
     | '/api/idea-flesh'
     | '/api/import-draft'
@@ -480,9 +478,11 @@ export interface FileRouteTypes {
     | '/.lovable/oauth/consent'
     | '/api/public/healthz'
     | '/api/public/mcp'
+    | '/api/public/relay-mcp'
     | '/projects/$id/chats'
     | '/projects/$id/roadmap'
     | '/projects/$id/tasks'
+    | '/api/public/.well-known/oauth-protected-resource'
     | '/api/public/hub/$'
     | '/api/public/hub/demo'
     | '/api/public/hub/docs'
@@ -506,7 +506,6 @@ export interface FileRouteTypes {
     | '/import'
     | '/inbox'
     | '/kickoff'
-    | '/mcp'
     | '/mind-map'
     | '/overview'
     | '/reset-password'
@@ -515,7 +514,6 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/sign-up'
     | '/usage'
-    | '/.well-known/oauth-protected-resource'
     | '/api/chat'
     | '/api/idea-flesh'
     | '/api/import-draft'
@@ -529,9 +527,11 @@ export interface FileRouteTypes {
     | '/.lovable/oauth/consent'
     | '/api/public/healthz'
     | '/api/public/mcp'
+    | '/api/public/relay-mcp'
     | '/projects/$id/chats'
     | '/projects/$id/roadmap'
     | '/projects/$id/tasks'
+    | '/api/public/.well-known/oauth-protected-resource'
     | '/api/public/hub/$'
     | '/api/public/hub/demo'
     | '/api/public/hub/docs'
@@ -555,7 +555,6 @@ export interface FileRouteTypes {
     | '/import'
     | '/inbox'
     | '/kickoff'
-    | '/mcp'
     | '/mind-map'
     | '/overview'
     | '/reset-password'
@@ -564,7 +563,6 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/sign-up'
     | '/usage'
-    | '/.well-known/oauth-protected-resource'
     | '/api/chat'
     | '/api/idea-flesh'
     | '/api/import-draft'
@@ -578,9 +576,11 @@ export interface FileRouteTypes {
     | '/.lovable/oauth/consent'
     | '/api/public/healthz'
     | '/api/public/mcp'
+    | '/api/public/relay-mcp'
     | '/projects/$id_/chats'
     | '/projects/$id_/roadmap'
     | '/projects/$id_/tasks'
+    | '/api/public/.well-known/oauth-protected-resource'
     | '/api/public/hub/$'
     | '/api/public/hub/demo'
     | '/api/public/hub/docs'
@@ -605,7 +605,6 @@ export interface RootRouteChildren {
   ImportRoute: typeof ImportRoute
   InboxRoute: typeof InboxRoute
   KickoffRoute: typeof KickoffRoute
-  McpRoute: typeof McpRoute
   MindMapRoute: typeof MindMapRoute
   OverviewRoute: typeof OverviewRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
@@ -614,7 +613,6 @@ export interface RootRouteChildren {
   SignInRoute: typeof SignInRoute
   SignUpRoute: typeof SignUpRoute
   UsageRoute: typeof UsageRoute
-  Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   ApiChatRoute: typeof ApiChatRoute
   ApiIdeaFleshRoute: typeof ApiIdeaFleshRoute
   ApiImportDraftRoute: typeof ApiImportDraftRoute
@@ -628,9 +626,11 @@ export interface RootRouteChildren {
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   ApiPublicHealthzRoute: typeof ApiPublicHealthzRoute
   ApiPublicMcpRoute: typeof ApiPublicMcpRoute
+  ApiPublicRelayMcpRoute: typeof ApiPublicRelayMcpRoute
   ProjectsIdChatsRoute: typeof ProjectsIdChatsRoute
   ProjectsIdRoadmapRoute: typeof ProjectsIdRoadmapRoute
   ProjectsIdTasksRoute: typeof ProjectsIdTasksRoute
+  ApiPublicChar91DotwellKnownChar93OauthProtectedResourceRoute: typeof ApiPublicChar91DotwellKnownChar93OauthProtectedResourceRoute
   ApiPublicHubSplatRoute: typeof ApiPublicHubSplatRoute
   ApiPublicHubDemoRoute: typeof ApiPublicHubDemoRoute
   ApiPublicHubDocsRoute: typeof ApiPublicHubDocsRoute
@@ -728,13 +728,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof KickoffRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/mcp': {
-      id: '/mcp'
-      path: '/mcp'
-      fullPath: '/mcp'
-      preLoaderRoute: typeof McpRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/mind-map': {
       id: '/mind-map'
       path: '/mind-map'
@@ -789,13 +782,6 @@ declare module '@tanstack/react-router' {
       path: '/usage'
       fullPath: '/usage'
       preLoaderRoute: typeof UsageRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/.well-known/oauth-protected-resource': {
-      id: '/.well-known/oauth-protected-resource'
-      path: '/.well-known/oauth-protected-resource'
-      fullPath: '/.well-known/oauth-protected-resource'
-      preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/chat': {
@@ -889,6 +875,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicMcpRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/relay-mcp': {
+      id: '/api/public/relay-mcp'
+      path: '/api/public/relay-mcp'
+      fullPath: '/api/public/relay-mcp'
+      preLoaderRoute: typeof ApiPublicRelayMcpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/projects/$id_/chats': {
       id: '/projects/$id_/chats'
       path: '/projects/$id/chats'
@@ -908,6 +901,13 @@ declare module '@tanstack/react-router' {
       path: '/projects/$id/tasks'
       fullPath: '/projects/$id/tasks'
       preLoaderRoute: typeof ProjectsIdTasksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/.well-known/oauth-protected-resource': {
+      id: '/api/public/.well-known/oauth-protected-resource'
+      path: '/api/public/.well-known/oauth-protected-resource'
+      fullPath: '/api/public/.well-known/oauth-protected-resource'
+      preLoaderRoute: typeof ApiPublicChar91DotwellKnownChar93OauthProtectedResourceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/hub/$': {
@@ -989,7 +989,6 @@ const rootRouteChildren: RootRouteChildren = {
   ImportRoute: ImportRoute,
   InboxRoute: InboxRoute,
   KickoffRoute: KickoffRoute,
-  McpRoute: McpRoute,
   MindMapRoute: MindMapRoute,
   OverviewRoute: OverviewRoute,
   ResetPasswordRoute: ResetPasswordRoute,
@@ -998,8 +997,6 @@ const rootRouteChildren: RootRouteChildren = {
   SignInRoute: SignInRoute,
   SignUpRoute: SignUpRoute,
   UsageRoute: UsageRoute,
-  Char91DotwellKnownChar93OauthProtectedResourceRoute:
-    Char91DotwellKnownChar93OauthProtectedResourceRoute,
   ApiChatRoute: ApiChatRoute,
   ApiIdeaFleshRoute: ApiIdeaFleshRoute,
   ApiImportDraftRoute: ApiImportDraftRoute,
@@ -1013,9 +1010,12 @@ const rootRouteChildren: RootRouteChildren = {
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   ApiPublicHealthzRoute: ApiPublicHealthzRoute,
   ApiPublicMcpRoute: ApiPublicMcpRoute,
+  ApiPublicRelayMcpRoute: ApiPublicRelayMcpRoute,
   ProjectsIdChatsRoute: ProjectsIdChatsRoute,
   ProjectsIdRoadmapRoute: ProjectsIdRoadmapRoute,
   ProjectsIdTasksRoute: ProjectsIdTasksRoute,
+  ApiPublicChar91DotwellKnownChar93OauthProtectedResourceRoute:
+    ApiPublicChar91DotwellKnownChar93OauthProtectedResourceRoute,
   ApiPublicHubSplatRoute: ApiPublicHubSplatRoute,
   ApiPublicHubDemoRoute: ApiPublicHubDemoRoute,
   ApiPublicHubDocsRoute: ApiPublicHubDocsRoute,
