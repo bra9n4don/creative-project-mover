@@ -247,6 +247,104 @@
           "additionalProperties": false
         },
         "outputSchema": null
+      },
+      {
+        "name": "import_project",
+        "title": "Send project to CarterHub",
+        "description": "Send a project started in this chat to the owner's CarterHub import inbox as a draft. Nothing is saved to projects until the owner reviews and approves it.",
+        "annotations": {
+          "destructiveHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "type": "object",
+          "properties": {
+            "title": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200,
+              "description": "Project name."
+            },
+            "goal": {
+              "description": "What the project should achieve.",
+              "type": "string",
+              "maxLength": 2000
+            },
+            "description": {
+              "description": "Summary of what was discussed and decided.",
+              "type": "string",
+              "maxLength": 5000
+            },
+            "tasks": {
+              "description": "Remaining next steps.",
+              "maxItems": 30,
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "description": {
+                    "type": "string",
+                    "maxLength": 1000
+                  },
+                  "priority": {
+                    "type": "string",
+                    "enum": [
+                      "low",
+                      "medium",
+                      "high"
+                    ]
+                  }
+                },
+                "required": [
+                  "title"
+                ]
+              }
+            },
+            "ideas": {
+              "description": "Side ideas not committed to yet.",
+              "maxItems": 15,
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 150
+                  },
+                  "description": {
+                    "type": "string",
+                    "maxLength": 1000
+                  }
+                },
+                "required": [
+                  "title"
+                ]
+              }
+            },
+            "nextAction": {
+              "description": "One concrete next step for the handoff.",
+              "type": "string",
+              "maxLength": 1000
+            },
+            "summary": {
+              "description": "Progress and open questions for the handoff.",
+              "type": "string",
+              "maxLength": 2000
+            }
+          },
+          "required": [
+            "title"
+          ],
+          "additionalProperties": false
+        },
+        "outputSchema": null
       }
     ]
   }
