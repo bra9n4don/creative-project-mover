@@ -1,6 +1,7 @@
 # Roadmap
 
 ## Current
+- [x] Add project dashboard with daily task charts, progress, and seven-day inactive counts.
 - [x] Set up email infrastructure for carterlab.app (domain verifying DNS; scaffold + branding done)
 - [x] Brand CarterHub auth emails (ember accent, noreply@carterlab.app)
 - [ ] Publish to carterhub.carterlab.app — publishing requested this turn
