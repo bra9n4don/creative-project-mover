@@ -54,3 +54,11 @@ export function upcomingMilestones<M extends Pick<Milestone, "id" | "targetDate"
   return milestones.filter(m => m.targetDate).map(m => ({ milestone: m, progress: milestoneProgress(m, tasks, today) }))
     .filter(x => !x.progress.complete).sort((a, b) => a.milestone.targetDate!.localeCompare(b.milestone.targetDate!));
 }
+
+/** Groups tasks under their milestone (roadmap order), then a trailing "No milestone" group (milestone: null) when any task has none. */
+export function groupTasksByMilestone<T extends TaskLike, M extends Pick<Milestone, "id" | "targetDate">>(tasks: T[], milestones: M[], allTasks: TaskLike[] = tasks): Array<{ milestone: M | null; tasks: T[]; progress: MilestoneProgress | null }> {
+  const groups: Array<{ milestone: M | null; tasks: T[]; progress: MilestoneProgress | null }> = milestones.map(m => ({ milestone: m, tasks: tasks.filter(t => t.milestoneId === m.id), progress: milestoneProgress(m, allTasks) }));
+  const loose = tasks.filter(t => !t.milestoneId || !milestones.some(m => m.id === t.milestoneId));
+  if (loose.length) groups.push({ milestone: null, tasks: loose, progress: null });
+  return groups;
+}

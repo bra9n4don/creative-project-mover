@@ -7,6 +7,7 @@ import { Empty, ErrorBlock, LoadingBlock, PageHeader, Pill } from "@/components/
 import { useWorkspace } from "@/lib/workspace";
 import { dashboardData } from "@/lib/hub/dashboard";
 import { upcomingMilestones } from "@/lib/hub/milestones";
+import { ChatTouchPill, useTaskChatTouches } from "@/components/chat/chat-source-link";
 
 type Props = { days: 7 | 30; projectId: string; onDays: (days: 7 | 30) => void; onProject: (id: string) => void };
 
@@ -14,6 +15,8 @@ export default function DashboardPage({ days, projectId, onDays, onProject }: Pr
   const { state, isLoading, error, refetch } = useWorkspace();
   const data = useMemo(() => state ? dashboardData(state.projects.filter(p => !projectId || p.id === projectId), state.tasks, days, new Date()) : null, [state, days, projectId]);
   const milestones = useMemo(() => state ? upcomingMilestones((state.milestones ?? []).filter(m => !projectId || m.projectId === projectId), state.tasks).slice(0, 8) : [], [state, projectId]);
+  const touches = useTaskChatTouches();
+  const recent = useMemo(() => state ? [...state.tasks].filter(t => !projectId || t.projectId === projectId).sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)).slice(0, 8) : [], [state, projectId]);
   const maxDaily = Math.max(1, ...(data?.daily.map(d => Math.max(d.added, d.updated)) ?? []));
   const maxInactive = Math.max(1, ...(data?.rows.map(r => r.inactive) ?? []));
   return (
@@ -101,6 +104,19 @@ export default function DashboardPage({ days, projectId, onDays, onProject }: Pr
                   <div><div className="h-2 rounded-full bg-muted"><div className="h-full rounded-full bg-accent" style={{ width: `${pr.percent}%` }} /></div><div className="mt-1 text-xs text-muted-foreground">{pr.total ? `${pr.done}/${pr.total} tasks · ${pr.percent}%` : "No tasks yet"}</div></div>
                 </Link>)}
               </div>
+            )}
+          </section>
+
+          <section className="mt-8" aria-labelledby="recent-heading" data-testid="dashboard-recent-tasks">
+            <h2 id="recent-heading" className="mb-4 font-display text-xl font-semibold">Recently updated tasks</h2>
+            {!recent.length ? <p className="text-sm text-muted-foreground">No tasks yet.</p> : (
+              <ul className="divide-y border-y">
+                {recent.map(t => <li key={t.id} className="flex min-w-0 items-center gap-2 py-2.5 text-sm">
+                  <Link href={`/projects/${t.projectId}/tasks/${t.id}`} className="min-w-0 flex-1 truncate font-medium hover:underline">{t.title}</Link>
+                  <ChatTouchPill id={t.id} touches={touches} />
+                  <span className="hidden shrink-0 sm:inline"><Pill value={t.status} /></span>
+                </li>)}
+              </ul>
             )}
           </section>
 
