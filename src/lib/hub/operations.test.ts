@@ -57,6 +57,17 @@ describe("guarded automation rules", () => {
     expect(() => ops.addTask(owner, { projectId: p.id, title: "Ship", dueDate: "2026-02-30" })).toThrow();
   });
 
+  it("saves owner notes and queues assistant note changes for review", async () => {
+    const { db, owner, agent } = setup();
+    const p = await ops.addProject(owner, { title: "Notes" });
+    const t = await ops.addTask(owner, { projectId: p.id, title: "Ship" });
+    await ops.editTask(owner, t.id, { expectedVersion: 1, notes: "Waiting on API key" });
+    expect(db.state.tasks[0]?.notes).toBe("Waiting on API key");
+    await ops.editTask(agent, t.id, { expectedVersion: 2, notes: "Overwritten" });
+    expect(db.state.tasks[0]?.notes).toBe("Waiting on API key");
+    expect(db.state.approvals).toHaveLength(1);
+  });
+
   it("requires review of assistant due-date changes", async () => {
     const { db, owner, agent } = setup();
     const p = await ops.addProject(owner, { title: "Dates" });

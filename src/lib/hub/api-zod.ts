@@ -43,6 +43,7 @@ export const GetDemoStateResponse = zod.object({
   "startedAt": zod.iso.datetime().optional(),
   "completedAt": zod.iso.datetime().optional(),
   "dueDate": zod.iso.date().nullable().optional(),
+  "notes": zod.string().max(10000).optional(),
   "milestoneId": zod.string().nullable().optional()
 })),
   "ideas": zod.array(zod.object({
@@ -138,6 +139,7 @@ export const GetHubStateResponse = zod.object({
   "startedAt": zod.iso.datetime().optional(),
   "completedAt": zod.iso.datetime().optional(),
   "dueDate": zod.iso.date().nullable().optional(),
+  "notes": zod.string().max(10000).optional(),
   "milestoneId": zod.string().nullable().optional()
 })),
   "ideas": zod.array(zod.object({
@@ -376,6 +378,7 @@ export const createTaskBodyDependenciesMax = 50;
 
 export const CreateTaskBody = zod.object({
   "dueDate": zod.iso.date().nullable().optional(),
+  "notes": zod.string().max(10000).optional(),
   "milestoneId": zod.string().nullable().optional(),
   "projectId": zod.string(),
   "title": zod.string().min(1).max(createTaskBodyTitleMax),
@@ -400,7 +403,8 @@ export const CreateTaskResponse = zod.object({
   "updatedAt": zod.string(),
   "startedAt": zod.iso.datetime().optional(),
   "completedAt": zod.iso.datetime().optional(),
-  "dueDate": zod.iso.date().nullable().optional()
+  "dueDate": zod.iso.date().nullable().optional(),
+  "notes": zod.string().max(10000).optional()
 })
 
 
@@ -423,6 +427,7 @@ export const updateTaskBodyDependenciesMax = 50;
 
 export const UpdateTaskBody = zod.object({
   "dueDate": zod.iso.date().nullable().optional(),
+  "notes": zod.string().max(10000).optional(),
   "milestoneId": zod.string().nullable().optional(),
   "expectedVersion": zod.number().int().min(1),
   "title": zod.string().min(1).max(updateTaskBodyTitleMax).optional(),

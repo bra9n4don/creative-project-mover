@@ -12,8 +12,8 @@ import { milestoneProgress } from "@/lib/hub/milestones";
 import { ChatSourceLink, useChatSources } from "@/components/chat/chat-source-link";
 import { isTaskOverdue } from "@/lib/hub/task-due";
 
-type Draft = { title: string; description: string; status: Task["status"]; priority: Task["priority"]; dueDate: string; milestoneId: string };
-const toDraft = (t: Task): Draft => ({ title: t.title, description: t.description, status: t.status, priority: t.priority, dueDate: t.dueDate ?? "", milestoneId: t.milestoneId ?? "" });
+type Draft = { title: string; description: string; status: Task["status"]; priority: Task["priority"]; dueDate: string; milestoneId: string; notes: string };
+const toDraft = (t: Task): Draft => ({ title: t.title, description: t.description, status: t.status, priority: t.priority, dueDate: t.dueDate ?? "", milestoneId: t.milestoneId ?? "", notes: t.notes ?? "" });
 const fmt = (d: string) => new Date(d.length === 10 ? `${d}T12:00:00` : d).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
 
 export default function TaskDetail() {
@@ -46,7 +46,7 @@ export default function TaskDetail() {
 
   const save = () => guard("Editing tasks needs your own workspace.", () => {
     if (!draft.title.trim()) { setMsg({ kind: "err", text: "Give the task a title." }); return; }
-    update.mutate({ id: task.id, data: { expectedVersion: task.version, title: draft.title.trim(), description: draft.description, priority: draft.priority, dueDate: draft.dueDate || null, milestoneId: draft.milestoneId || null, ...(draft.status !== task.status && task.status !== "verified" ? { status: draft.status } : {}) } as never }, {
+    update.mutate({ id: task.id, data: { expectedVersion: task.version, title: draft.title.trim(), description: draft.description, priority: draft.priority, dueDate: draft.dueDate || null, milestoneId: draft.milestoneId || null, notes: draft.notes, ...(draft.status !== task.status && task.status !== "verified" ? { status: draft.status } : {}) } as never }, {
       onSuccess: () => { setDraft(null); setMsg({ kind: "ok", text: "Saved." }); },
       onError: e => { const m = errMessage(e); setMsg({ kind: "err", text: /version|changed|conflict/i.test(m) ? "This task changed, reload to see the latest." : m }); },
     });
@@ -69,6 +69,7 @@ export default function TaskDetail() {
       <section className="space-y-4 rounded-xl border bg-card p-4" aria-label="Edit task">
         <label className="block text-sm"><span className="text-muted-foreground">Title</span><input data-testid="input-task-title" className={`${field} mt-1`} value={draft.title} onChange={e => set("title", e.target.value)} /></label>
         <label className="block text-sm"><span className="text-muted-foreground">Description</span><textarea className={`${field} mt-1 min-h-28`} value={draft.description} onChange={e => set("description", e.target.value)} /></label>
+        <label className="block text-sm"><span className="text-muted-foreground">Notes</span><textarea data-testid="input-task-notes" maxLength={10000} placeholder="Progress, links, decisions…" className={`${field} mt-1 min-h-32`} value={draft.notes} onChange={e => set("notes", e.target.value)} /></label>
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="block text-sm"><span className="text-muted-foreground">Status</span>
             <select className={`${field} mt-1`} value={draft.status} disabled={task.status === "verified"} onChange={e => set("status", e.target.value as Task["status"])}>{(task.status === "verified" ? ["verified"] : ["todo", "in_progress", "blocked", "done"]).map(s => <option key={s} value={s}>{s.replace("_", " ")}</option>)}</select></label>
