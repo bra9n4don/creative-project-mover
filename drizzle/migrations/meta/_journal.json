@@ -99,6 +99,13 @@
       "when": 1793855516766,
       "tag": "0013_revoke_anon_is_hub_owner",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1793862427653,
+      "tag": "0014_private_claim_status",
+      "breakpoints": true
     }
   ]
 }
