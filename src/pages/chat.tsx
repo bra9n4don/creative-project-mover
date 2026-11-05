@@ -3,7 +3,7 @@ import type { UIMessage } from "ai";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { MessageSquarePlus, Pencil, Trash2 } from "lucide-react";
 import { AppShell } from "@/components/shell";
-import { ChatWindow, AgentMark } from "@/components/chat/chat-window";
+import { ChatWindow, AgentMark, type DockLayout } from "@/components/chat/chat-window";
 import { useChatThreadActions, useChatThreadMessages, useChatThreads } from "@/components/chat/use-chat-threads";
 import { useWorkspace } from "@/lib/workspace";
 
