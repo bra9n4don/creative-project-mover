@@ -333,7 +333,7 @@ describe("roadmap milestones", () => {
   it("Kickoff plan review creates one milestone per plan milestone, without duplicates on re-review", async () => {
     const { db, owner } = setup();
     const k = newKickoff(); k.brainstorm = "Recipe scaler"; k.step = 3;
-    k.plan.milestones = [{ title: "Form", outcome: "Working form", tasks: [{ title: "Test calculations", description: "Double", priority: "high" }] }, { title: "Share", outcome: "Send", tasks: [] }];
+    k.plan.milestones = [{ title: "Form", outcome: "Working form", tasks: [{ title: "Test calculations", description: "Double", priority: "high" }] }, { title: "Share", outcome: "Send", tasks: [{ title: "Send link", description: "To partner", priority: "low" }] }];
     const saved = await ops.saveKickoff(owner, { kickoff: k, expectedRevision: 0 });
     const r = await ops.saveKickoff(owner, { kickoff: { ...k, step: 4 }, expectedRevision: saved.revision, reviewedStep: 3 });
     expect(db.state.milestones?.map(m => m.title)).toEqual(["Form", "Share"]);
