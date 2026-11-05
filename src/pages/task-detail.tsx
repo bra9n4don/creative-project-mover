@@ -9,6 +9,7 @@ import { errMessage, useWorkspace } from "@/lib/workspace";
 import { useDeleteTask, useUpdateTask, type Task } from "@/lib/hub-api";
 import { taskProgress } from "@/lib/hub/timeline";
 import { milestoneProgress } from "@/lib/hub/milestones";
+import { ChatSourceLink, useChatSources } from "@/components/chat/chat-source-link";
 import { isTaskOverdue } from "@/lib/hub/task-due";
 
 type Draft = { title: string; description: string; status: Task["status"]; priority: Task["priority"]; dueDate: string; milestoneId: string };
@@ -22,6 +23,7 @@ export default function TaskDetail() {
   const del = useDeleteTask();
   const navigate = useNavigate();
   const task = state?.tasks.find(t => t.id === taskId);
+  const sources = useChatSources();
   const [draft, setDraft] = useState<Draft | null>(null);
   const [msg, setMsg] = useState<{ kind: "ok" | "err"; text: string } | null>(null);
   useEffect(() => { if (task && !draft) setDraft(toDraft(task)); }, [task, draft]);
@@ -58,7 +60,7 @@ export default function TaskDetail() {
   return <AppShell>
     {back}
     <header className="flex flex-wrap items-start justify-between gap-3">
-      <div className="min-w-0"><p className="text-sm text-muted-foreground">{project?.title}</p><h1 className="break-words font-display text-3xl font-semibold">{task.title}</h1></div>
+      <div className="min-w-0"><p className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">{project?.title}<ChatSourceLink id={task.id} sources={sources} /></p><h1 className="break-words font-display text-3xl font-semibold">{task.title}</h1></div>
       <div className="flex flex-wrap items-center gap-2"><Pill value={task.status} />{overdue && <span className="rounded-md bg-destructive/15 px-2 py-0.5 text-xs font-medium text-destructive">Overdue</span>}</div>
     </header>
     <div className="mt-4 flex items-center gap-3"><div role="progressbar" aria-label="Task progress" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} className="h-2 flex-1 overflow-hidden rounded-sm bg-muted"><div className={task.status === "blocked" ? "h-full bg-destructive" : "h-full bg-accent"} style={{ width: `${pct}%` }} /></div><span className="font-mono text-xs text-muted-foreground">{pct}%</span></div>

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { APPROVING_LOCK_MS, applyDecision, extractInboxItems } from "./inbox";
+import { APPROVING_LOCK_MS, applyDecision, buildChatSources, extractInboxItems } from "./inbox";
 
 const idea = (id: string, decision?: string) => ({ type: "tool-propose_idea", toolCallId: id, state: "output-available", output: { kind: "idea", ok: true, title: id }, ...(decision ? { decision } : {}) });
 
@@ -31,5 +31,16 @@ describe("AI inbox approval links", () => {
     const r = applyDecision(part, "dismissed", undefined);
     expect(r.result.alreadyApproved).toBe(true);
     expect(r.part.decision).toBe("approved");
+  });
+});
+
+describe("chat source links", () => {
+  it("maps only approved items with a created ref, newest approval wins", () => {
+    const rows = [
+      { thread_id: "old", message_id: "m1", created_at: "2026-11-01T00:00:00Z", parts: [{ ...idea("a", "approved"), created: { kind: "task_update", id: "t1" } }] },
+      { thread_id: "new", message_id: "m2", created_at: "2026-11-02T00:00:00Z", parts: [{ ...idea("b", "approved"), created: { kind: "task_update", id: "t1" } }, idea("c"), { ...idea("d", "dismissed"), created: { kind: "idea", id: "i9" } }] },
+    ];
+    const s = buildChatSources(extractInboxItems(rows, {}));
+    expect(s).toEqual({ t1: { threadId: "new", kind: "task_update" } });
   });
 });

@@ -34,3 +34,14 @@ export function extractInboxItems(rows: Row[], titles: Record<string, string>, l
   }
   return out.sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, limit);
 }
+
+export type ChatSource = { threadId: string; kind: CreatedRef["kind"] };
+/** Maps each created/changed task, idea or milestone id to the chat that suggested it (newest approval wins). */
+export function buildChatSources(items: InboxItem[]): Record<string, ChatSource> {
+  const out: Record<string, ChatSource> = {};
+  for (const i of [...items].sort((a, b) => a.createdAt.localeCompare(b.createdAt))) {
+    const c = i.part.created;
+    if (i.status === "approved" && c) out[c.id] = { threadId: i.threadId, kind: c.kind };
+  }
+  return out;
+}
