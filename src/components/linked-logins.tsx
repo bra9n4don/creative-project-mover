@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { btn } from "@/components/kit";
+import { checkNewPassword } from "@/lib/password-rules";
 
 type Login = { user_id: string; provider: string | null; email: string | null; linked_at: string; is_primary: boolean; is_current: boolean };
 
@@ -86,7 +87,8 @@ export function PasswordSignIn() {
   const [busy, setBusy] = useState(false);
   useState(() => { void supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? null)); });
   const save = async () => {
-    if (pw.length < 8) { toast.error("Use at least 8 characters."); return; }
+    const bad = checkNewPassword(pw, undefined, current);
+    if (bad) { toast.error(bad); return; }
     setBusy(true);
     const { error } = await supabase.auth.updateUser(current ? { password: pw, current_password: current } as never : { password: pw });
     setBusy(false);
@@ -99,7 +101,7 @@ export function PasswordSignIn() {
       <p className="text-muted-foreground">
         Sign in with <span className="font-medium text-foreground">{email ?? "your email"}</span> and a password. It opens this same account.
       </p>
-      <input type="password" autoComplete="new-password" placeholder="New password (8+ characters)" value={pw} onChange={(e) => setPw(e.target.value)} className="w-full rounded-md border border-border bg-background px-3 py-2" data-testid="input-new-password" />
+      <input type="password" autoComplete="new-password" placeholder="New password (12+ characters)" value={pw} onChange={(e) => setPw(e.target.value)} className="w-full rounded-md border border-border bg-background px-3 py-2" data-testid="input-new-password" />
       <input type="password" autoComplete="current-password" placeholder="Current password (only if you already have one)" value={current} onChange={(e) => setCurrent(e.target.value)} className="w-full rounded-md border border-border bg-background px-3 py-2" />
       <button className={btn.primary} disabled={busy || !email} onClick={save} data-testid="button-save-password">{busy ? "Saving…" : "Save password"}</button>
     </div>

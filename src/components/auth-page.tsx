@@ -6,6 +6,7 @@ import "@lovable.dev/cloud-auth-js/styles.css";
 import { useAuth } from "@/lib/auth";
 import { btn, field } from "@/components/kit";
 import { oauthReturnPath } from "@/lib/oauth-return-path";
+import { MIN_PASSWORD } from "@/lib/password-rules";
 
 function AuthFrame({ children, mode }: { children: ReactNode; mode: "in" | "up" }) {
   return (
@@ -48,6 +49,16 @@ export function AuthPage({ mode }: { mode: "in" | "up" | "forgot" | "reset" }) {
   useEffect(() => {
     if (isSignedIn && (mode === "in" || mode === "up")) goDest();
   }, [isSignedIn, mode, dest]);
+
+  // Once the owner has claimed CarterHub, new sign-ups are hidden (linked sign-ins still work).
+  const [claimed, setClaimed] = useState(false);
+  useEffect(() => {
+    void supabase.rpc("hub_is_claimed").then(({ data }) => {
+      const c = data === true;
+      setClaimed(c);
+      if (c && mode === "up" && !new URLSearchParams(window.location.search).has("link")) void navigate({ href: `/sign-in${nextSearch}` });
+    });
+  }, [mode]);
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
@@ -113,7 +124,7 @@ export function AuthPage({ mode }: { mode: "in" | "up" | "forgot" | "reset" }) {
           )}
           {mode !== "forgot" && (
             <label className="grid gap-1.5 text-sm font-medium">{mode === "reset" ? "New password" : "Password"}
-              <input type="password" required minLength={8} autoComplete={mode === "in" ? "current-password" : "new-password"} className={field} value={password} onChange={(e) => setPassword(e.target.value)} data-testid="input-password" />
+              <input type="password" required minLength={mode === "in" ? undefined : MIN_PASSWORD} autoComplete={mode === "in" ? "current-password" : "new-password"} className={field} value={password} onChange={(e) => setPassword(e.target.value)} data-testid="input-password" />
             </label>
           )}
           {msg && <p className={msg.kind === "ok" ? "text-sm text-accent" : "text-sm text-destructive"} role="status">{msg.text}</p>}
@@ -122,7 +133,7 @@ export function AuthPage({ mode }: { mode: "in" | "up" | "forgot" | "reset" }) {
           </button>
         </form>
         <div className="mt-5 flex flex-wrap justify-between gap-2 text-sm text-muted-foreground">
-          {mode === "in" && <><Link to="/forgot-password" className="text-primary">Forgot password?</Link><span>New here? <Link to={`/sign-up${nextSearch}` as "/sign-up"} className="font-semibold text-primary">Create account</Link></span></>}
+          {mode === "in" && <><Link to="/forgot-password" className="text-primary">Forgot password?</Link>{claimed ? <span>Private app. Only the owner can sign in.</span> : <span>New here? <Link to={`/sign-up${nextSearch}` as "/sign-up"} className="font-semibold text-primary">Create account</Link></span>}</>}
           {mode === "up" && <span>Already have one? <Link to={`/sign-in${nextSearch}` as "/sign-in"} className="font-semibold text-primary">Sign in</Link></span>}
           {(mode === "forgot" || mode === "reset") && <Link to="/sign-in" className="text-primary">Back to sign in</Link>}
         </div>
