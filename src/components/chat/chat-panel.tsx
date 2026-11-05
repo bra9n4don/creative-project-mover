@@ -1,29 +1,33 @@
 import { useEffect, useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { ChevronsDownUp, Inbox, Maximize2, MoreHorizontal, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronsDownUp, Inbox, Maximize2, MoreHorizontal, Plus } from "lucide-react";
 import { useInbox } from "./use-chat-threads";
 import { ChatThreadView } from "@/pages/chat";
 import { useChatThreadActions, useChatThreads } from "./use-chat-threads";
 import { AgentMark } from "./chat-window";
 
 const OPEN_KEY = "carterhub.chatDock.open";
+const MINI_KEY = "carterhub.chatDock.mini";
 const iconBtn = "grid h-8 w-8 shrink-0 place-items-center rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground";
 
 /** Floating chat dock on every page except the full Chat page; continues the latest conversation. */
 export function ChatDock() {
   const pathname = useRouterState({ select: s => s.location.pathname });
   const [open, setOpenState] = useState(false);
-  useEffect(() => { setOpenState(localStorage.getItem(OPEN_KEY) === "1"); }, []);
+  const [mini, setMiniState] = useState(true);
+  useEffect(() => { setOpenState(localStorage.getItem(OPEN_KEY) === "1"); setMiniState(localStorage.getItem(MINI_KEY) !== "0"); }, []);
   const setOpen = (v: boolean) => { setOpenState(v); localStorage.setItem(OPEN_KEY, v ? "1" : "0"); };
+  const setMini = (v: boolean) => { setMiniState(v); localStorage.setItem(MINI_KEY, v ? "1" : "0"); if (v) setOpen(false); };
   if (pathname.startsWith("/chat")) return null;
+  if (mini) return <MiniDock onExpand={() => setMini(false)} />;
   return (
     <div data-testid="chat-dock" className="fixed left-3 right-20 z-40 md:left-[calc(16rem+1.5rem)] md:right-6 md:mx-auto md:max-w-2xl bottom-[calc(4.75rem+env(safe-area-inset-bottom))] md:bottom-5">
-      <DockBody open={open} setOpen={setOpen} projectId={pathname.match(/^\/projects\/([^/]+)/)?.[1]} />
+      <DockBody open={open} setOpen={setOpen} onMinimize={() => setMini(true)} projectId={pathname.match(/^\/projects\/([^/]+)/)?.[1]} />
     </div>
   );
 }
 
-function DockBody({ open, setOpen, projectId }: { open: boolean; setOpen: (v: boolean) => void; projectId?: string }) {
+function DockBody({ open, setOpen, projectId, onMinimize }: { open: boolean; setOpen: (v: boolean) => void; projectId?: string; onMinimize: () => void }) {
   const { data, error } = useChatThreads();
   const actions = useChatThreadActions();
   const [threadId, setThreadId] = useState<string>();
@@ -63,8 +67,25 @@ function DockBody({ open, setOpen, projectId }: { open: boolean; setOpen: (v: bo
           <Link to="/inbox" aria-label="AI inbox" title="AI inbox" data-testid="link-dock-inbox" className={`${iconBtn} relative`}><Inbox className="h-4 w-4" />{waiting > 0 && <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground">{waiting}</span>}</Link>
           <Link to="/chat/$threadId" params={{ threadId }} aria-label="Open full page" title="Open full page" className={`${iconBtn} hidden sm:grid`}><Maximize2 className="h-4 w-4" /></Link>
           <button aria-label="Recent chats" title="Recent chats" onClick={() => setMenu(m => !m)} className={iconBtn}><MoreHorizontal className="h-4 w-4" /></button>
+          <button aria-label="Shrink chat to a pill" title="Shrink" data-testid="button-dock-minimize" onClick={onMinimize} className={iconBtn}><ChevronRight className="h-4 w-4" /></button>
         </>,
       }} />
+    </div>
+  );
+}
+
+/** Compact toolbar-style pill; the arrow (or the Ask button) opens the full chat bar. */
+function MiniDock({ onExpand }: { onExpand: () => void }) {
+  const waiting = useInbox().data?.filter(i => i.status === "waiting").length ?? 0;
+  return (
+    <div data-testid="chat-dock-mini" className="fixed right-20 z-40 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] md:right-6 md:bottom-5">
+      <div className="flex items-center gap-0.5 rounded-full border bg-card/95 p-1 shadow-dock backdrop-blur">
+        <button onClick={onExpand} aria-label="Ask CarterHub" title="Ask CarterHub" data-testid="button-dock-expand-ask" className="flex items-center gap-2 rounded-full py-1 pl-1 pr-3 text-sm text-muted-foreground hover:bg-accent hover:text-foreground">
+          <AgentMark className="h-6 w-6" /><span className="hidden sm:inline">Ask CarterHub…</span>
+        </button>
+        <Link to="/inbox" aria-label="AI inbox" title="AI inbox" className={`${iconBtn} relative rounded-full`}><Inbox className="h-4 w-4" />{waiting > 0 && <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground">{waiting}</span>}</Link>
+        <button onClick={onExpand} aria-label="Expand chat" title="Expand" data-testid="button-dock-expand" className={`${iconBtn} rounded-full`}><ChevronLeft className="h-4 w-4" /></button>
+      </div>
     </div>
   );
 }

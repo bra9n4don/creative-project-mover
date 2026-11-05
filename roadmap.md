@@ -9,4 +9,4 @@
 - [x] Publish dashboard and project task lists; verify all five real projects on the published site.
 - [x] Confirm carterlab.app email DNS verification and enabled auth emails.
 # Roadmap
-- [ ] Make the AI chat box match the uploaded video
+- [x] Make the AI chat box match the uploaded video
