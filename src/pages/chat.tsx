@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { UIMessage } from "ai";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { MessageSquarePlus, Pencil, Trash2 } from "lucide-react";
+import { History, MessageSquarePlus, Pencil, Trash2 } from "lucide-react";
 import { AppShell } from "@/components/shell";
 import { ChatWindow, AgentMark, type DockLayout } from "@/components/chat/chat-window";
 import { useChatThreadActions, useChatThreadMessages, useChatThreads } from "@/components/chat/use-chat-threads";
@@ -51,7 +51,8 @@ export default function ChatPage({ threadId }: { threadId: string }) {
       <div className="mb-4 flex items-center gap-3">
         <AgentMark />
         <h1 className="font-display text-2xl font-semibold">Chat</h1>
-        <button className="ml-auto rounded-lg border px-3 py-1.5 text-sm md:hidden" onClick={() => setShowList(s => !s)}>{showList ? "Hide chats" : "Chats"}</button>
+        <Link to="/chat/history" data-testid="link-chat-history" className="ml-auto inline-flex items-center gap-1 rounded-lg border px-3 py-1.5 text-sm"><History className="h-4 w-4" />History</Link>
+        <button className="rounded-lg border px-3 py-1.5 text-sm md:hidden" onClick={() => setShowList(s => !s)}>{showList ? "Hide chats" : "Chats"}</button>
       </div>
       {isDemo ? <p className="text-sm text-muted-foreground">Sign in to chat with your workspace.</p> : (
         <div className="grid h-[calc(100dvh-13rem)] min-h-[420px] gap-4 md:h-[calc(100dvh-10rem)] md:grid-cols-[240px_1fr]">
