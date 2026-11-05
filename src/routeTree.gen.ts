@@ -29,6 +29,7 @@ import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as SignUpRouteImport } from './routes/sign-up'
 import { Route as UsageRouteImport } from './routes/usage'
 import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } from './routes/[.well-known]/oauth-protected-resource'
+import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ApiKickoffDraftRouteImport } from './routes/api/kickoff-draft'
 import { Route as ApiProjectUpdateRouteImport } from './routes/api/project-update'
 import { Route as ProjectsIndexRouteImport } from './routes/projects.index'
@@ -147,6 +148,11 @@ const Char91DotwellKnownChar93OauthProtectedResourceRoute =
     path: '/.well-known/oauth-protected-resource',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiChatRoute = ApiChatRouteImport.update({
+  id: '/api/chat',
+  path: '/api/chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiKickoffDraftRoute = ApiKickoffDraftRouteImport.update({
   id: '/api/kickoff-draft',
   path: '/api/kickoff-draft',
@@ -249,6 +255,7 @@ export interface FileRoutesByFullPath {
   '/sign-up': typeof SignUpRoute
   '/usage': typeof UsageRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  '/api/chat': typeof ApiChatRoute
   '/api/kickoff-draft': typeof ApiKickoffDraftRoute
   '/api/project-update': typeof ApiProjectUpdateRoute
   '/projects/$id': typeof ProjectsIdRoute
@@ -287,6 +294,7 @@ export interface FileRoutesByTo {
   '/sign-up': typeof SignUpRoute
   '/usage': typeof UsageRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  '/api/chat': typeof ApiChatRoute
   '/api/kickoff-draft': typeof ApiKickoffDraftRoute
   '/api/project-update': typeof ApiProjectUpdateRoute
   '/projects/$id': typeof ProjectsIdRoute
@@ -326,6 +334,7 @@ export interface FileRoutesById {
   '/sign-up': typeof SignUpRoute
   '/usage': typeof UsageRoute
   '/.well-known/oauth-protected-resource': typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  '/api/chat': typeof ApiChatRoute
   '/api/kickoff-draft': typeof ApiKickoffDraftRoute
   '/api/project-update': typeof ApiProjectUpdateRoute
   '/projects/$id': typeof ProjectsIdRoute
@@ -366,6 +375,7 @@ export interface FileRouteTypes {
     | '/sign-up'
     | '/usage'
     | '/.well-known/oauth-protected-resource'
+    | '/api/chat'
     | '/api/kickoff-draft'
     | '/api/project-update'
     | '/projects/$id'
@@ -404,6 +414,7 @@ export interface FileRouteTypes {
     | '/sign-up'
     | '/usage'
     | '/.well-known/oauth-protected-resource'
+    | '/api/chat'
     | '/api/kickoff-draft'
     | '/api/project-update'
     | '/projects/$id'
@@ -442,6 +453,7 @@ export interface FileRouteTypes {
     | '/sign-up'
     | '/usage'
     | '/.well-known/oauth-protected-resource'
+    | '/api/chat'
     | '/api/kickoff-draft'
     | '/api/project-update'
     | '/projects/$id'
@@ -481,6 +493,7 @@ export interface RootRouteChildren {
   SignUpRoute: typeof SignUpRoute
   UsageRoute: typeof UsageRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
+  ApiChatRoute: typeof ApiChatRoute
   ApiKickoffDraftRoute: typeof ApiKickoffDraftRoute
   ApiProjectUpdateRoute: typeof ApiProjectUpdateRoute
   ProjectsIdRoute: typeof ProjectsIdRoute
@@ -641,6 +654,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/chat': {
+      id: '/api/chat'
+      path: '/api/chat'
+      fullPath: '/api/chat'
+      preLoaderRoute: typeof ApiChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/kickoff-draft': {
       id: '/api/kickoff-draft'
       path: '/api/kickoff-draft'
@@ -778,6 +798,7 @@ const rootRouteChildren: RootRouteChildren = {
   UsageRoute: UsageRoute,
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
+  ApiChatRoute: ApiChatRoute,
   ApiKickoffDraftRoute: ApiKickoffDraftRoute,
   ApiProjectUpdateRoute: ApiProjectUpdateRoute,
   ProjectsIdRoute: ProjectsIdRoute,
