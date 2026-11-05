@@ -3,7 +3,7 @@ import { z } from "zod";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Database, Json } from "@/integrations/supabase/types";
-import { extractInboxItems, type InboxItem } from "@/lib/ai/inbox";
+import { applyDecision, extractInboxItems, type CreatedRef, type InboxItem } from "@/lib/ai/inbox";
 
 type Db = SupabaseClient<Database>;
 const authed = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]);

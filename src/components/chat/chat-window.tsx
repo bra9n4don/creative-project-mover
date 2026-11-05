@@ -3,6 +3,8 @@ import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { Link } from "@tanstack/react-router";
+import type { CreatedRef } from "@/lib/ai/inbox";
 import { Check, Flag, Lightbulb, ListPlus, PencilLine, Waypoints, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Conversation, ConversationContent, ConversationEmptyState, ConversationScrollButton } from "@/components/ai-elements/conversation";
@@ -24,11 +26,12 @@ export function AgentMark({ className = "h-7 w-7" }: { className?: string }) {
   return <span className={`grid shrink-0 place-items-center rounded-full bg-primary text-primary-foreground ${className}`}><Waypoints className="h-[55%] w-[55%]" /></span>;
 }
 
-type ToolPartLike = { type: string; toolCallId: string; state: string; input?: unknown; output?: unknown; errorText?: string; decision?: "approved" | "dismissed" };
+type ToolPartLike = { type: string; toolCallId: string; state: string; input?: unknown; output?: unknown; errorText?: string; decision?: "approved" | "dismissed"; created?: CreatedRef };
 
 export function ProposalCard({ threadId, messageId, part }: { threadId: string; messageId: string; part: ToolPartLike }) {
   const p = part.output as Proposal | undefined;
   const [decision, setDecision] = useState(part.decision);
+  const [created, setCreated] = useState<CreatedRef | undefined>(part.created);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const { state } = useWorkspace();
@@ -42,35 +45,47 @@ export function ProposalCard({ threadId, messageId, part }: { threadId: string; 
   if (!p) return null;
   if (!p.ok) return <p className="text-xs text-muted-foreground">Suggestion couldn't be made: {p.error}</p>;
 
-  const record = (d: "approved" | "dismissed") => {
-    setDecision(d);
-    void decide({ data: { threadId, messageId, toolCallId: part.toolCallId, decision: d } })
-      .then(() => qc.invalidateQueries({ queryKey: ["chat"] }))
-      .catch(() => {});
+  const send = (d: "approving" | "approved" | "dismissed", c?: CreatedRef) => decide({ data: { threadId, messageId, toolCallId: part.toolCallId, decision: d, ...(c ? { created: c } : {}) } });
+  const record = (d: "approved" | "dismissed", c?: CreatedRef) => {
+    setDecision(d); if (c) setCreated(c);
+    // Retry once so a saved item never shows Approve again.
+    void send(d, c).catch(() => send(d, c)).then(() => qc.invalidateQueries({ queryKey: ["chat"] })).catch(() => {});
   };
   const missing = p.kind === "task" || p.kind === "milestone" ? !state?.projects.some(x => x.id === p.projectId) : p.kind === "task_update" ? !state?.tasks.some(t => t.id === p.taskId) : p.kind === "milestone_update" ? !state?.milestones?.some(m => m.id === p.milestoneId) : false;
   const approve = async () => {
     setBusy(true); setError("");
     try {
-      if (p.kind === "task") await createTask.mutateAsync({ data: { projectId: p.projectId, title: p.title, description: p.description, priority: p.priority, ...(p.milestoneId && state?.milestones?.some(m => m.id === p.milestoneId) ? { milestoneId: p.milestoneId } : {}) } as never });
-      else if (p.kind === "milestone") await createMilestone.mutateAsync({ data: { projectId: p.projectId, title: p.title, outcome: p.outcome, targetDate: p.targetDate ?? null } });
+      const lock = await send("approving");
+      if (lock.alreadyApproved) { setDecision("approved"); if (lock.created) setCreated(lock.created); await qc.invalidateQueries({ queryKey: ["chat"] }); return; }
+      if (lock.locked) throw new Error("This suggestion is already being saved. Try again in a couple of minutes.");
+      let c: CreatedRef;
+      if (p.kind === "task") c = { kind: "task", id: (await createTask.mutateAsync({ data: { projectId: p.projectId, title: p.title, description: p.description, priority: p.priority, ...(p.milestoneId && state?.milestones?.some(m => m.id === p.milestoneId) ? { milestoneId: p.milestoneId } : {}) } as never })).id };
+      else if (p.kind === "milestone") c = { kind: "milestone", id: (await createMilestone.mutateAsync({ data: { projectId: p.projectId, title: p.title, outcome: p.outcome, targetDate: p.targetDate ?? null } })).id };
       else if (p.kind === "milestone_update") {
         const m = state?.milestones?.find(m => m.id === p.milestoneId);
         if (!m) throw new Error("That milestone no longer exists.");
         await updateMilestone.mutateAsync({ id: m.id, data: { expectedVersion: m.version, ...(p.title ? { title: p.title } : {}), ...(p.targetDate ? { targetDate: p.targetDate } : {}) } });
+        c = { kind: "milestone_update", id: m.id };
       }
-      else if (p.kind === "idea") await createIdea.mutateAsync({ data: { title: p.title, description: p.description } as never });
+      else if (p.kind === "idea") c = { kind: "idea", id: (await createIdea.mutateAsync({ data: { title: p.title, description: p.description } as never })).id };
       else {
         const task = state?.tasks.find(t => t.id === p.taskId);
         if (!task) throw new Error("That task no longer exists.");
         await updateTask.mutateAsync({ id: p.taskId, data: { expectedVersion: task.version, ...(p.status ? { status: p.status } : {}), ...(p.title ? { title: p.title } : {}) } as never });
+        c = { kind: "task_update", id: task.id };
       }
       await qc.invalidateQueries({ queryKey: ["hub"] });
-      record("approved");
+      record("approved", c);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not save this suggestion.");
     } finally { setBusy(false); }
   };
+  const link = (() => {
+    if (!created || !state) return null;
+    if (created.kind === "idea") return state.ideas.some(i => i.id === created.id) ? { to: "/ideas" as const, label: "Open idea" } : "gone" as const;
+    if (created.kind === "task" || created.kind === "task_update") { const t = state.tasks.find(t => t.id === created.id); return t ? { to: "/projects/$id/tasks" as const, params: { id: t.projectId }, label: "Open task" } : "gone" as const; }
+    const m = state.milestones?.find(m => m.id === created.id); return m ? { to: "/projects/$id/roadmap" as const, params: { id: m.projectId }, label: "Open roadmap" } : "gone" as const;
+  })();
 
   const Icon = p.kind === "task" ? ListPlus : p.kind === "idea" ? Lightbulb : p.kind === "milestone" || p.kind === "milestone_update" ? Flag : PencilLine;
   const heading = p.kind === "task" ? `New task in ${p.projectTitle}${p.milestoneTitle ? ` · ${p.milestoneTitle}` : ""}` : p.kind === "idea" ? "New idea" : p.kind === "milestone" ? `New milestone in ${p.projectTitle}` : p.kind === "milestone_update" ? `Change milestone “${p.milestoneTitle}”` : `Change “${p.taskTitle}”`;
@@ -86,7 +101,8 @@ export function ProposalCard({ threadId, messageId, part }: { threadId: string; 
       {error && <p className="mt-2 text-xs text-destructive">{error}</p>}
       <div className="mt-3 flex gap-2">
         {decision ? (
-          <span className="text-xs text-muted-foreground">{decision === "approved" ? "Saved to your workspace." : "Dismissed."}</span>
+          <span className="flex items-center gap-2 text-xs text-muted-foreground">{decision === "approved" ? (link === "gone" ? "No longer in your workspace." : "Saved to your workspace.") : "Dismissed."}
+            {decision === "approved" && link && link !== "gone" && <Link to={link.to} params={"params" in link ? link.params : undefined as never} data-testid="link-proposal-created" className="font-medium text-primary underline-offset-2 hover:underline">{link.label}</Link>}</span>
         ) : (
           <>
             {missing && state && <span className="self-center text-xs text-destructive">{p.kind === "task" ? "That project no longer exists." : p.kind === "milestone" ? "That project no longer exists." : p.kind === "milestone_update" ? "That milestone no longer exists." : "That task no longer exists."}</span>}
