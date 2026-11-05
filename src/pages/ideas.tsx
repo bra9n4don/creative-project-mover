@@ -88,7 +88,7 @@ export default function IdeasPage() {
               {list.map((i) => (
                 <div key={i.id} data-testid={`card-idea-${i.id}`} className="rise mb-3 break-inside-avoid rounded-2xl border bg-card p-4">
                   <div className="flex items-start gap-2">
-                    <h3 className="flex-1 font-medium leading-snug">{i.title}</h3>
+                    <div className="flex-1"><h3 className="font-medium leading-snug">{i.title}</h3><ChatSourceLink id={i.id} sources={sources} /></div>
                     <Pill value={i.status} />
                   </div>
                   {i.description && <p className="mt-1.5 whitespace-pre-line text-sm text-muted-foreground">{i.description}</p>}
