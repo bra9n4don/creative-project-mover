@@ -61,7 +61,8 @@ export const listInboxFn = authed.handler(async ({ context }) => {
   const { data: rows, error } = await db.from("hub_chat_messages").select("thread_id, message_id, created_at, parts").eq("role", "assistant").order("created_at", { ascending: false }).limit(400);
   if (error) fail("Could not load the AI inbox.", error);
   const titles = Object.fromEntries((threads ?? []).map(t => [t.id, t.title]));
-  return JSON.parse(JSON.stringify(extractInboxItems(rows ?? [], titles))) as InboxItem[];
+  // Sent as JSON text: stored tool parts are loosely typed, so skip the serializer's type check.
+  return { json: JSON.stringify(extractInboxItems(rows ?? [], titles) satisfies InboxItem[]) };
 });
 
 /** Records Approve/Dismiss on a proposal card so it stays decided after reload. */
