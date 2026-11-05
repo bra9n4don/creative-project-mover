@@ -22,4 +22,5 @@ export interface TaskInput {
   agent?: string;
   /** @maxItems 50 */
   dependencies?: string[];
+  milestoneId?: string | null;
 }

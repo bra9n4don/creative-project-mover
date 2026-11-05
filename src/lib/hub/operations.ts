@@ -7,6 +7,7 @@ import {
   CreateTaskBody, UpdateTaskBody, CreateHandoffBody, DecideApprovalBody,
 } from "./api-zod";
 import { createImportSchema, approveImportSchema, findMatch, sourceLabels, IMPORT_MAX_TASKS, type ImportDraft, type ImportContent, type GithubLink } from "./imports";
+import { createMilestoneSchema, updateMilestoneSchema, reorderMilestonesSchema, type Milestone } from "./milestones";
 import { type Actor, type HubState, HubError, mutateState, audit, project, checkVersion, validateRepository, validateDependencies, requireOwner, ok } from "./store";
 
 export function addProject(actor: Actor, input: unknown) {
@@ -115,6 +116,7 @@ export function addTask(actor: Actor, input: unknown) {
     const now = new Date().toISOString();
     const t: HubState["tasks"][number] = { id, projectId: data.projectId, title: data.title.trim(), description: data.description ?? "", status: "todo", priority: data.priority ?? "medium", agent: actor.agent ? actor.source : data.agent ?? "", evidence: "", dependencies: data.dependencies ?? [], version: 1, createdAt: now, updatedAt: now };
     if (data.dueDate !== undefined) t.dueDate = data.dueDate;
+    if (data.milestoneId) { milestone(s, data.milestoneId, data.projectId); t.milestoneId = data.milestoneId; }
     s.tasks.push(t); audit(s, actor, `Added next step: ${t.title}`, "", t.projectId, "task");
     return t;
   });
@@ -141,7 +143,7 @@ export function editTask(actor: Actor, id: string, input: unknown) {
     checkVersion(t.version, data.expectedVersion);
     if (actor.agent && data.status === "verified") throw new HubError(403, "Only you can verify completion. Agents can report done with evidence.");
     if (data.dependencies) validateDependencies(s, t.projectId, id, data.dependencies);
-    if (actor.agent && (data.priority !== undefined || data.title !== undefined || data.description !== undefined || data.dependencies !== undefined || data.dueDate !== undefined)) {
+    if (actor.agent && (data.priority !== undefined || data.title !== undefined || data.description !== undefined || data.dependencies !== undefined || data.dueDate !== undefined || data.milestoneId !== undefined)) {
       return queueChange(s, actor, t.projectId, { type: "task", taskId: id, ...data }, `Review proposed changes to task: ${t.title}`);
     }
     const dependencies = data.dependencies ?? t.dependencies;
@@ -487,3 +489,56 @@ export function queueSyncSuggestions(s: HubState, link: GithubLink, issues: Issu
 }
 /** Test hook: run a pure state change through the same guarded write path. */
 export const mutateStateForTest = <T,>(actor: Actor, fn: (s: HubState) => T) => mutateState(actor, fn);
+
+// ---- Roadmap milestones (owner-only; assistants propose them through chat cards) ----
+function milestone(s: HubState, id: string, projectId?: string): Milestone {
+  const m = (s.milestones ?? []).find(m => m.id === id && (!projectId || m.projectId === projectId));
+  if (!m) throw new HubError(404, "Milestone not found");
+  return m;
+}
+export function addMilestone(actor: Actor, input: unknown) {
+  requireOwner(actor);
+  const data = createMilestoneSchema.parse(input);
+  return mutateState(actor, s => {
+    project(s, data.projectId);
+    s.milestones ??= [];
+    const now = new Date().toISOString();
+    const order = Math.max(-1, ...s.milestones.filter(m => m.projectId === data.projectId).map(m => m.order)) + 1;
+    const m: Milestone = { id: randomUUID(), projectId: data.projectId, title: data.title, outcome: data.outcome ?? "", targetDate: data.targetDate ?? null, order, version: 1, createdAt: now, updatedAt: now };
+    s.milestones.push(m);
+    audit(s, actor, `Added milestone: ${m.title}`, "", m.projectId, "milestone");
+    return m;
+  });
+}
+export function editMilestone(actor: Actor, id: string, input: unknown) {
+  requireOwner(actor);
+  const data = updateMilestoneSchema.parse(input);
+  return mutateState(actor, s => {
+    const m = milestone(s, id); checkVersion(m.version, data.expectedVersion);
+    const { expectedVersion: _, ...patch } = data;
+    Object.assign(m, patch, { version: m.version + 1, updatedAt: new Date().toISOString() });
+    audit(s, actor, `Updated milestone: ${m.title}`, Object.keys(patch).join(", "), m.projectId, "milestone");
+    return ok("Milestone saved.", id);
+  });
+}
+/** Deleting a milestone keeps its tasks; they become unassigned. */
+export function removeMilestone(actor: Actor, id: string) {
+  requireOwner(actor);
+  return mutateState(actor, s => {
+    const m = milestone(s, id);
+    s.milestones = (s.milestones ?? []).filter(x => x.id !== id);
+    for (const t of s.tasks) if (t.milestoneId === id) { t.milestoneId = null; t.version += 1; t.updatedAt = new Date().toISOString(); }
+    audit(s, actor, `Deleted milestone: ${m.title}`, "Its tasks were kept.", m.projectId, "delete");
+    return ok("Milestone deleted. Its tasks were kept.");
+  });
+}
+export function reorderMilestones(actor: Actor, input: unknown) {
+  requireOwner(actor);
+  const data = reorderMilestonesSchema.parse(input);
+  return mutateState(actor, s => {
+    const mine = (s.milestones ?? []).filter(m => m.projectId === data.projectId);
+    if (data.ids.length !== mine.length || !mine.every(m => data.ids.includes(m.id))) throw new HubError(409, "The roadmap changed. Refresh and try again.");
+    data.ids.forEach((id, i) => { const m = mine.find(m => m.id === id)!; m.order = i; });
+    return ok("Roadmap order saved.");
+  });
+}
