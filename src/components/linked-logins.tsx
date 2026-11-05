@@ -101,7 +101,7 @@ export function PasswordSignIn() {
       </p>
       <input type="password" autoComplete="new-password" placeholder="New password (8+ characters)" value={pw} onChange={(e) => setPw(e.target.value)} className="w-full rounded-md border border-border bg-background px-3 py-2" data-testid="input-new-password" />
       <input type="password" autoComplete="current-password" placeholder="Current password (only if you already have one)" value={current} onChange={(e) => setCurrent(e.target.value)} className="w-full rounded-md border border-border bg-background px-3 py-2" />
-      <button className={btn()} disabled={busy || !email} onClick={save} data-testid="button-save-password">{busy ? "Saving…" : "Save password"}</button>
+      <button className={btn.primary} disabled={busy || !email} onClick={save} data-testid="button-save-password">{busy ? "Saving…" : "Save password"}</button>
     </div>
   );
 }
