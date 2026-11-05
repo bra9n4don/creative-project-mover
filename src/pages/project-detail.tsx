@@ -188,6 +188,8 @@ export default function ProjectDetail() {
         </div>
         <div className="flex flex-wrap gap-2">
           {unfinishedKickoff && <Button variant="outline" asChild><Link href={`/kickoff?resume=${unfinishedKickoff.data.id}`}><ArrowLeft /> Resume Kickoff · Step {unfinishedKickoff.data.step + 1}</Link></Button>}
+          <Button variant="outline" asChild><Link href={`/projects/${project.id}/tasks`} data-testid="link-project-tasks">Tasks</Link></Button>
+          <Button variant="outline" asChild><Link href={`/projects/${project.id}/roadmap`} data-testid="link-project-roadmap">Roadmap</Link></Button>
           <Button variant="secondary" onClick={() => w("AI drafting needs your own workspace.", () => setUpdateOpen(true))}><Sparkles /> Project update</Button>
           <button className={btn.ghost} data-testid="button-edit-project" onClick={() => w("Editing needs your own workspace.", () => setEdit(true))}><Pencil className="h-4 w-4" /> Edit</button>
           <Confirm
