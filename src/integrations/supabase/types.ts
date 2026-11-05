@@ -41,6 +41,68 @@ export type Database = {
         }
         Relationships: []
       }
+      hub_chat_messages: {
+        Row: {
+          created_at: string
+          id: string
+          message_id: string
+          owner_id: string
+          parts: Json
+          role: string
+          thread_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message_id: string
+          owner_id: string
+          parts?: Json
+          role: string
+          thread_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message_id?: string
+          owner_id?: string
+          parts?: Json
+          role?: string
+          thread_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hub_chat_messages_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "hub_chat_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hub_chat_threads: {
+        Row: {
+          created_at: string
+          id: string
+          owner_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          owner_id: string
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          owner_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       hub_link_codes: {
         Row: {
           code_hash: string
