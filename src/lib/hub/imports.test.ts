@@ -43,7 +43,7 @@ describe("imports", () => {
     const r = await ops.createImportDraft(agent, { source: "chatgpt", content });
     expect(db.state.projects).toHaveLength(0);
     expect(db.state.tasks).toHaveLength(0);
-    await expect(ops.approveImport(agent, { id: r.draftId, mode: "new" })).rejects.toThrow();
+    expect(() => ops.approveImport(agent, { id: r.draftId, mode: "new" })).toThrow();
     await ops.approveImport(owner, { id: r.draftId, mode: "new" });
     expect(db.state.projects.map(p => p.title)).toEqual(["Meal Planner"]);
     expect(db.state.tasks).toHaveLength(1);

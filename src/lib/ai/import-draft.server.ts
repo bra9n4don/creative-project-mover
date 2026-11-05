@@ -35,7 +35,7 @@ export async function handleImportDraft(request: Request): Promise<Response> {
       "Turn this conversation from another AI chatbot into a CarterHub project the owner started there. " + DRAFT_PREAMBLE +
       ` Use only facts from the conversation. project: title <=120, goal <=300, description <=1500 summarizing what was decided. tasks: 0-${Math.min(15, IMPORT_MAX_TASKS)} concrete remaining next steps (not work already done), title <=200, description <=400, priority low/medium/high. ideas: 0-${Math.min(8, IMPORT_MAX_IDEAS)} side ideas not yet committed to, title <=150, description <=300. handoff: title <=200, summary <=1500 of progress/open questions, nextAction <=300, target "Next session".`,
       aiImportSchema);
-    const out = await call.result.output.catch(() => null);
+    const out = await Promise.resolve(call.result.output).catch(() => null);
     const failure = call.getFailure();
     if (failure) return jsonError(failure.status, failure.message);
     if (!out) return jsonError(502, "The AI couldn't read this chat. Try a shorter or cleaner paste.");
