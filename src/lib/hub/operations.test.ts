@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import * as ops from "./operations";
 import { emptyState, type Actor, type HubDb, type HubState } from "./store";
 import { newKickoff } from "../kickoff";
@@ -37,6 +37,53 @@ describe("guarded automation rules", () => {
     const agent: Actor = { ...owner, source: "Claude Code", agent: true };
     return { db, owner, agent };
   };
+
+  it("records actual start and end on status transitions and preserves dates during verification", async () => {
+    const { db, owner } = setup();
+    vi.useFakeTimers();
+    try {
+      vi.setSystemTime(new Date("2026-11-05T12:00:00Z"));
+      const p = await ops.addProject(owner, { title: "Timeline" });
+      const t = await ops.addTask(owner, { projectId: p.id, title: "Work" });
+      expect(t.startedAt).toBeUndefined();
+      expect(t.completedAt).toBeUndefined();
+      await ops.editTask(owner, t.id, { expectedVersion: 1, status: "in_progress" });
+      expect(db.state.tasks[0]?.startedAt).toBe("2026-11-05T12:00:00.000Z");
+      vi.setSystemTime(new Date("2026-11-06T12:00:00Z"));
+      await ops.editTask(owner, t.id, { expectedVersion: 2, status: "done" });
+      expect(db.state.tasks[0]?.completedAt).toBe("2026-11-06T12:00:00.000Z");
+      vi.setSystemTime(new Date("2026-11-07T12:00:00Z"));
+      await ops.editTask(owner, t.id, { expectedVersion: 3, status: "verified", evidence: "Checked" });
+      expect(db.state.tasks[0]).toMatchObject({ startedAt: "2026-11-05T12:00:00.000Z", completedAt: "2026-11-06T12:00:00.000Z" });
+      await ops.editTask(owner, t.id, { expectedVersion: 4, status: "in_progress" });
+      expect(db.state.tasks[0]?.completedAt).toBeUndefined();
+      expect(db.state.tasks[0]?.startedAt).toBe("2026-11-05T12:00:00.000Z");
+    } finally { vi.useRealTimers(); }
+  });
+
+  it("does not invent a start date when work is reported done directly", async () => {
+    const { db, owner, agent } = setup();
+    const p = await ops.addProject(owner, { title: "Timeline" });
+    const t = await ops.addTask(owner, { projectId: p.id, title: "Work" });
+    await ops.editTask(agent, t.id, { expectedVersion: 1, status: "done" });
+    expect(db.state.tasks[0]?.startedAt).toBeUndefined();
+    expect(db.state.tasks[0]?.completedAt).toBeDefined();
+    const end = db.state.tasks[0]?.completedAt;
+    await ops.editTask(owner, t.id, { expectedVersion: 2, description: "Edited later" });
+    expect(db.state.tasks[0]?.completedAt).toBe(end);
+  });
+
+  it("records actual dates only after a proposed status change is approved", async () => {
+    const { db, owner, agent } = setup();
+    const p = await ops.addProject(owner, { title: "Timeline" });
+    const t = await ops.addTask(owner, { projectId: p.id, title: "Work" });
+    await ops.editTask(agent, t.id, { expectedVersion: 1, title: "New title", status: "in_progress" });
+    expect(db.state.tasks[0]?.startedAt).toBeUndefined();
+    const approval = db.state.approvals[0];
+    if (!approval) throw new Error("Missing approval");
+    await ops.decide(owner, approval.id, { decision: "approved" });
+    expect(db.state.tasks[0]?.startedAt).toBeDefined();
+  });
 
   it("Kickoff export creates a project, tasks and checkpoint and plans its source idea atomically", async () => {
     const { db, owner } = setup();
