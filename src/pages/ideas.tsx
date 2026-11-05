@@ -8,6 +8,7 @@ import { useHubResult, usePageTitle, useWorkspace } from "@/lib/workspace";
 import { cn } from "@/lib/utils";
 import { ChatSourceLink, useChatSources } from "@/components/chat/chat-source-link";
 import { IdeaFleshDialog } from "@/components/idea-flesh-dialog";
+import { GithubIdeasBar, IdeaIssueButton, useIdeaIssues } from "@/components/github-ideas";
 
 const tabs = ["inbox", "exploring", "promoted", "archived"] as const;
 const parseTags = (s: string) => s.split(",").map((t) => t.trim()).filter(Boolean).slice(0, 12);
@@ -78,6 +79,7 @@ export default function IdeasPage() {
       </form>
       {isLoading ? <LoadingBlock /> : error || !state ? <ErrorBlock error={error} onRetry={refetch} /> : (
         <>
+          <GithubIdeasBar />
           <div className="mb-4 flex gap-1 overflow-x-auto border-b">
             {tabs.map((t) => (
               <button key={t} aria-pressed={tab === t} data-testid={`tab-${t}`} onClick={() => setTab(t)} className={cn("-mb-px border-b-2 px-3 py-2 text-sm capitalize", tab === t ? "border-primary font-medium" : "border-transparent text-muted-foreground")}>
@@ -114,7 +116,8 @@ export default function IdeasPage() {
                       ) : (
                         <button className="rounded-md p-1.5 text-muted-foreground hover:bg-secondary" aria-label="Archive" data-testid={`button-archive-${i.id}`} onClick={() => w(() => update.mutate({ id: i.id, data: { status: "archived" } }, result("Archived")))}><Archive className="h-3.5 w-3.5" /></button>
                       )}
-                      <button className="ml-auto inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs hover:bg-secondary" data-testid={`button-flesh-${i.id}`} onClick={() => w(() => setFleshing(i))}><Sparkles className="h-3.5 w-3.5" />Flesh out</button>
+                      <span className="ml-auto" /><IdeaIssueButton ideaId={i.id} cfg={issueCfg.data} />
+                      <button className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs hover:bg-secondary" data-testid={`button-flesh-${i.id}`} onClick={() => w(() => setFleshing(i))}><Sparkles className="h-3.5 w-3.5" />Flesh out</button>
                       <button className="rounded-md p-1.5 text-muted-foreground hover:bg-secondary" aria-label="Edit" data-testid={`button-edit-idea-${i.id}`} onClick={() => w(() => setEditing(i))}><Pencil className="h-3.5 w-3.5" /></button>
                       <Confirm
                         trigger={<button className="rounded-md p-1.5 text-muted-foreground hover:text-destructive" aria-label="Delete" data-testid={`button-delete-idea-${i.id}`}><Trash2 className="h-3.5 w-3.5" /></button>}
