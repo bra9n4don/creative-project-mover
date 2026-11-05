@@ -6,6 +6,7 @@ import { Link, useLocation, useParams } from "@/lib/router-compat";
 import { ArrowLeft, BadgeCheck, Bookmark, Github, GitPullRequest, Link2, Lock, Pencil, Plus, RefreshCw, Sparkles, Trash2 } from "lucide-react";
 import { ProjectUpdateDialog } from "@/components/project-update-dialog";
 import { ProjectTimeline } from "@/components/project-timeline";
+import { MilestonePlanner } from "@/components/milestone-planner";
 import { Button } from "@/components/ui/button";
 import {
   useDeleteProject,
@@ -220,6 +221,8 @@ export default function ProjectDetail() {
           </div>
         </div>
       </section>
+
+      <MilestonePlanner projectId={project.id} />
 
       <div className="mt-8 grid gap-6 lg:grid-cols-[1fr_300px]">
         <div>
