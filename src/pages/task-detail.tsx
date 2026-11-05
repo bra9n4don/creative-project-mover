@@ -45,7 +45,7 @@ export default function TaskDetail() {
   const save = () => guard("Editing tasks needs your own workspace.", () => {
     if (!draft.title.trim()) { setMsg({ kind: "err", text: "Give the task a title." }); return; }
     update.mutate({ id: task.id, data: { expectedVersion: task.version, title: draft.title.trim(), description: draft.description, priority: draft.priority, dueDate: draft.dueDate || null, milestoneId: draft.milestoneId || null, ...(draft.status !== task.status && task.status !== "verified" ? { status: draft.status } : {}) } as never }, {
-      onSuccess: (t: Task) => { setDraft(toDraft(t)); setMsg({ kind: "ok", text: "Saved." }); },
+      onSuccess: () => { setDraft(null); setMsg({ kind: "ok", text: "Saved." }); },
       onError: e => { const m = errMessage(e); setMsg({ kind: "err", text: /version|changed|conflict/i.test(m) ? "This task changed, reload to see the latest." : m }); },
     });
   });
