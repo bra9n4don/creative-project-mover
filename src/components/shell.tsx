@@ -2,7 +2,7 @@ import { ChatPanelButton } from "@/components/chat/chat-panel";
 import { useState, type ReactNode } from "react";
 import { Link, useLocation } from "@/lib/router-compat";
 import { useUser, useClerk } from "@/lib/auth";
-import { BarChart3, ListChecks, Bookmark, FolderKanban, History, Lightbulb, LogOut, Menu, MoreHorizontal, Network, Plug, Rocket, Settings, ShieldCheck, Sunrise, X } from "lucide-react";
+import { BarChart3, ListChecks, Bookmark, FolderKanban, History, Lightbulb, LogOut, Menu, MessageCircle, MoreHorizontal, Network, Plug, Rocket, Settings, ShieldCheck, Sunrise, X } from "lucide-react";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { useWorkspace } from "@/lib/workspace";

@@ -32,6 +32,8 @@ import { Route as Char91DotwellKnownChar93OauthProtectedResourceRouteImport } fr
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ApiKickoffDraftRouteImport } from './routes/api/kickoff-draft'
 import { Route as ApiProjectUpdateRouteImport } from './routes/api/project-update'
+import { Route as ChatIndexRouteImport } from './routes/chat.index'
+import { Route as ChatThreadIdRouteImport } from './routes/chat.$threadId'
 import { Route as ProjectsIndexRouteImport } from './routes/projects.index'
 import { Route as ProjectsIdRouteImport } from './routes/projects.$id'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
@@ -163,6 +165,16 @@ const ApiProjectUpdateRoute = ApiProjectUpdateRouteImport.update({
   path: '/api/project-update',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ChatIndexRoute = ChatIndexRouteImport.update({
+  id: '/chat/',
+  path: '/chat/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChatThreadIdRoute = ChatThreadIdRouteImport.update({
+  id: '/chat/$threadId',
+  path: '/chat/$threadId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProjectsIndexRoute = ProjectsIndexRouteImport.update({
   id: '/projects/',
   path: '/projects/',
@@ -258,7 +270,9 @@ export interface FileRoutesByFullPath {
   '/api/chat': typeof ApiChatRoute
   '/api/kickoff-draft': typeof ApiKickoffDraftRoute
   '/api/project-update': typeof ApiProjectUpdateRoute
+  '/chat/$threadId': typeof ChatThreadIdRoute
   '/projects/$id': typeof ProjectsIdRoute
+  '/chat/': typeof ChatIndexRoute
   '/projects/': typeof ProjectsIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/api/public/healthz': typeof ApiPublicHealthzRoute
@@ -297,7 +311,9 @@ export interface FileRoutesByTo {
   '/api/chat': typeof ApiChatRoute
   '/api/kickoff-draft': typeof ApiKickoffDraftRoute
   '/api/project-update': typeof ApiProjectUpdateRoute
+  '/chat/$threadId': typeof ChatThreadIdRoute
   '/projects/$id': typeof ProjectsIdRoute
+  '/chat': typeof ChatIndexRoute
   '/projects': typeof ProjectsIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/api/public/healthz': typeof ApiPublicHealthzRoute
@@ -337,7 +353,9 @@ export interface FileRoutesById {
   '/api/chat': typeof ApiChatRoute
   '/api/kickoff-draft': typeof ApiKickoffDraftRoute
   '/api/project-update': typeof ApiProjectUpdateRoute
+  '/chat/$threadId': typeof ChatThreadIdRoute
   '/projects/$id': typeof ProjectsIdRoute
+  '/chat/': typeof ChatIndexRoute
   '/projects/': typeof ProjectsIndexRoute
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/api/public/healthz': typeof ApiPublicHealthzRoute
@@ -378,7 +396,9 @@ export interface FileRouteTypes {
     | '/api/chat'
     | '/api/kickoff-draft'
     | '/api/project-update'
+    | '/chat/$threadId'
     | '/projects/$id'
+    | '/chat/'
     | '/projects/'
     | '/.lovable/oauth/consent'
     | '/api/public/healthz'
@@ -417,7 +437,9 @@ export interface FileRouteTypes {
     | '/api/chat'
     | '/api/kickoff-draft'
     | '/api/project-update'
+    | '/chat/$threadId'
     | '/projects/$id'
+    | '/chat'
     | '/projects'
     | '/.lovable/oauth/consent'
     | '/api/public/healthz'
@@ -456,7 +478,9 @@ export interface FileRouteTypes {
     | '/api/chat'
     | '/api/kickoff-draft'
     | '/api/project-update'
+    | '/chat/$threadId'
     | '/projects/$id'
+    | '/chat/'
     | '/projects/'
     | '/.lovable/oauth/consent'
     | '/api/public/healthz'
@@ -496,7 +520,9 @@ export interface RootRouteChildren {
   ApiChatRoute: typeof ApiChatRoute
   ApiKickoffDraftRoute: typeof ApiKickoffDraftRoute
   ApiProjectUpdateRoute: typeof ApiProjectUpdateRoute
+  ChatThreadIdRoute: typeof ChatThreadIdRoute
   ProjectsIdRoute: typeof ProjectsIdRoute
+  ChatIndexRoute: typeof ChatIndexRoute
   ProjectsIndexRoute: typeof ProjectsIndexRoute
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   ApiPublicHealthzRoute: typeof ApiPublicHealthzRoute
@@ -675,6 +701,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiProjectUpdateRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/chat/': {
+      id: '/chat/'
+      path: '/chat'
+      fullPath: '/chat/'
+      preLoaderRoute: typeof ChatIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/chat/$threadId': {
+      id: '/chat/$threadId'
+      path: '/chat/$threadId'
+      fullPath: '/chat/$threadId'
+      preLoaderRoute: typeof ChatThreadIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/projects/': {
       id: '/projects/'
       path: '/projects'
@@ -801,7 +841,9 @@ const rootRouteChildren: RootRouteChildren = {
   ApiChatRoute: ApiChatRoute,
   ApiKickoffDraftRoute: ApiKickoffDraftRoute,
   ApiProjectUpdateRoute: ApiProjectUpdateRoute,
+  ChatThreadIdRoute: ChatThreadIdRoute,
   ProjectsIdRoute: ProjectsIdRoute,
+  ChatIndexRoute: ChatIndexRoute,
   ProjectsIndexRoute: ProjectsIndexRoute,
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   ApiPublicHealthzRoute: ApiPublicHealthzRoute,
