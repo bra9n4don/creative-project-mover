@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from "react";
 import { Link, useLocation } from "@/lib/router-compat";
-import { useUser } from "@/lib/auth";
-import { BarChart3, ListChecks, Bookmark, FolderKanban, History, Lightbulb, Menu, MoreHorizontal, Network, Plug, Rocket, Settings, ShieldCheck, Sunrise, X } from "lucide-react";
+import { useUser, useClerk } from "@/lib/auth";
+import { BarChart3, ListChecks, Bookmark, FolderKanban, History, Lightbulb, LogOut, Menu, MoreHorizontal, Network, Plug, Rocket, Settings, ShieldCheck, Sunrise, X } from "lucide-react";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { useWorkspace } from "@/lib/workspace";
@@ -123,6 +123,18 @@ function TabBar({ onMore }: { onMore: () => void }) {
   );
 }
 
+function SignOutButton() {
+  const { user } = useUser();
+  const { signOut } = useClerk();
+  if (!user) return null;
+  return (
+    <button data-testid="button-sidebar-sign-out" onClick={() => void signOut({ redirectUrl: "/sign-in" })}
+      className="mt-auto flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground">
+      <LogOut className="h-4 w-4" /> Log out
+    </button>
+  );
+}
+
 export function AppShell({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const { isDemo, authLoaded } = useWorkspace();
@@ -134,6 +146,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <ThemeToggle className="rounded-lg p-2 text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground" />
         </div>
         <NavList />
+        <SignOutButton />
       </aside>
       <header className="sticky top-0 z-30 flex items-center justify-between border-b bg-background/90 px-4 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top))] backdrop-blur md:hidden">
         <Logo />
@@ -157,6 +170,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </button>
           </div>
           <NavList onNav={() => setOpen(false)} />
+          <div className="mt-6 border-t border-sidebar-border pt-3"><SignOutButton /></div>
         </SheetContent>
       </Sheet>
       <div className="min-w-0 overflow-x-clip break-words [overflow-wrap:anywhere] md:pl-64">
