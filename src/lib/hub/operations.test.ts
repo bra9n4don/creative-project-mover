@@ -38,6 +38,37 @@ describe("guarded automation rules", () => {
     return { db, owner, agent };
   };
 
+  it("persists optional due dates and lets the owner update or clear them without changing actual dates", async () => {
+    const { db, owner } = setup();
+    const p = await ops.addProject(owner, { title: "Due dates" });
+    const t = await ops.addTask(owner, { projectId: p.id, title: "Ship", dueDate: "2026-11-12" });
+    expect(t.dueDate).toBe("2026-11-12");
+    await ops.editTask(owner, t.id, { expectedVersion: 1, dueDate: "2026-11-15" });
+    expect(db.state.tasks[0]?.dueDate).toBe("2026-11-15");
+    expect(db.state.tasks[0]?.startedAt).toBeUndefined();
+    expect(db.state.tasks[0]?.completedAt).toBeUndefined();
+    await ops.editTask(owner, t.id, { expectedVersion: 2, dueDate: null });
+    expect(db.state.tasks[0]?.dueDate).toBeNull();
+  });
+
+  it("rejects impossible due dates", async () => {
+    const { owner } = setup();
+    const p = await ops.addProject(owner, { title: "Dates" });
+    expect(() => ops.addTask(owner, { projectId: p.id, title: "Ship", dueDate: "2026-02-30" })).toThrow();
+  });
+
+  it("requires review of assistant due-date changes", async () => {
+    const { db, owner, agent } = setup();
+    const p = await ops.addProject(owner, { title: "Dates" });
+    const t = await ops.addTask(owner, { projectId: p.id, title: "Ship" });
+    await ops.editTask(agent, t.id, { expectedVersion: 1, dueDate: "2026-11-15" });
+    expect(db.state.tasks[0]?.dueDate).toBeUndefined();
+    const approval = db.state.approvals[0];
+    if (!approval) throw new Error("Missing approval");
+    await ops.decide(owner, approval.id, { decision: "approved" });
+    expect(db.state.tasks[0]?.dueDate).toBe("2026-11-15");
+  });
+
   it("records actual start and end on status transitions and preserves dates during verification", async () => {
     const { db, owner } = setup();
     vi.useFakeTimers();

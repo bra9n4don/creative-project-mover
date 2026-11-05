@@ -11,6 +11,7 @@ import type { TaskUpdateStatus } from './taskUpdateStatus';
 export interface TaskUpdate {
   /** @minimum 1 */
   expectedVersion: number;
+  dueDate?: string | null;
   /**
      * @minLength 1
      * @maxLength 200

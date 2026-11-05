@@ -79,7 +79,7 @@ export default function DashboardPage({ days, projectId, onDays, onProject }: Pr
           <section className="mt-8" aria-labelledby="inactive-heading">
             <h2 id="inactive-heading" className="font-display text-xl font-semibold">Inactive tasks by project</h2>
             <div className="mt-4 space-y-3">
-              {data.rows.map(row => <Link key={row.project.id} href={`/projects/${row.project.id}`} className="grid grid-cols-[minmax(0,1fr)_minmax(60px,2fr)_2rem] items-center gap-3 text-sm">
+              {data.rows.map(row => <Link key={row.project.id} href={`/projects/${row.project.id}/tasks`} className="grid grid-cols-[minmax(0,1fr)_minmax(60px,2fr)_2rem] items-center gap-3 text-sm">
                 <span className="truncate">{row.project.title}</span>
                 <span className="h-3 bg-muted"><span className="block h-full bg-destructive" style={{ width: `${row.inactive / maxInactive * 100}%` }} /></span>
                 <span className="text-right font-mono tabular-nums">{row.inactive}</span>
@@ -92,7 +92,7 @@ export default function DashboardPage({ days, projectId, onDays, onProject }: Pr
           <section className="mt-8" aria-labelledby="progress-heading">
             <h2 id="progress-heading" className="mb-4 font-display text-xl font-semibold">Project progress</h2>
             <div className="divide-y border-y">
-              {data.rows.map(row => <Link key={row.project.id} href={`/projects/${row.project.id}`} className="grid gap-3 py-4 hover:bg-muted/30 sm:grid-cols-[minmax(0,1fr)_180px_auto] sm:items-center">
+              {data.rows.map(row => <Link key={row.project.id} href={`/projects/${row.project.id}/tasks`} className="grid gap-3 py-4 hover:bg-muted/30 sm:grid-cols-[minmax(0,1fr)_180px_auto] sm:items-center">
                 <div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><span className="font-medium">{row.project.title}</span><Pill value={row.project.status} /></div><div className="mt-1 text-xs text-muted-foreground">{row.open} open · {row.inactive} inactive</div></div>
                 <div><div className="h-2 rounded-full bg-muted" role="progressbar" aria-label={`${row.project.title} task progress`} aria-valuenow={row.pct} aria-valuemin={0} aria-valuemax={100}><div className="h-full rounded-full bg-accent" style={{ width: `${row.pct}%` }} /></div><div className="mt-1 text-xs text-muted-foreground">{row.total ? `${row.done}/${row.total} finished · ${row.pct}%` : "No tasks yet"}</div></div>
                 <ArrowUpRight className="hidden h-4 w-4 text-muted-foreground sm:block" />

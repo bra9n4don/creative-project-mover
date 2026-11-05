@@ -36,6 +36,7 @@ import { Route as ProjectsIdRouteImport } from './routes/projects.$id'
 import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as ApiPublicHealthzRouteImport } from './routes/api/public/healthz'
 import { Route as ApiPublicMcpRouteImport } from './routes/api/public/mcp'
+import { Route as ProjectsIdTasksRouteImport } from './routes/projects.$id_.tasks'
 import { Route as ApiPublicHubSplatRouteImport } from './routes/api/public/hub/$'
 import { Route as ApiPublicHubDemoRouteImport } from './routes/api/public/hub/demo'
 import { Route as ApiPublicHubDocsRouteImport } from './routes/api/public/hub/docs'
@@ -181,6 +182,11 @@ const ApiPublicMcpRoute = ApiPublicMcpRouteImport.update({
   path: '/api/public/mcp',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProjectsIdTasksRoute = ProjectsIdTasksRouteImport.update({
+  id: '/projects/$id_/tasks',
+  path: '/projects/$id/tasks',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicHubSplatRoute = ApiPublicHubSplatRouteImport.update({
   id: '/api/public/hub/$',
   path: '/api/public/hub/$',
@@ -250,6 +256,7 @@ export interface FileRoutesByFullPath {
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/api/public/healthz': typeof ApiPublicHealthzRoute
   '/api/public/mcp': typeof ApiPublicMcpRoute
+  '/projects/$id/tasks': typeof ProjectsIdTasksRoute
   '/api/public/hub/$': typeof ApiPublicHubSplatRoute
   '/api/public/hub/demo': typeof ApiPublicHubDemoRoute
   '/api/public/hub/docs': typeof ApiPublicHubDocsRoute
@@ -287,6 +294,7 @@ export interface FileRoutesByTo {
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/api/public/healthz': typeof ApiPublicHealthzRoute
   '/api/public/mcp': typeof ApiPublicMcpRoute
+  '/projects/$id/tasks': typeof ProjectsIdTasksRoute
   '/api/public/hub/$': typeof ApiPublicHubSplatRoute
   '/api/public/hub/demo': typeof ApiPublicHubDemoRoute
   '/api/public/hub/docs': typeof ApiPublicHubDocsRoute
@@ -325,6 +333,7 @@ export interface FileRoutesById {
   '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/api/public/healthz': typeof ApiPublicHealthzRoute
   '/api/public/mcp': typeof ApiPublicMcpRoute
+  '/projects/$id_/tasks': typeof ProjectsIdTasksRoute
   '/api/public/hub/$': typeof ApiPublicHubSplatRoute
   '/api/public/hub/demo': typeof ApiPublicHubDemoRoute
   '/api/public/hub/docs': typeof ApiPublicHubDocsRoute
@@ -364,6 +373,7 @@ export interface FileRouteTypes {
     | '/.lovable/oauth/consent'
     | '/api/public/healthz'
     | '/api/public/mcp'
+    | '/projects/$id/tasks'
     | '/api/public/hub/$'
     | '/api/public/hub/demo'
     | '/api/public/hub/docs'
@@ -401,6 +411,7 @@ export interface FileRouteTypes {
     | '/.lovable/oauth/consent'
     | '/api/public/healthz'
     | '/api/public/mcp'
+    | '/projects/$id/tasks'
     | '/api/public/hub/$'
     | '/api/public/hub/demo'
     | '/api/public/hub/docs'
@@ -438,6 +449,7 @@ export interface FileRouteTypes {
     | '/.lovable/oauth/consent'
     | '/api/public/healthz'
     | '/api/public/mcp'
+    | '/projects/$id_/tasks'
     | '/api/public/hub/$'
     | '/api/public/hub/demo'
     | '/api/public/hub/docs'
@@ -476,6 +488,7 @@ export interface RootRouteChildren {
   DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   ApiPublicHealthzRoute: typeof ApiPublicHealthzRoute
   ApiPublicMcpRoute: typeof ApiPublicMcpRoute
+  ProjectsIdTasksRoute: typeof ProjectsIdTasksRoute
   ApiPublicHubSplatRoute: typeof ApiPublicHubSplatRoute
   ApiPublicHubDemoRoute: typeof ApiPublicHubDemoRoute
   ApiPublicHubDocsRoute: typeof ApiPublicHubDocsRoute
@@ -677,6 +690,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicMcpRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/projects/$id_/tasks': {
+      id: '/projects/$id_/tasks'
+      path: '/projects/$id/tasks'
+      fullPath: '/projects/$id/tasks'
+      preLoaderRoute: typeof ProjectsIdTasksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hub/$': {
       id: '/api/public/hub/$'
       path: '/api/public/hub/$'
@@ -765,6 +785,7 @@ const rootRouteChildren: RootRouteChildren = {
   DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   ApiPublicHealthzRoute: ApiPublicHealthzRoute,
   ApiPublicMcpRoute: ApiPublicMcpRoute,
+  ProjectsIdTasksRoute: ProjectsIdTasksRoute,
   ApiPublicHubSplatRoute: ApiPublicHubSplatRoute,
   ApiPublicHubDemoRoute: ApiPublicHubDemoRoute,
   ApiPublicHubDocsRoute: ApiPublicHubDocsRoute,
