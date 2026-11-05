@@ -48,7 +48,7 @@ function ChatHistoryPage() {
     if (c.kind === "task" || c.kind === "task_update") { const t = state.tasks.find(x => x.id === c.id); return t ? <Link to="/projects/$id/tasks/$taskId" params={{ id: t.projectId, taskId: t.id }} className="text-primary hover:underline">{t.title}</Link> : <span className="text-muted-foreground">Deleted task</span>; }
     const m = state.milestones?.find(x => x.id === c.id); return m ? <Link to="/projects/$id/roadmap" params={{ id: m.projectId }} className="text-primary hover:underline">{m.title}</Link> : <span className="text-muted-foreground">Deleted milestone</span>;
   };
-  const icon = (i: InboxItem) => { const k = i.part.created?.kind ?? i.part.output?.kind; return k === "idea" ? <Lightbulb className="h-3.5 w-3.5" /> : k === "milestone" || k === "milestone_update" ? <Flag className="h-3.5 w-3.5" /> : <ListChecks className="h-3.5 w-3.5" />; };
+  const icon = (i: InboxItem) => { const k = i.part.created?.kind ?? (i.part.output?.ok ? i.part.output.kind : undefined); return k === "idea" ? <Lightbulb className="h-3.5 w-3.5" /> : k === "milestone" || k === "milestone_update" ? <Flag className="h-3.5 w-3.5" /> : <ListChecks className="h-3.5 w-3.5" />; };
 
   return (
     <AppShell>
