@@ -68,6 +68,14 @@ describe("guarded automation rules", () => {
     expect(db.state.approvals).toHaveLength(1);
   });
 
+  it("deleting a project also removes its milestones", async () => {
+    const { db, owner } = setup();
+    const p = await ops.addProject(owner, { title: "Gone" });
+    await ops.createMilestone(owner, { projectId: p.id, title: "M" });
+    await ops.removeProject(owner, p.id);
+    expect(db.state.milestones ?? []).toHaveLength(0);
+  });
+
   it("saves owner checklists and queues assistant checklist changes", async () => {
     const { db, owner, agent } = setup();
     const p = await ops.addProject(owner, { title: "Checklist" });
