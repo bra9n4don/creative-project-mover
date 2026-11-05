@@ -32,6 +32,13 @@ export function LinkedLogins() {
     toast.success("Sign-in removed");
     void qc.invalidateQueries({ queryKey: ["hub", "linked-logins"] });
   };
+  const makePrimary = async (l: Login) => {
+    if (!window.confirm(`Make ${l.email ?? label(l.provider)} the main owner sign-in? The current main one stays linked.`)) return;
+    const { error } = await supabase.rpc("make_primary_login", { _user_id: l.user_id });
+    if (error) { toast.error(error.message); return; }
+    toast.success("Main sign-in changed");
+    void qc.invalidateQueries();
+  };
   return (
     <div className="p-5 text-sm">
       <p className="text-muted-foreground">Every sign-in here opens your same workspace.</p>
@@ -44,7 +51,10 @@ export function LinkedLogins() {
               <div className="font-medium">{label(l.provider)}{l.is_primary && " · original"}{l.is_current && " · this device"}</div>
               <div className="truncate font-mono text-xs text-muted-foreground">{l.email} · added {new Date(l.linked_at).toLocaleDateString()}</div>
             </div>
-            {!l.is_primary && !l.is_current && <button className={btn.ghost} onClick={() => void remove(l.user_id)}>Remove</button>}
+            <div className="flex shrink-0 gap-2">
+              {!l.is_primary && <button className={btn.ghost} data-testid={`button-make-primary-${l.user_id}`} onClick={() => void makePrimary(l)}>Make main</button>}
+              {!l.is_primary && !l.is_current && <button className={btn.ghost} onClick={() => void remove(l.user_id)}>Remove</button>}
+            </div>
           </li>
         ))}
       </ul>
