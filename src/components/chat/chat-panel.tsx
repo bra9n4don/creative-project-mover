@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { ChevronLeft, ChevronRight, ChevronsDownUp, Inbox, Maximize2, MoreHorizontal, Plus } from "lucide-react";
 import { useInbox } from "./use-chat-threads";
@@ -40,23 +40,70 @@ function DockBody({ open, setOpen, projectId, onMinimize }: { open: boolean; set
   const [threadId, setThreadId] = useState<string>();
   const [menu, setMenu] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
+  const startupCreate = useRef<ReturnType<typeof actions.create> | null>(null);
+  const newChatPending = useRef(false);
+  const mounted = useRef(false);
+  const selectionVersion = useRef(0);
+  const createAction = useRef(actions.create);
+  useEffect(() => { createAction.current = actions.create; }, [actions.create]);
+  useEffect(() => {
+    mounted.current = true;
+    return () => { mounted.current = false; };
+  }, []);
   const waiting = useInbox().data?.filter(i => i.status === "waiting").length ?? 0;
   useEffect(() => {
     if (!data || threadId) return;
-    if (data[0]) setThreadId(data[0].id);
-    else {
-      let cancelled = false;
-      void actions.create().then(t => { if (!cancelled) setThreadId(t.id); }).catch(e => { if (!cancelled) setCreateError(e instanceof Error ? e.message : "Could not open chat."); });
-      return () => { cancelled = true; };
+    if (data[0]) {
+      selectionVersion.current++;
+      setThreadId(data[0].id);
+      return;
     }
-  }, [data, threadId, actions]);
+    // Reuse the same request across query rerenders and React effect replays.
+    const version = selectionVersion.current;
+    const pending = startupCreate.current ??= createAction.current();
+    let cancelled = false;
+    void pending.then(t => {
+      if (!cancelled && mounted.current && selectionVersion.current === version) setThreadId(t.id);
+    }).catch(e => {
+      if (startupCreate.current === pending) startupCreate.current = null;
+      if (!cancelled && mounted.current && selectionVersion.current === version) {
+        setCreateError(e instanceof Error ? e.message : "Could not open chat.");
+      }
+    });
+    return () => { cancelled = true; };
+  }, [data, threadId, retryCount]);
   const title = data?.find(t => t.id === threadId)?.title ?? "Chat";
-  const newChat = () => {
+  const retryStartup = () => {
+    startupCreate.current = null;
     setCreateError(null);
-    void actions.create().then(t => { setThreadId(t.id); setOpen(true); }).catch(e => setCreateError(e instanceof Error ? e.message : "Could not create chat."));
+    setRetryCount(n => n + 1);
+  };
+  const selectThread = (id: string) => {
+    selectionVersion.current++;
+    setThreadId(id);
+    setMenu(false);
+    setOpen(true);
+  };
+  const newChat = () => {
+    if (newChatPending.current) return;
+    newChatPending.current = true;
+    const version = selectionVersion.current;
+    setCreateError(null);
+    void actions.create().then(t => {
+      if (mounted.current && selectionVersion.current === version) {
+        selectionVersion.current++;
+        setThreadId(t.id);
+        setOpen(true);
+      }
+    }).catch(e => {
+      if (mounted.current && selectionVersion.current === version) {
+        setCreateError(e instanceof Error ? e.message : "Could not create chat.");
+      }
+    }).finally(() => { newChatPending.current = false; });
   };
   if (error) return <p className="rounded-2xl border bg-card p-3 text-sm text-destructive">{error.message}</p>;
-  if (!threadId && createError) return <p role="alert" className="rounded-2xl border bg-card p-3 text-sm text-destructive">{createError}</p>;
+  if (!threadId && createError) return <div role="alert" className="rounded-2xl border bg-card p-3 text-sm text-destructive">{createError}<button type="button" className="ml-2 underline" onClick={retryStartup}>Retry opening chat</button></div>;
   if (!threadId) return <div className="rounded-2xl border bg-card/95 px-4 py-3 text-sm text-muted-foreground shadow-dock">Opening chat…</div>;
   return (
     <div className="relative">
@@ -65,7 +112,7 @@ function DockBody({ open, setOpen, projectId, onMinimize }: { open: boolean; set
         <div className="absolute bottom-full right-0 mb-2 max-h-72 w-64 overflow-y-auto rounded-2xl border bg-card p-1.5 shadow-dock" role="menu">
           <p className="px-2 py-1 text-xs font-medium text-muted-foreground">Recent chats</p>
           {(data ?? []).slice(0, 15).map(t => (
-            <button key={t.id} role="menuitem" onClick={() => { setThreadId(t.id); setMenu(false); setOpen(true); }} className={`block w-full truncate rounded-lg px-2 py-1.5 text-left text-sm hover:bg-accent ${t.id === threadId ? "bg-secondary font-medium" : ""}`}>{t.title}</button>
+            <button key={t.id} role="menuitem" onClick={() => selectThread(t.id)} className={`block w-full truncate rounded-lg px-2 py-1.5 text-left text-sm hover:bg-accent ${t.id === threadId ? "bg-secondary font-medium" : ""}`}>{t.title}</button>
           ))}
         </div>
       )}
