@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { HubState } from "@/lib/hub/types";
+import type { HubState } from "@/lib/hub/store";
 
 /** Chat limits shared by the server route and tests. */
 export const CHAT_HISTORY_LIMIT = 40;
