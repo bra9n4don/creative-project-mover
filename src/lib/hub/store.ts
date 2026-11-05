@@ -6,19 +6,21 @@ import { clients, policy } from "./clients";
 import { mindMapSchema, savedKickoffSchema, type SavedKickoff } from "../kickoff";
 import { z as zod } from "zod";
 import { milestoneSchema, type Milestone } from "./milestones";
+import { ideaIssuesSchema, type IdeaIssues } from "./idea-issues";
 import { importDraftSchema, githubLinkSchema, type ImportDraft, type GithubLink } from "./imports";
 export const savedMindMapSchema = zod.object({ map: mindMapSchema, title: zod.string().max(200), revision: zod.number().int(), updatedAt: zod.string() });
 export type SavedMindMap = zod.infer<typeof savedMindMapSchema>;
 
-export type HubState = z.infer<typeof GetHubStateResponse> & { kickoffs: SavedKickoff[]; mindMap?: SavedMindMap; imports?: ImportDraft[]; githubLinks?: GithubLink[]; milestones?: Milestone[] };
+export type HubState = z.infer<typeof GetHubStateResponse> & { kickoffs: SavedKickoff[]; mindMap?: SavedMindMap; imports?: ImportDraft[]; githubLinks?: GithubLink[]; milestones?: Milestone[]; ideaIssues?: IdeaIssues };
 function parseState(data: unknown): HubState {
-  const raw = data as { kickoffs?: unknown[]; mindMap?: unknown; imports?: unknown[]; githubLinks?: unknown[]; milestones?: unknown[] };
+  const raw = data as { kickoffs?: unknown[]; mindMap?: unknown; imports?: unknown[]; githubLinks?: unknown[]; milestones?: unknown[]; ideaIssues?: unknown };
   return {
     ...GetHubStateResponse.parse(data), kickoffs: (raw.kickoffs ?? []).map(k => savedKickoffSchema.parse(k)),
     ...(raw.mindMap ? { mindMap: savedMindMapSchema.parse(raw.mindMap) } : {}),
     imports: (raw.imports ?? []).map(i => importDraftSchema.parse(i)),
     githubLinks: (raw.githubLinks ?? []).map(l => githubLinkSchema.parse(l)),
     milestones: (raw.milestones ?? []).map(m => milestoneSchema.parse(m)),
+    ...(raw.ideaIssues ? { ideaIssues: ideaIssuesSchema.parse(raw.ideaIssues) } : {}),
   };
 }
 export type HubDb = SupabaseClient<Database>;
