@@ -13,6 +13,7 @@ import { ThemeToggle } from "@/components/theme-controls";
 
 const primaryNav = [
   { href: "/overview", label: "Where I left off", icon: Sunrise },
+  { href: "/dashboard", label: "Dashboard", icon: BarChart3 },
   { href: "/projects", label: "Projects", icon: FolderKanban },
   { href: "/kickoff", label: "Kickoff", icon: Rocket },
   { href: "/handoffs", label: "Checkpoints", icon: Bookmark },

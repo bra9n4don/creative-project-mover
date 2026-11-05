@@ -10,6 +10,7 @@
 <!-- LOVABLE:END -->
 
 ## Architecture rules
+- Dashboard metrics derive from the existing workspace task records, with URL-backed filters and latest-update daily buckets — avoids new storage and misleading completion history.
 - Each owner's workspace is one JSON aggregate in `hub_workspaces`, written via `mutateState` with an optimistic `rev` check — keeps an edit and its audit event atomic without DB transactions.
 - All hub business rules live in `src/lib/hub/operations.ts` and are shared by browser server functions and agent endpoints — one guarded path for humans and AI tools.
 - Browser calls use RLS-scoped clients after `claim_hub()`; only agent endpoints under `/api/public/*` use the admin client, after verifying a hashed `relay_` credential.
