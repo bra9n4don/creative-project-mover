@@ -1,4 +1,4 @@
-import { ChatPanelButton } from "@/components/chat/chat-panel";
+import { ChatDock } from "@/components/chat/chat-panel";
 import { useState, type ReactNode } from "react";
 import { Link, useLocation } from "@/lib/router-compat";
 import { useUser, useClerk } from "@/lib/auth";
@@ -37,7 +37,7 @@ function Logo() {
   return (
     <Link href="/" data-testid="link-home" className="flex items-center gap-2.5">
       <img src={`${import.meta.env.BASE_URL}logo.svg`} alt="" className="h-8 w-8 rounded-lg" />
-      <span className="font-display text-xl font-semibold tracking-tight">Relay</span>
+      <span className="font-display text-xl font-semibold tracking-tight">CarterHub</span>
     </Link>
   );
 }
@@ -148,7 +148,6 @@ export function AppShell({ children }: { children: ReactNode }) {
         <div className="mb-8 flex items-center justify-between px-1 [&_span]:text-sidebar-foreground">
           <Logo />
           <div className="flex items-center">
-            {!isDemo && authLoaded && <ChatPanelButton className="rounded-lg p-2 text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground" />}
             <ThemeToggle className="rounded-lg p-2 text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground" />
           </div>
         </div>
@@ -158,7 +157,6 @@ export function AppShell({ children }: { children: ReactNode }) {
       <header className="sticky top-0 z-30 flex items-center justify-between border-b bg-background/90 px-4 pb-3 pt-[calc(0.75rem+env(safe-area-inset-top))] backdrop-blur md:hidden">
         <Logo />
         <div className="flex items-center gap-2">
-          {!isDemo && authLoaded && <ChatPanelButton className="rounded-lg border p-2" />}
           <ThemeToggle className="rounded-lg border p-2.5" />
           <button data-testid="button-menu" onClick={() => setOpen(true)} className="rounded-lg border p-2" aria-label="Open menu">
             <Menu className="h-5 w-5" />
@@ -167,6 +165,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </header>
       <TabBar onMore={() => setOpen(true)} />
       {!isDemo && authLoaded && <QuickCapture />}
+      {!isDemo && authLoaded && <ChatDock />}
       {!isDemo && authLoaded && <GuidedTour />}
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent side="left" className="w-72 border-0 bg-sidebar p-4 text-sidebar-foreground [&>button]:hidden">
@@ -192,7 +191,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         )}
         <IosInstallBanner />
-        <main className="mx-auto max-w-6xl px-4 pt-6 pb-[calc(6rem+env(safe-area-inset-bottom))] md:px-10 md:py-10">{children}</main>
+        <main className="mx-auto max-w-6xl px-4 pt-6 pb-[calc(10rem+env(safe-area-inset-bottom))] md:px-10 md:pt-10 md:pb-32">{children}</main>
       </div>
     </div>
   );
