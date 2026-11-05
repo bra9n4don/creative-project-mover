@@ -143,6 +143,7 @@ export function editTask(actor: Actor, id: string, input: unknown) {
     checkVersion(t.version, data.expectedVersion);
     if (actor.agent && data.status === "verified") throw new HubError(403, "Only you can verify completion. Agents can report done with evidence.");
     if (data.dependencies) validateDependencies(s, t.projectId, id, data.dependencies);
+    if (data.milestoneId) milestone(s, data.milestoneId, t.projectId);
     if (actor.agent && (data.priority !== undefined || data.title !== undefined || data.description !== undefined || data.dependencies !== undefined || data.dueDate !== undefined || data.milestoneId !== undefined)) {
       return queueChange(s, actor, t.projectId, { type: "task", taskId: id, ...data }, `Review proposed changes to task: ${t.title}`);
     }
@@ -325,7 +326,27 @@ export function saveKickoff(actor: Actor, input: unknown) {
         closeTaskApprovals(s, id);
       }
     };
-    if (reviewedStep === 3 || reviewedStep === 5) upsertTasks("plan", k.plan.milestones.flatMap(m => m.tasks.map(t => ({ ...t, description: `${m.title}\n${m.outcome}\n${t.description}` }))));
+    if (reviewedStep === 3 || reviewedStep === 5) {
+      // One roadmap milestone per plan milestone, mapped by index so re-review updates instead of duplicating.
+      s.milestones ??= [];
+      const ids = k.plan.milestones.map((m, i) => {
+        const key = `milestone:${i}`;
+        const found = s.milestones!.find(x => x.id === record!.taskIds[key] && x.projectId === p.id);
+        if (found) {
+          if (found.title !== m.title.trim() || found.outcome !== m.outcome) Object.assign(found, { title: m.title.trim(), outcome: m.outcome, version: found.version + 1, updatedAt: now });
+          return found.id;
+        }
+        const id = randomUUID(); record!.taskIds[key] = id;
+        s.milestones!.push({ id, projectId: p.id, title: m.title.trim(), outcome: m.outcome, targetDate: null, order: i, version: 1, createdAt: now, updatedAt: now });
+        return id;
+      });
+      upsertTasks("plan", k.plan.milestones.flatMap(m => m.tasks.map(t => ({ ...t, description: `${m.title}\n${m.outcome}\n${t.description}` }))));
+      let n = 0;
+      k.plan.milestones.forEach((m, mi) => m.tasks.forEach(() => {
+        const task = s.tasks.find(t => t.id === record!.taskIds[`plan:${n++}`]);
+        if (task && task.milestoneId === undefined) task.milestoneId = ids[mi];
+      }));
+    }
     if (reviewedStep === 4 || reviewedStep === 5) upsertTasks("actions", k.firstActions.filter(title => !k.plan.milestones.some(m => m.tasks.some(t => t.title.trim().toLowerCase() === title.trim().toLowerCase()))).map(title => ({ title, description: "First action this week", priority: "high" as const })));
     const step = reviewedStep ?? k.step;
     if (reviewedStep !== undefined || [0, 1, 4].includes(step)) {
