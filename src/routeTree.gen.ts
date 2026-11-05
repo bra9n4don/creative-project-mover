@@ -14,6 +14,7 @@ import { Route as ActivityRouteImport } from './routes/activity'
 import { Route as ApprovalsRouteImport } from './routes/approvals'
 import { Route as ConnectRouteImport } from './routes/connect'
 import { Route as ConnectionsRouteImport } from './routes/connections'
+import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as HandoffsRouteImport } from './routes/handoffs'
 import { Route as IdeasRouteImport } from './routes/ideas'
@@ -67,6 +68,11 @@ const ConnectRoute = ConnectRouteImport.update({
 const ConnectionsRoute = ConnectionsRouteImport.update({
   id: '/connections',
   path: '/connections',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
@@ -222,6 +228,7 @@ export interface FileRoutesByFullPath {
   '/approvals': typeof ApprovalsRoute
   '/connect': typeof ConnectRoute
   '/connections': typeof ConnectionsRoute
+  '/dashboard': typeof DashboardRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/handoffs': typeof HandoffsRoute
   '/ideas': typeof IdeasRoute
@@ -258,6 +265,7 @@ export interface FileRoutesByTo {
   '/approvals': typeof ApprovalsRoute
   '/connect': typeof ConnectRoute
   '/connections': typeof ConnectionsRoute
+  '/dashboard': typeof DashboardRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/handoffs': typeof HandoffsRoute
   '/ideas': typeof IdeasRoute
@@ -295,6 +303,7 @@ export interface FileRoutesById {
   '/approvals': typeof ApprovalsRoute
   '/connect': typeof ConnectRoute
   '/connections': typeof ConnectionsRoute
+  '/dashboard': typeof DashboardRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/handoffs': typeof HandoffsRoute
   '/ideas': typeof IdeasRoute
@@ -333,6 +342,7 @@ export interface FileRouteTypes {
     | '/approvals'
     | '/connect'
     | '/connections'
+    | '/dashboard'
     | '/forgot-password'
     | '/handoffs'
     | '/ideas'
@@ -369,6 +379,7 @@ export interface FileRouteTypes {
     | '/approvals'
     | '/connect'
     | '/connections'
+    | '/dashboard'
     | '/forgot-password'
     | '/handoffs'
     | '/ideas'
@@ -405,6 +416,7 @@ export interface FileRouteTypes {
     | '/approvals'
     | '/connect'
     | '/connections'
+    | '/dashboard'
     | '/forgot-password'
     | '/handoffs'
     | '/ideas'
@@ -442,6 +454,7 @@ export interface RootRouteChildren {
   ApprovalsRoute: typeof ApprovalsRoute
   ConnectRoute: typeof ConnectRoute
   ConnectionsRoute: typeof ConnectionsRoute
+  DashboardRoute: typeof DashboardRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   HandoffsRoute: typeof HandoffsRoute
   IdeasRoute: typeof IdeasRoute
@@ -508,6 +521,13 @@ declare module '@tanstack/react-router' {
       path: '/connections'
       fullPath: '/connections'
       preLoaderRoute: typeof ConnectionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/forgot-password': {
@@ -722,6 +742,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApprovalsRoute: ApprovalsRoute,
   ConnectRoute: ConnectRoute,
   ConnectionsRoute: ConnectionsRoute,
+  DashboardRoute: DashboardRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   HandoffsRoute: HandoffsRoute,
   IdeasRoute: IdeasRoute,
