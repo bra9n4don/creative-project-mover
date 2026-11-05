@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ReactNode } from "react";
 
@@ -34,7 +34,7 @@ describe("planner save flow", () => {
       callbacks.onSuccess({});
     });
     const view = render(<MilestonePlanner projectId="p" />);
-    fixture.drop?.({ active: { id: "m" }, over: { id: "2026-11-08" } });
+    act(() => fixture.drop?.({ active: { id: "m" }, over: { id: "2026-11-08" } }));
     expect(fixture.mutate.mock.calls[0]?.[0]).toEqual({ id: "m", data: { expectedVersion: 3, targetDate: "2026-11-08" } });
     expect(fixture.invalidate).toHaveBeenCalledOnce();
     expect(fixture.state.milestones[0]?.targetDate).toBe("2026-11-08");
@@ -53,7 +53,15 @@ describe("planner save flow", () => {
     if (!button) return;
     fireEvent.click(button);
     fireEvent.click(screen.getByRole("button", { name: "Clear date" }));
-    fireEvent.click(screen.getByRole("button", { name: "Save", exact: true }));
+    fireEvent.click(screen.getByRole("button", { name: /^Save$/ }));
     await waitFor(() => expect(fixture.mutate.mock.calls[0]?.[0]).toEqual({ id: "m", data: { expectedVersion: 3, targetDate: null } }));
+  });
+  it("keeps the old deadline and reports a failed save", () => {
+    fixture.mutate.mockImplementation((_patch, callbacks) => callbacks.onError(new Error("Changed in another tab")));
+    render(<MilestonePlanner projectId="p" />);
+    act(() => fixture.drop?.({ active: { id: "m" }, over: { id: "2026-11-08" } }));
+    expect(fixture.state.milestones[0]?.targetDate).toBe("2026-11-15");
+    expect(screen.getByRole("alert").textContent).toBe("Changed in another tab");
+    expect(fixture.invalidate).toHaveBeenCalledOnce();
   });
 });
