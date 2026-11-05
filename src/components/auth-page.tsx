@@ -15,7 +15,7 @@ function AuthFrame({ children, mode }: { children: ReactNode; mode: "in" | "up" 
         <div className="pointer-events-none absolute -bottom-24 -left-24 h-96 w-96 rounded-full bg-primary/40 blur-3xl" />
         <Link to="/" className="relative flex items-center gap-2.5">
           <img src="/logo.svg" alt="" className="h-9 w-9 rounded-lg" />
-          <span className="font-display text-2xl font-semibold">Relay</span>
+          <span className="font-display text-2xl font-semibold">CarterHub</span>
         </Link>
         <div className="relative mt-auto max-w-md">
           <div className="font-mono text-[11px] uppercase tracking-[0.2em] text-primary">Where you left off</div>
@@ -96,8 +96,8 @@ export function AuthPage({ mode }: { mode: "in" | "up" | "forgot" | "reset" }) {
   };
 
   const titles = {
-    in: ["Pick up where you left off", "Sign in to your Relay workspace"],
-    up: ["Start your Relay", "Your private project memory, empty and ready"],
+    in: ["Pick up where you left off", "Sign in to your CarterHub workspace"],
+    up: ["Start your CarterHub", "Your private project memory, empty and ready"],
     forgot: ["Reset your password", "We'll email you a link to choose a new one"],
     reset: ["Choose a new password", "You'll be signed in right after"],
   }[mode];
