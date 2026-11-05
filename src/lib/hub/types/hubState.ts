@@ -24,4 +24,5 @@ export interface HubState {
   connections: Connection[];
   summary: HubSummary;
   policy: string;
+  milestones?: import("../milestones").Milestone[];
 }

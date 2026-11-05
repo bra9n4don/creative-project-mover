@@ -27,4 +27,5 @@ export interface TaskUpdate {
   evidence?: string;
   /** @maxItems 50 */
   dependencies?: string[];
+  milestoneId?: string | null;
 }

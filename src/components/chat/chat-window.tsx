@@ -3,7 +3,7 @@ import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage } from "ai";
 import { useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Check, Lightbulb, ListPlus, PencilLine, Waypoints, X } from "lucide-react";
+import { Check, Flag, Lightbulb, ListPlus, PencilLine, Waypoints, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Conversation, ConversationContent, ConversationEmptyState, ConversationScrollButton } from "@/components/ai-elements/conversation";
 import { Message, MessageContent, MessageResponse } from "@/components/ai-elements/message";
@@ -13,8 +13,12 @@ import { ModelBadge } from "@/components/model-badge";
 import { UPDATE_MODEL_LABEL } from "@/lib/ai/model";
 import { CHAT_INPUT_LIMIT, type Proposal } from "@/lib/ai/chat-tools";
 import { decideProposalFn } from "@/lib/ai/chat.functions";
-import { useCreateIdea, useCreateTask, useUpdateTask } from "@/lib/hub-api";
+import { useCreateIdea, useCreateMilestone, useCreateTask, useUpdateMilestone, useUpdateTask } from "@/lib/hub-api";
 import { useWorkspace } from "@/lib/workspace";
+
+export const DOCK_ASK_EVENT = "carterhub:dock-ask";
+/** Sends a question to the floating chat dock (opens it). */
+export function askDock(text: string) { window.dispatchEvent(new CustomEvent(DOCK_ASK_EVENT, { detail: text })); }
 
 export function AgentMark({ className = "h-7 w-7" }: { className?: string }) {
   return <span className={`grid shrink-0 place-items-center rounded-full bg-primary text-primary-foreground ${className}`}><Waypoints className="h-[55%] w-[55%]" /></span>;
@@ -32,6 +36,8 @@ export function ProposalCard({ threadId, messageId, part }: { threadId: string; 
   const createTask = useCreateTask();
   const updateTask = useUpdateTask();
   const createIdea = useCreateIdea();
+  const createMilestone = useCreateMilestone();
+  const updateMilestone = useUpdateMilestone();
   const decide = useServerFn(decideProposalFn);
   if (!p) return null;
   if (!p.ok) return <p className="text-xs text-muted-foreground">Suggestion couldn't be made: {p.error}</p>;
@@ -42,11 +48,17 @@ export function ProposalCard({ threadId, messageId, part }: { threadId: string; 
       .then(() => qc.invalidateQueries({ queryKey: ["chat"] }))
       .catch(() => {});
   };
-  const missing = p.kind === "task" ? !state?.projects.some(x => x.id === p.projectId) : p.kind === "task_update" ? !state?.tasks.some(t => t.id === p.taskId) : false;
+  const missing = p.kind === "task" || p.kind === "milestone" ? !state?.projects.some(x => x.id === p.projectId) : p.kind === "task_update" ? !state?.tasks.some(t => t.id === p.taskId) : p.kind === "milestone_update" ? !state?.milestones?.some(m => m.id === p.milestoneId) : false;
   const approve = async () => {
     setBusy(true); setError("");
     try {
-      if (p.kind === "task") await createTask.mutateAsync({ data: { projectId: p.projectId, title: p.title, description: p.description, priority: p.priority } as never });
+      if (p.kind === "task") await createTask.mutateAsync({ data: { projectId: p.projectId, title: p.title, description: p.description, priority: p.priority, ...(p.milestoneId && state?.milestones?.some(m => m.id === p.milestoneId) ? { milestoneId: p.milestoneId } : {}) } as never });
+      else if (p.kind === "milestone") await createMilestone.mutateAsync({ data: { projectId: p.projectId, title: p.title, outcome: p.outcome, targetDate: p.targetDate ?? null } });
+      else if (p.kind === "milestone_update") {
+        const m = state?.milestones?.find(m => m.id === p.milestoneId);
+        if (!m) throw new Error("That milestone no longer exists.");
+        await updateMilestone.mutateAsync({ id: m.id, data: { expectedVersion: m.version, ...(p.title ? { title: p.title } : {}), ...(p.targetDate ? { targetDate: p.targetDate } : {}) } });
+      }
       else if (p.kind === "idea") await createIdea.mutateAsync({ data: { title: p.title, description: p.description } as never });
       else {
         const task = state?.tasks.find(t => t.id === p.taskId);
@@ -60,10 +72,12 @@ export function ProposalCard({ threadId, messageId, part }: { threadId: string; 
     } finally { setBusy(false); }
   };
 
-  const Icon = p.kind === "task" ? ListPlus : p.kind === "idea" ? Lightbulb : PencilLine;
-  const heading = p.kind === "task" ? `New task in ${p.projectTitle}` : p.kind === "idea" ? "New idea" : `Change “${p.taskTitle}”`;
-  const body = p.kind === "task_update" ? [p.status && `Status → ${p.status.replace("_", " ")}`, p.title && `Title → ${p.title}`].filter(Boolean).join(" · ") : p.title;
-  const detail = p.kind !== "task_update" ? p.description : undefined;
+  const Icon = p.kind === "task" ? ListPlus : p.kind === "idea" ? Lightbulb : p.kind === "milestone" || p.kind === "milestone_update" ? Flag : PencilLine;
+  const heading = p.kind === "task" ? `New task in ${p.projectTitle}${p.milestoneTitle ? ` · ${p.milestoneTitle}` : ""}` : p.kind === "idea" ? "New idea" : p.kind === "milestone" ? `New milestone in ${p.projectTitle}` : p.kind === "milestone_update" ? `Change milestone “${p.milestoneTitle}”` : `Change “${p.taskTitle}”`;
+  const body = p.kind === "task_update" ? [p.status && `Status → ${p.status.replace("_", " ")}`, p.title && `Title → ${p.title}`].filter(Boolean).join(" · ")
+    : p.kind === "milestone_update" ? [p.title && `Title → ${p.title}`, p.targetDate && `Target → ${p.targetDate}`].filter(Boolean).join(" · ")
+    : p.kind === "milestone" ? `${p.title}${p.targetDate ? ` · target ${p.targetDate}` : ""}` : p.title;
+  const detail = p.kind === "task" || p.kind === "idea" ? p.description : p.kind === "milestone" ? p.outcome : undefined;
   return (
     <div data-testid="chat-proposal" className="rounded-xl border bg-card p-3 text-sm">
       <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground"><Icon className="h-3.5 w-3.5" />{heading}</div>
@@ -75,7 +89,7 @@ export function ProposalCard({ threadId, messageId, part }: { threadId: string; 
           <span className="text-xs text-muted-foreground">{decision === "approved" ? "Saved to your workspace." : "Dismissed."}</span>
         ) : (
           <>
-            {missing && state && <span className="self-center text-xs text-destructive">{p.kind === "task" ? "That project no longer exists." : "That task no longer exists."}</span>}
+            {missing && state && <span className="self-center text-xs text-destructive">{p.kind === "task" ? "That project no longer exists." : p.kind === "milestone" ? "That project no longer exists." : p.kind === "milestone_update" ? "That milestone no longer exists." : "That task no longer exists."}</span>}
             <button disabled={busy || (missing && !!state)} onClick={() => void approve()} data-testid="button-proposal-approve" className="inline-flex items-center gap-1 rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground disabled:opacity-60"><Check className="h-3.5 w-3.5" />{busy ? "Saving…" : "Approve"}</button>
             <button disabled={busy} onClick={() => record("dismissed")} data-testid="button-proposal-dismiss" className="inline-flex items-center gap-1 rounded-md border px-3 py-1.5 text-xs"><X className="h-3.5 w-3.5" />Dismiss</button>
           </>
@@ -119,6 +133,15 @@ export function ChatWindow({ threadId, initialMessages, projectId, onActivity, d
     dock?.setOpen(true);
     void sendMessage({ text: t });
   };
+  // Pages (e.g. a project roadmap) can ask the dock a ready-made question.
+  const submitRef = useRef(submit);
+  submitRef.current = submit;
+  useEffect(() => {
+    if (!dock) return;
+    const onAsk = (e: Event) => { const text = (e as CustomEvent<string>).detail; if (typeof text === "string") submitRef.current({ text }); };
+    window.addEventListener(DOCK_ASK_EVENT, onAsk);
+    return () => window.removeEventListener(DOCK_ASK_EVENT, onAsk);
+  }, [!!dock]); // eslint-disable-line react-hooks/exhaustive-deps
   const conversation = (
       <Conversation className="min-h-0 flex-1">
         <ConversationContent className="gap-5">
