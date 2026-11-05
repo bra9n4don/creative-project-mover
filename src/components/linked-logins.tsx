@@ -52,7 +52,7 @@ export function LinkedLogins() {
       {code && (
         <div className="mt-4 rounded-lg bg-accent/10 p-4">
           <div className="font-mono text-2xl tracking-widest" data-testid="text-link-code">{code}</div>
-          <p className="mt-2 text-muted-foreground">On any device, sign in with the other account, then enter this code on the screen that says it isn't the owner. Works once, for 10 minutes.</p>
+          <p className="mt-2 text-muted-foreground">On any device, sign in with the other account, then enter this code on the screen that says it isn't the owner. Works once, for 10 minutes. New email account? Create it at <span className="font-mono">/sign-up?link=1</span>.</p>
         </div>
       )}
     </div>
