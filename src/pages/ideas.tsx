@@ -47,6 +47,7 @@ export default function IdeasPage() {
   usePageTitle("Ideas", "Catch ideas before they vanish. Promote the good ones into projects.");
   const { state, isLoading, error, refetch, guard } = useWorkspace();
   const sources = useChatSources();
+  const issueCfg = useIdeaIssues();
   const [tab, setTab] = useState<(typeof tabs)[number]>("inbox");
   const [cap, setCap] = useState({ title: "", description: "", tags: "" });
   const [editing, setEditing] = useState<Idea | null>(null);
